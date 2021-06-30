@@ -1,1 +1,0 @@
-window.googleTTS = require('google-tts-api');
