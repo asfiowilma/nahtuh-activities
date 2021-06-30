@@ -8,9 +8,11 @@ const MainScene = new (function () {
   this.answer = null;
   this.timerInterval = null;
   this.timeRemaining = 0;
+  this.voices = speechSynthesis.getVoices();
 
   this.start = () => {
     canvas.empty();
+    this.voices = speechSynthesis.getVoices();
     this.renderWaitingScreen();
   };
 
@@ -23,13 +25,21 @@ const MainScene = new (function () {
 
     if (content === "startTimer") {
       question = this.currentQuestion;
-      src = `https://www.youtube.com/embed/${question.media.video}?start=${
-        question.media.startAt
-      }&end=${parseInt(
-        parseInt(question.media.startAt) + parseInt(question.media.duration)
-      )}&autoplay=1`;
-      $("iframe").attr("src", `${src}`);
-      timer = parseInt(parseInt(question.time) + parseInt(question.media.duration));
+      media = question.media;
+      if (question.type === "MV") {
+        endTime = parseInt(parseInt(media.startAt) + parseInt(media.duration));
+        src = `https://www.youtube.com/embed/${media.video}?start=${media.startAt}&end=${endTime}&autoplay=1`;
+        $("iframe").attr("src", src);
+        timer = parseInt(parseInt(question.time) + parseInt(media.duration));
+      } else if (question.type === "TTS") {
+        lyrics = new SpeechSynthesisUtterance(media.audio);
+        lyrics.voice = this.voices[media.voice];
+        lyrics.pitch = media.pitch;
+        lyrics.rate = media.rate;
+        yai.eventVars.autoplay && speechSynthesis.speak(lyrics);
+        timer = question.time;
+      }
+
       $("#progressBar").replaceWith(ProgressBar(timer));
       this.startTimer(timer - 0.05, $("#timer"));
     }
@@ -129,22 +139,32 @@ const MainScene = new (function () {
   };
 
   this.renderQuestion = (question) => {
+    media = question.media;
+    let src;
+    if (question.type === "MV") {
+      endTime = parseInt(parseInt(media.startAt) + parseInt(media.duration));
+      src = `https://www.youtube.com/embed/${media.video}?start=${media.startAt}&end=${endTime}&autoplay=1`;
+    } else if (question.type === "TTS") {
+      lyrics = new SpeechSynthesisUtterance(media.audio);
+      lyrics.voice = this.voices[media.voice];
+      lyrics.pitch = media.pitch;
+      lyrics.rate = media.rate;
+      !yai.eventVars.hostOnly && !yai.eventVars.autoplay && speechSynthesis.speak(lyrics);
+    }
+    isMVhost = yai.eventVars.hostOnly && question.type === "MV";
+    isMV = question.type === "MV";
     canvas.html(
       `
       ${this.header(question)}
       <div class="flex-1 flex flex-col items-center justify-center mx-auto container md:max-w-lg lg:max-w-xl xl:max-w-3xl px-4 md:px-0 mb-4">
       ${
-        yai.eventVars.hostOnly
+        !isMV || isMVhost
           ? ""
-          : `<iframe class="w-full h-80 rounded-lg mx-auto" src="https://www.youtube.com/embed/${
-              question.media.video
-            }?start=${question.media.startAt}&end=${parseInt(
-              parseInt(question.media.startAt) + parseInt(question.media.duration)
-            )}&autoplay=${yai.eventVars.autoplay ? 1 : 0}">
+          : `<iframe class="w-full h-80 rounded-lg mx-auto" src="${src}">
           </iframe>`
       }
         <div class="w-full h-80 ${
-          yai.eventVars.hostOnly ? "" : "-mt-80"
+          !isMV || isMVhost ? "" : "-mt-80"
         } z-10 bg-green-500 flex flex-col items-center justify-center rounded-lg">
           <i class="fab fa-itunes-note text-white animate-bounce fa-4x "></i>
           <span class="text-white font-bold text-xl mt-2">What is the title of the song?</span>
@@ -168,7 +188,10 @@ const MainScene = new (function () {
       }
     }
 
-    timer = parseInt(parseInt(question.time) + parseInt(question.media.duration));
+    timer =
+      question.type === "MV"
+        ? parseInt(parseInt(question.time) + parseInt(question.media.duration))
+        : question.time;
     this.timeRemaining = timer;
     if (yai.eventVars.autoplay) this.startTimer(timer - 0.05, $("#timer"));
   };
@@ -221,8 +244,10 @@ const MainScene = new (function () {
             ${this.currentScore + ` (+${this.scoreEarned})`}
           </div>
         </div>
-        <img src="${question.img}" 
-          alt="" class="w-full md:w-1/2 md:max-h-40 object-contain rounded-lg mx-auto" />
+        <div class="w-full h-80 bg-green-500 flex flex-col items-center justify-center rounded-lg p-4">
+          <i class="fab fa-itunes-note text-white animate-bounce fa-2x mb-4"></i>
+          <div class="whitespace-pre-line text-white">${question.media.audio}</div>
+        </div>
         ${
           !["SA", "MV", "TTS"].includes(question.type)
             ? '<div id="options" class="w-full grid grid-rows-4 md:grid-cols-2 md:grid-rows-2 gap-3 my-4"></div>'
@@ -281,7 +306,10 @@ const MainScene = new (function () {
   // ============================================================
 
   this.header = (question) => {
-    timer = parseInt(parseInt(question.time) + parseInt(question.media.duration));
+    timer =
+      question.type === "MV"
+        ? parseInt(parseInt(question.time) + parseInt(question.media.duration))
+        : question.time;
 
     return `
     <div class="sticky top-0 z-40 w-screen flex flex-col items-end mb-4">
@@ -289,7 +317,7 @@ const MainScene = new (function () {
         <div class="font-bold text-white">
           Question ${this.currentQid + 1}/${this.totalQuestions}
         </div>
-        <div id="timer" class="font-bold text-white">${question.time}s</div>
+        <div id="timer" class="font-bold text-white">${timer}s</div>
       </div>
       ${ProgressBar(yai.eventVars.autoplay ? timer : 9999)}
     </div>

@@ -209,8 +209,8 @@ const HostLobby = new (function () {
       ${
         question.type === "MV"
           ? `<iframe class="w-full h-80 rounded-lg mx-auto" src="${src}"></iframe>`
-          : `<div class="w-full h-80 bg-green-500 flex flex-col items-center justify-center rounded-lg">
-            <i class="fab fa-itunes-note text-white animate-bounce fa-4x mb-4"></i>
+          : `<div class="w-full h-80 bg-green-500 flex flex-col items-center justify-center rounded-lg p-4">
+            <i class="fab fa-itunes-note text-white animate-bounce fa-3x mb-4"></i>
             <div class="whitespace-pre-line text-white">${question.media.audio}</div>
           </div>`
       }        
