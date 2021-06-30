@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.7/signalr.min.js"></script>
+    <script src="../js/observable-slim.js"></script>
+    <script src="../js/yai-settings.js"></script>
+    <script src="../js/identitymanager.js"></script>
+    <script src="../js/yai.js"></script>
+    <style>
+        body {
+            background: url('box/grasss.png') round;
+        }
+    </style>
+    <title>Wiggle Wiggle Box Playground</title>
+  </head>
+  <body>
+    <div id="canvas" class="canvas w-100 h-screen">
+      <div
+        id="login-panel"
+        class="w-1/2 relative top-1/2 mx-auto transform -traslate-x-1/2 -translate-y-1/2 p-8 bg-white rounded-lg"
+      >
+        <h1 class="text-center text-2xl font-bold mb-4 text-green-900">Box Playground</h1>
+        <form class="flex flex-col justify-center items-center">
+          <div class="flex mb-2">
+            <label class="align-middle" for="username">Username</label>
+            <input
+              type="text"
+              class="ml-2 rounded ring-1 ring-gray-300 px-4 py-1"
+              id="username"
+              placeholder="Enter your username"
+            />
+          </div>
+          <div id="btn-wrapper" class="flex">
+            <div
+              class="rounded text-green-500 mr-2 border border-green-500 px-4 py-1 hover:bg-green-200 cursor-pointer"
+              onclick="login()"
+            >Create New Room
+            </div>
+            <div
+              class="rounded text-white bg-green-500 px-4 py-1 hover:bg-green-400 cursor-pointer"
+              onclick="showInputEventId()"
+            >
+              Join Room
+            </div>
+          </div>
+          <div id="join-room" class="flex hidden">
+            <input
+              type="text"
+              class="ml-2 rounded ring-1 ring-gray-300 px-4 py-1"
+              id="eventId"
+              placeholder="Enter room ID"
+            />
+            <div
+              class="rounded ml-2 text-white bg-green-500 px-4 py-1 hover:bg-green-400 cursor-pointer"
+              onclick="joinRoom()"
+            >
+              Join Room
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </body>
+  <footer>
+    <script src="/box/index.js"></script>
+    <!-- <script src="/box/punyaKaIndra.js"></script> -->
+  </footer>
+</html>

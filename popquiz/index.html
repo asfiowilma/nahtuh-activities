@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.3/css/all.css" integrity="sha384-SZXxX4whJ79/gErwcOYf+zWLeJdY/qpuqC4cAa9rOGUstPomtqpuNWT9wdPEn2fk" crossorigin="anonymous" />
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet"/>
+    <script src="https://code.jquery.com/jquery-3.6.0.slim.min.js" integrity="sha256-u7e5khyithlIdTpu22PHhENmPcRdFiHRjhAuHcs05RI=" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.7/signalr.min.js"></script>
+    <!-- PRODUCTION -->
+    <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/observable-slim.js"></script>
+    <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/yai-settings.js"></script>
+    <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/identitymanager.js"></script>
+    <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/yai.js"></script>
+    <!-- DEV -->
+    <!-- <script src="../js/observable-slim.js"></script>
+    <script src="../js/yai-settings.js"></script>
+    <script src="../js/identitymanager.js"></script>
+    <script src="../js/yai.js"></script> -->
+    <title>Pop! Quiz</title>
+    <style>
+      @keyframes progressbar-countdown {
+        0% {
+          width: 100%;
+        }
+        100% {
+          width: 0%;
+        }
+      }
+      .tooltip {
+        visibility: hidden;
+        position: absolute;
+      }
+      .has-tooltip:hover .tooltip {
+        visibility: visible;
+        z-index: 100;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="canvas" class="canvas w-full h-fit-content min-h-screen flex flex-col bg-pink-600">
+      <div
+        id="login-panel"
+        class="flex-1 flex flex-col w-full md:w-96 px-4 mx-auto items-center justify-center"
+      >
+        <h1 class="text-center text-3xl md:text-4xl font-bold text-white">Pop! Quiz</h1>
+        <div class="p-4 bg-white rounded-lg mt-4 mb-2 w-full"">
+          <form class="flex flex-col justify-center items-stretch">
+            <label class="hidden" for="gameId">Game ID</label>
+            <input
+              type="text"
+              class="rounded ring-1 ring-gray-300 px-4 py-2 mb-3 text-center"
+              id="gameId"
+              placeholder="Game ID"
+            />
+            <div
+              id="enterGameId"
+              class="
+                text-center
+                bg-gray-600
+                text-white
+                rounded
+                font-bold
+                py-2
+                cursor-pointer
+                hover:bg-gray-500
+              "
+              onclick="renderUsernameInput(false)"
+            >
+              Enter
+            </div>
+          </form>
+        </div>
+        <div
+          class="
+            text-white
+            hover:text-pink-300
+            hover:underline
+            cursor-pointer
+            text-center
+          "
+          onclick="renderUsernameInput(true)"
+        >
+          Create new Game
+        </div>
+      </div>
+    </div>
+  </body>
+  <footer>
+    <!-- DEV -->
+    <!-- <script src="/popquiz/components.js"></script>
+    <script src="/popquiz/mainScene.js"></script>
+    <script src="/popquiz/hostLobby.js"></script>
+    <script src="/popquiz/hostPanel.js"></script>
+    <script src="/popquiz/login.js"></script>
+    <script src="/popquiz/index.js"></script> -->
+    <!-- PRODUCTION -->
+    <script src="./components.js"></script>
+    <script src="./index.js"></script>
+    <script src="./login.js"></script>
+    <script src="./hostPanel.js"></script>
+    <script src="./hostLobby.js"></script>
+    <script src="./mainScene.js"></script>
+  </footer>
+</html>
