@@ -1,6 +1,6 @@
 const LoginScene = new (function () {
   this.start = () => {
-    $("#enterBtn").html('<i class="fas fa-spinner animate-spin"></i>')
+    $("#enterBtn").html('<i class="fas fa-spinner animate-spin"></i>');
     if (isHost) createGame();
     else joinGame();
   };
@@ -21,6 +21,7 @@ const LoginScene = new (function () {
 
     yai.eventVars.quiz = { isStarted: false };
     yai.eventVars.questions = [];
+    yai.eventVars.wrongAnswers = [];
     yai.eventVars.leaderboard = {};
     yai.eventVars.autoplay = false;
     yai.eventVars.hostOnly = false;
@@ -61,9 +62,10 @@ function joinRoom() {
   // console.log("joining room ...");
   username = $("#username").val();
   if (validate(username)) LoginScene.start();
-  else $("#enterBtn").one("click", function () {
-    isHost ? createRoom() : joinRoom();
-  });
+  else
+    $("#enterBtn").one("click", function () {
+      isHost ? createRoom() : joinRoom();
+    });
 }
 
 function renderUsernameInput(newHost = false) {
@@ -97,8 +99,23 @@ function renderUsernameInput(newHost = false) {
       <div id="backlink" class="text-white hover:text-green-300 hover:underline cursor-pointer text-center">Back</div>
     </div>
   `);
+  $("#username").focus();
+  $("#username").on("keypress", function (e) {
+    if (e.which == 13) {
+      e.preventDefault();
+      $("#enterBtn").click();
+    }
+  });
   $("#enterBtn").one("click", function () {
     isHost ? createRoom() : joinRoom();
   });
   $("#backlink").click(() => canvas.html(loginPanel));
 }
+
+$("#gameId").focus();
+$("#gameId").on("keypress", function (e) {
+  if (e.which == 13) {
+    e.preventDefault();
+    $("#enterGameId").click();
+  }
+});

@@ -105,7 +105,7 @@ function detectJoinLink() {
   eventId = new URLSearchParams(window.location.search).get("id");
   if (eventId) {
     $("#gameId").val(eventId);
-    $("#gameId").disable();
+    $("#gameId").attr('readonly', true);
     $("#enterGameId").click();
   }
 }

@@ -52,6 +52,7 @@ const HostLobby = new (function () {
 
   this.nextQuestion = () => {
     this.currentQid += 1;
+    yai.eventVars.wrongAnswers = [];
     if (this.currentQid !== questions.length) {
       yai.broadcast({ nextQId: this.currentQid, nextQuestion: questions[this.currentQid] });
       this.renderQuestion(questions[this.currentQid]);
@@ -149,7 +150,7 @@ const HostLobby = new (function () {
       lyrics.voice = this.voices[question.media.voice];
       lyrics.pitch = question.media.pitch;
       lyrics.rate = question.media.rate;
-      yai.eventVars.autoplay && speechSynthesis.speak(lyrics);
+      if (yai.eventVars.autoplay) speechSynthesis.speak(lyrics);
       timer = question.time;
     }
     canvas.html(
@@ -227,9 +228,50 @@ const HostLobby = new (function () {
         $("#options").append(OptionButton(question.options[i], true, true));
       }
     } else {
+      console.log("appending correct answer..");
       $("#cAnswer").append(
         `<div class="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight bg-white mt-4 text-center w-1/2 mx-auto">${question.options[0]}</div>`
       );
+      $("#cAnswer").append(
+        `<div class="font-bold text-xl text-white text-center mt-4">Wrong answers:</div>
+        <div id="wrongAnswerGrid" class="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 my-4"></div>`
+      );
+      // render wrong answers to be regraded
+      console.log("counting wrong answers..");
+      wrongAnswers = {};
+      for (var i = 0; i < yai.eventVars.wrongAnswers.length; i++) {
+        var answer = yai.eventVars.wrongAnswers[i];
+        wrongAnswers[answer] = wrongAnswers[answer] ? wrongAnswers[answer] + 1 : 1;
+      }
+      console.log("done counting.");
+      console.log("appending wrong answers..");
+      for (const wrong of Object.entries(wrongAnswers)) {
+        (answer = wrong[0]), (count = wrong[1]);
+        answerSlug = answer.replace(/[^\w ]+/g, "").replace(/ +/g, "-");
+        $("#wrongAnswerGrid").append(`
+          <div class="border border-white bg-green-900 text-white rounded-lg p-4 flex flex-col transform ease-in-out">
+            <div class="flex items-center justify-end">${Button(
+              "primary",
+              '<i class="fas fa-check"></i>',
+              "",
+              `transform ease-in-out" id="${answerSlug}`
+            )}</div>
+            <div class="flex-1 text-center my-2">${answer}</div>
+            <div class="text-sm text-right">${count} <i class="fas fa-user ml-2 text-sm"></i></div>
+          </div>
+        `);
+        $(`#${answerSlug}`).hover(
+          () => $(`#${answerSlug}`).html('Mark as correct <i class="fas fa-check"></i>'),
+          () => $(`#${answerSlug}`).html('<i class="fas fa-check"></i>')
+        );
+        $(`#${answerSlug}`).one("click", function () {
+          yai.broadcast({ regrade: answer });
+          $(`#${answerSlug}`).parent().parent().removeClass("bg-green-900");
+          $(`#${answerSlug}`).unbind("mouseenter mouseleave");
+          $(`#${answerSlug}`).html('Marked as correct <i class="fas fa-check"></i>');
+        });
+        console.log("done appending.");
+      }
     }
     yai.broadcast("showCorrect");
   };

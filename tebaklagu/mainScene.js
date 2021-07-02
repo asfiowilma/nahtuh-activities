@@ -8,12 +8,23 @@ const MainScene = new (function () {
   this.answer = null;
   this.timerInterval = null;
   this.timeRemaining = 0;
+
+  // VOICES
   this.voices = speechSynthesis.getVoices();
+  this.voice = 0;
+  this.rate = 1;
+  this.pitch = 1;
 
   this.start = () => {
     canvas.empty();
     this.voices = speechSynthesis.getVoices();
     this.renderWaitingScreen();
+  };
+
+  this.onLeave = () => {
+    yai.leaveEvent().then(() => {
+      location.reload();
+    });
   };
 
   this.onIncomingMessage = (content) => {
@@ -33,10 +44,10 @@ const MainScene = new (function () {
         timer = parseInt(parseInt(question.time) + parseInt(media.duration));
       } else if (question.type === "TTS") {
         lyrics = new SpeechSynthesisUtterance(media.audio);
-        lyrics.voice = this.voices[media.voice];
-        lyrics.pitch = media.pitch;
-        lyrics.rate = media.rate;
-        yai.eventVars.autoplay && speechSynthesis.speak(lyrics);
+        lyrics.voice = this.voices[this.voice];
+        lyrics.pitch = this.pitch;
+        lyrics.rate = this.rate;
+        if (!yai.eventVars.hostOnly) speechSynthesis.speak(lyrics);
         timer = question.time;
       }
 
@@ -55,7 +66,21 @@ const MainScene = new (function () {
       this.resetAnswer();
       this.renderQuestion(this.currentQuestion);
     }
+
+    if (content.regrade && content.regrade == this.answer) {
+      console.log("regrading...");
+      console.log(`user answer = ${this.answer}`);
+      console.log(`to regrade = ${content.regrade}`);
+      this.scoringHandler(true);
+      this.renderShowScore(this.currentQuestion);
+      this.answeredCorrect = false;
+      console.log("finished regrading.");
+    }
   };
+
+  // ============================================================
+  // Scoring Handlers
+  // ============================================================
 
   this.resetAnswer = () => {
     this.answeredCorrect = false;
@@ -82,6 +107,9 @@ const MainScene = new (function () {
       this.currentScore += score;
       this.scoreEarned = score;
       this.answeredCorrect = true;
+    } else {
+      console.log("sending wrong answer");
+      yai.eventVars.wrongAnswers = [...yai.eventVars.wrongAnswers, this.answer.toLowerCase()];
     }
     yai.eventVars.leaderboard = {
       ...yai.eventVars.leaderboard,
@@ -122,7 +150,7 @@ const MainScene = new (function () {
   this.renderWaitingScreen = () => {
     canvas.html(
       `
-    <div class="flex-1 flex items-center justify-center px-4 md:px-0">
+    <div class="flex-1 flex flex-col items-center justify-center px-4 md:px-0">
       <div class="bg-white flex flex-col p-4 rounded-lg w-full md:w-1/2 mx-auto items-center">
         <div class="text-center text-4xl font-bold text-green-800">${username}</div>
         <div class="text-center text-xl font-bold">
@@ -133,9 +161,81 @@ const MainScene = new (function () {
           Waiting for host to start quiz...
         </div>
       </div>
+      ${
+        !yai.eventVars.hostOnly
+          ? `<div class="mt-6 flex flex-col bg-gray-50 p-4 rounded-lg">
+          <div class="text-sm text-center">Please select your preferred robot voice~</div>
+          <div class="flex items-center mb-4">
+            <div class="voices flex flex-col align-stretch w-full rounded">
+              <label for="voices">Voice:</label>
+              <div class="inline-block relative">
+                <select
+                  name="voices"
+                  id="voices"
+                  class="appearance-none w-full bg-white border border-gray-400 hover:border-gray-500 px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none focus:shadow-outline"
+                >
+                ${this.voices
+                  .map(
+                    (option, idx) => `
+                <option ${idx == this.voice && `selected="selected"`} value="${idx}" >${
+                      option.name
+                    }</option>
+                `
+                  )
+                  .join("")}
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                  <i class="fas fa-chevron-down text-gray-500"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-between flex-wrap mb-3">
+            <label for="rate" class="flex-1">Speech Rate:</label><span id="rateLabel">1</span>
+            <input id="rate" class="rounded-lg overflow-hidden appearance-none bg-gray-200 h-3 w-full" type="range" min="0.5" max="2" step="0.1" value="${
+              this.rate
+            }" />
+          </div>
+          <div class="flex items-between flex-wrap">
+            <label for="pitch" class="flex-1">Pitch:</label><span id="pitchLabel">1</span>
+            <input id="pitch" class="rounded-lg overflow-hidden appearance-none bg-gray-200 h-3 w-full" type="range" min="0" max="2" step="0.1" value="${
+              this.pitch
+            }" />
+          </div>   
+          ${Button(
+            "secondary-outline",
+            `<i class="fas fa-play mr-2"></i><span class="small">Preview</span>`,
+            "",
+            'rounded-full mt-4 flex items-center justify-center w-full" id="playButton"'
+          )}
+        </div>`
+          : ""
+      }
     </div>
-    ` + Button("light-outline", "Quit", "location.reload()", "w-40 absolute bottom-4 right-4")
+    ` +
+        Button(
+          "light-outline",
+          "Quit",
+          "MainScene.onLeave()",
+          'w-20 absolute bottom-4 right-4" id="quitBtn"'
+        )
     );
+    $("#voices").change(() => (MainScene.voice = $("#voices").val()));
+    $("#rate").change(() => {
+      $("#rateLabel").text($("#rate").val());
+      MainScene.rate = $("#rate").val();
+    });
+    $("#pitch").change(() => {
+      $("#pitchLabel").text($("#pitch").val());
+      MainScene.pitch = $("#pitch").val();
+    });
+    $("#playButton").click(() => {
+      preview = new SpeechSynthesisUtterance("nahtuh nahtuh nahtuh");
+      preview.voice = this.voices[this.voice];
+      preview.pitch = this.pitch;
+      preview.rate = this.rate;
+      speechSynthesis.speak(preview);
+    });
   };
 
   this.renderQuestion = (question) => {
@@ -146,10 +246,10 @@ const MainScene = new (function () {
       src = `https://www.youtube.com/embed/${media.video}?start=${media.startAt}&end=${endTime}&autoplay=1`;
     } else if (question.type === "TTS") {
       lyrics = new SpeechSynthesisUtterance(media.audio);
-      lyrics.voice = this.voices[media.voice];
-      lyrics.pitch = media.pitch;
-      lyrics.rate = media.rate;
-      !yai.eventVars.hostOnly && !yai.eventVars.autoplay && speechSynthesis.speak(lyrics);
+      lyrics.voice = this.voices[this.voice];
+      lyrics.pitch = this.pitch;
+      lyrics.rate = this.rate;
+      if (!yai.eventVars.hostOnly && yai.eventVars.autoplay) speechSynthesis.speak(lyrics);
     }
     isMVhost = yai.eventVars.hostOnly && question.type === "MV";
     isMV = question.type === "MV";
@@ -174,7 +274,12 @@ const MainScene = new (function () {
             ? '<div id="options" class="w-full grid grid-rows-4 md:grid-cols-2 md:grid-rows-2 gap-3 my-4"></div>'
             : `<div class="flex w-full px-4 w-full xl:w-2/3 mt-4 mx-auto">
             <input id="answer" type="text" placeholder="Enter correct answer" class="options shadow appearance-none border rounded flex-1 w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-            ${Button("primary", "Submit", "MainScene.answerHandler()", `ml-2 flex items-center`)}
+            ${Button(
+              "primary",
+              "Submit",
+              "MainScene.answerHandler()",
+              `ml-2 flex items-center" id="submitAnswer"`
+            )}
             </div>`
         }
       </div>
@@ -186,6 +291,15 @@ const MainScene = new (function () {
       for (let i = 0; i < question.options.length; i++) {
         $("#options").append(OptionButton(question.options[i]));
       }
+    } else {
+      $("#answer").focus();
+      $("#answer").on("keypress", function (e) {
+        if (e.which == 13) {
+          console.log("enter key pressed");
+          e.preventDefault();
+          $("#submitAnswer").click();
+        }
+      });
     }
 
     timer =
@@ -328,7 +442,7 @@ const MainScene = new (function () {
     return `
     <div class="bg-green-700 p-4 md:py-8 md:px-16 relative w-screen flex items-center justify-between">
       <div class="text-2xl font-bold text-white">${username}</div>
-      ${Button("light-outline", "Quit", "location.reload()", "w-20 md:w-40")}
+      ${Button("light-outline", "Quit", "MainScene.onLeave()", "w-20 md:w-40")}
     </div>
     `;
   };

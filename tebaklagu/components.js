@@ -143,8 +143,9 @@ MediaInput = (type, question) => {
           </div>
           </div>
         <div class="flex flex-col bg-gray-50 px-4 py-2 rounded-lg">
+          <div class="text-sm">This is only a preview, as your participants will choose their preferred voice before the quiz starts.</div>
           <div class="flex items-center mb-4">
-            <div class="voices flex flex-col align-stretch rounded">
+            <div class="voices flex flex-col align-stretch w-full rounded">
               <label for="voices">Voice:</label>
               <div class="inline-block relative">
                 <select
@@ -156,7 +157,7 @@ MediaInput = (type, question) => {
                   .map(
                     (option, idx) => `
                 <option ${
-                  option.name === question.media.voice && `selected="selected"`
+                  idx == question.media.voice && `selected="selected"`
                 } value="${idx}" >${option.name}</option>
                 `
                   )
@@ -169,20 +170,12 @@ MediaInput = (type, question) => {
             </div>
           </div>
           <div class="flex items-between flex-wrap mb-3">
-            <label for="rate" class="flex-1">Speech Rate:</label><span id="rateLabel">${
-              question.media.rate || 1
-            }</span>
-            <input id="rate" class="rounded-lg overflow-hidden appearance-none bg-gray-200 h-3 w-full" type="range" min="0.5" max="2" step="0.1" value="${
-              question.media.rate || 1
-            }" />
+            <label for="rate" class="flex-1">Speech Rate:</label><span id="rateLabel">1</span>
+            <input id="rate" class="rounded-lg overflow-hidden appearance-none bg-gray-200 h-3 w-full" type="range" min="0.5" max="2" step="0.1" value="1" />
           </div>
           <div class="flex items-between flex-wrap">
-            <label for="pitch" class="flex-1">Pitch:</label><span id="pitchLabel">${
-              question.media.pitch || 1
-            }</span>
-            <input id="pitch" class="rounded-lg overflow-hidden appearance-none bg-gray-200 h-3 w-full" type="range" min="0" max="2" step="0.1" value="${
-              question.media.pitch || 1
-            }" />
+            <label for="pitch" class="flex-1">Pitch:</label><span id="pitchLabel">1</span>
+            <input id="pitch" class="rounded-lg overflow-hidden appearance-none bg-gray-200 h-3 w-full" type="range" min="0" max="2" step="0.1" value="1" />
           </div>   
                  
         </div>
