@@ -232,10 +232,12 @@ const HostLobby = new (function () {
       $("#cAnswer").append(
         `<div class="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight bg-white mt-4 text-center w-1/2 mx-auto">${question.options[0]}</div>`
       );
-      $("#cAnswer").append(
-        `<div class="font-bold text-xl text-white text-center mt-4">Wrong answers:</div>
-        <div id="wrongAnswerGrid" class="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 my-4"></div>`
-      );
+      if (yai.eventVars.wrongAnswers.length > 0) {
+        $("#cAnswer").append(
+          `<div class="font-bold text-xl text-white text-center mt-4">Wrong answers:</div>
+          <div id="wrongAnswerGrid" class="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 my-4"></div>`
+        );
+      }
       // render wrong answers to be regraded
       console.log("counting wrong answers..");
       wrongAnswers = {};
@@ -246,8 +248,9 @@ const HostLobby = new (function () {
       console.log("done counting.");
       console.log("appending wrong answers..");
       for (const wrong of Object.entries(wrongAnswers)) {
-        (answer = wrong[0]), (count = wrong[1]);
-        answerSlug = answer.replace(/[^\w ]+/g, "").replace(/ +/g, "-");
+        const answer = wrong[0],
+          count = wrong[1];
+        const answerSlug = answer.replace(/[^\w ]+/g, "").replace(/ +/g, "-");
         $("#wrongAnswerGrid").append(`
           <div class="border border-white bg-green-900 text-white rounded-lg p-4 flex flex-col transform ease-in-out">
             <div class="flex items-center justify-end">${Button(
