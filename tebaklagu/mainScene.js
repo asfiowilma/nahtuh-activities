@@ -382,8 +382,12 @@ const MainScene = new (function () {
         );
       } else {
         $("#cAnswer").append(
-          `<div class="shadow rounded py-2 px-3 text-gray-700 leading-tight bg-green-400 text-center mx-auto">${this.currentQuestion.options[0]}</div>
-          <div class="shadow appearance-none rounded py-2 px-3 text-white leading-tight bg-green-900 text-center mx-auto">${this.answer}</div>`
+          `<div class="shadow rounded py-2 px-3 text-gray-700 leading-tight bg-green-400 text-center mx-auto">${
+            this.currentQuestion.options[0]
+          }</div>
+          <div class="shadow appearance-none rounded py-2 px-3 text-white leading-tight bg-green-900 text-center mx-auto">${
+            this.answer || "unanswered"
+          }</div>`
         );
       }
     }
