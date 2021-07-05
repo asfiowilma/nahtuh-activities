@@ -1,6 +1,6 @@
 # Nahtuh Activities Repository 
 
-Code base for activities deployed on [nahtuh.com](nahtuh.com). Built using VanillaJs and yai library for multiplayer capabilities. 
+Code base for activities deployed on [nahtuh.com](http://dev.nahtuh.com/). Built using VanillaJs and yai library for multiplayer capabilities. 
 
 ## How to Play
 
