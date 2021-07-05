@@ -163,7 +163,11 @@ const HostLobby = new (function () {
         <i class="fab fa-itunes-note text-white animate-bounce fa-4x "></i>
         <span class="text-white font-bold text-xl mt-2">What is the title of the song?</span>
       </div>
-      ${yai.eventVars.autoplay ? "" : Button("primary", "Play", "", 'w-40 mt-4" id="playButton"')}
+      ${
+        yai.eventVars.autoplay
+          ? Button("primary", "Replay", "", 'w-40 mt-4" id="replayButton"')
+          : Button("primary", "Play", "", 'w-40 mt-4" id="playButton"')
+      }
         ${
           question.type !== "SA"
             ? '<div id="options" class="w-full grid grid-rows-4 md:grid-cols-2 md:grid-rows-2 gap-3 my-4"></div>'
@@ -173,12 +177,23 @@ const HostLobby = new (function () {
     `
     );
 
+    if (yai.eventVars.autoplay) $("#replayButton").click(() => speechSynthesis.speak(lyrics));
+
     $("#playButton").one("click", function () {
-      if (question.type === "MV") $("iframe").attr("src", `${src}1`);
-      else if (question.type === "TTS") speechSynthesis.speak(lyrics);
+      if (question.type === "MV") {
+        $("iframe").attr("src", `${src}1`);
+        $("#playButton").remove();
+      } else if (question.type === "TTS") {
+        speechSynthesis.speak(lyrics);
+        $("#playButton").replaceWith(
+          $(Button("primary", "Replay", "", 'w-40 mt-4" id="replayButton"')).click(() =>
+            speechSynthesis.speak(lyrics)
+          )
+        );
+      }
       HostLobby.startTimer(timer - 1, $("#timer"));
       $("#progressBar").replaceWith(ProgressBar(timer));
-      $("#playButton").remove();
+
       yai.broadcast("startTimer");
     });
 
