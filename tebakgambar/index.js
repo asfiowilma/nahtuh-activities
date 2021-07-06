@@ -11,18 +11,18 @@ var loadedImage = null;
 const BASE_SCORE = 200;
 
 yai.onParticipantJoined = onPlayerJoin;
+yai.onParticipantLeave = onPlayerLeave;
 yai.onIncomingMessage = onIncomingMessage;
 yai.onEventVariableChanged = onEventVariableChanged;
-
-function setAttributes(el, attrs) {
-  for (var key in attrs) {
-    el[key] = attrs[key];
-  }
-}
 
 function onPlayerJoin(message) {
   playerList.push(message);
   HostLobby.onPlayerJoin(message);
+}
+
+function onPlayerLeave(message) {
+  playerList.pop(message);
+  HostLobby.onPlayerLeave(message);
 }
 
 function onIncomingMessage(data) {

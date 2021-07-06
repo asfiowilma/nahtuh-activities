@@ -15,12 +15,6 @@ yai.onParticipantLeave = onPlayerLeave;
 yai.onIncomingMessage = onIncomingMessage;
 yai.onEventVariableChanged = onEventVariableChanged;
 
-function setAttributes(el, attrs) {
-  for (var key in attrs) {
-    el[key] = attrs[key];
-  }
-}
-
 function onPlayerJoin(message) {
   playerList.push(message);
   HostLobby.onPlayerJoin(message);
@@ -59,45 +53,6 @@ function uploadJson(id, callback) {
     } catch (err) {
       console.error(err);
     }
-  };
-}
-
-function imageViewer(img) {
-  return {
-    imageUrl: img || "",
-
-    fileChosen(event) {
-      this.fileToDataUrl(event, (src) => (this.imageUrl = src));
-    },
-
-    fileToDataUrl(event, callback) {
-      if (!event.target.files.length) return;
-      const files = [...event.target.files];
-
-      if (files[0].size > 1024 * 1024) {
-        Compress.compress(files, {
-          size: 1, // the max size in MB, defaults to 2MB
-          quality: 0.6, // the quality of the image, max is 1
-        }).then((result) => {
-          // returns an array of compressed images
-          const img = result[0];
-          const base64str = "data:image/jpeg;charset=utf-8;base64, " + img.data;
-          console.log(img.endSizeInMb + "MiB");
-          callback(base64str);
-          loadedImage = base64str;
-        });
-      } else {
-        let file = event.target.files[0],
-          reader = new FileReader();
-
-        reader.readAsDataURL(file);
-        reader.onload = (e) => {
-          callback(e.target.result);
-          console.log(files[0].size / 1024 / 1024 + "MiB");
-          loadedImage = e.target.result;
-        };
-      }
-    },
   };
 }
 
