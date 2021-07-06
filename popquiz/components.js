@@ -99,54 +99,6 @@ const OptionGrid = (type) => {
   } gap-4"></div>`;
 };
 
-const Dropzone = (img) => {
-  return `
-  <div class="bg-white mb-4">
-    <div class="max-w-md mx-auto rounded-lg overflow-hidden md:max-w-xl">
-      <div class="md:flex">
-        <div class="w-full md:p-3">
-          <div class="
-                  relative
-                  border-dotted
-                  h-80
-                  rounded-lg
-                  border-dashed border-2 border-pink-600
-                  bg-gray-100
-                  p-2
-                ">
-            <div x-data="imageViewer(${img})" class="relative w-full h-full flex justify-center items-center">
-              <!-- Show the image -->
-              <template x-if="imageUrl">
-                <div class="relative rounded-lg h-full w-full"><img :src="imageUrl" class="object-contain w-full h-full" />
-                ${Button(
-                  "danger",
-                  '<i class="fa fa-trash"></i>',
-                  "HostPanel.deleteImage()",
-                  "absolute bottom-2 right-2 z-20"
-                )}</div>
-              </template>
-
-              <!-- Show the gray box when image is not available -->
-              <template x-if="!imageUrl">
-                <div class="flex flex-col items-center">
-                  <i class="fa fa-image fa-4x text-gray-400"></i>
-                  <span class="block text-gray-400 font-normal">Drag and drop image or</span>
-                  ${Button("primary-outline", "Choose file", "", "mt-4")}
-                </div>
-              </template>
-              <!-- Image file selector -->
-              <!-- <input class="mt-2" type="file" accept="image/*" @change="fileChosen" /> -->
-              <input type="file" class="h-full w-full opacity-0 absolute top-0 z-10 cursor-pointer" accept="image/*"
-                @change="fileChosen" name="" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-`;
-};
-
 ProgressBar = (duration) => {
   return `
   <div id="progressBar" class="absolute top-4 w-full px-4 md:px-8 lg:px-16">

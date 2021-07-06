@@ -5,24 +5,23 @@ var isHost = false;
 var isAcceptingPlayers = false;
 var isStarted = false;
 var playerList = [];
+var questions = [];
 
 const BASE_SCORE = 200;
 
 yai.onParticipantJoined = onPlayerJoin;
 yai.onIncomingMessage = onIncomingMessage;
 yai.onEventVariableChanged = onEventVariableChanged;
-// yai.onPlayerLeave
-
-
-function setAttributes(el, attrs) {
-  for (var key in attrs) {
-    el[key] = attrs[key];
-  }
-}
+yai.onParticipantLeave = onPlayerLeave;
 
 function onPlayerJoin(message) {
   playerList.push(message);
   HostLobby.onPlayerJoin(message);
+}
+
+function onPlayerLeave(message) {
+  playerList.pop(message);
+  HostLobby.onPlayerLeave(message);
 }
 
 function onIncomingMessage(data) {
@@ -60,10 +59,9 @@ function uploadJson(id, callback) {
 function detectJoinLink() {
   eventId = new URLSearchParams(window.location.search).get("id");
   if (eventId) {
-    const formId = document.getElementById("gameId");
-    formId.value = eventId;
-    formId.disabled = true;
-    document.getElementById("enterGameId").click();
+    $("#gameId").val(eventId);
+    $("#gameId").disable();
+    $("#enterGameId").click();
   }
 }
 

@@ -22,6 +22,11 @@ const HostLobby = new (function () {
     // console.log(playerList);
   };
 
+  this.onPlayerLeave = (message) => {
+    delete yai.eventVars.leaderboard[message.participantName];
+    this.renderPlayerList();
+  };
+
   this.onEventVariableChanged = (message) => {
     // console.log("ini dari host lobby");
     // console.log(message.name, message.value);
@@ -34,19 +39,22 @@ const HostLobby = new (function () {
 
   this.startQuiz = () => {
     isStarted = true;
-    yai.eventVars.quiz.isStarted = true;
     yai.broadcast({
       isStarted: isStarted,
-      nextQuestion: this.currentQid,
+      totalQuestions: questions.length,
+      nextQId: this.currentQid,
+      nextQuestion: questions[this.currentQid],
     });
-    this.renderQuestion(yai.eventVars.questions[this.currentQid]);
+    this.renderQuestion(questions[this.currentQid]);
   };
 
   this.nextQuestion = () => {
     this.currentQid += 1;
-    if (this.currentQid !== yai.eventVars.questions.length) {
-      yai.broadcast({ nextQuestion: this.currentQid });
-      this.renderQuestion(yai.eventVars.questions[this.currentQid]);
+    yai.eventVars.wrongAnswers = [];
+
+    if (this.currentQid !== questions.length) {
+      yai.broadcast({ nextQId: this.currentQid, nextQuestion: questions[this.currentQid] });
+      this.renderQuestion(questions[this.currentQid]);
       this.answered = 0;
     } else {
       this.showLeaderboard(yai.eventVars.leaderboard, true);
@@ -59,7 +67,7 @@ const HostLobby = new (function () {
       var seconds = parseInt(timer % 60, 10);
       display.text(seconds + "s");
       if (--timer < 0) {
-        display.text(0 + "s");
+        display.text("0s");
         HostLobby.stopTimer();
       }
     }, 1000);
@@ -67,7 +75,7 @@ const HostLobby = new (function () {
 
   this.stopTimer = () => {
     clearInterval(this.timerInterval);
-    this.renderCorrectAnswer(yai.eventVars.questions[this.currentQid]);
+    this.renderCorrectAnswer(questions[this.currentQid]);
   };
 
   this.showLeaderboard = (final = false) => {
@@ -86,40 +94,6 @@ const HostLobby = new (function () {
   this.renderWaitingForPlayers = () => {
     canvas.removeClass("bg-gray-100");
     canvas.addClass("bg-pink-600");
-
-    // let header = document.createElement("div");
-    // let headerContainer = document.createElement("div");
-    // let gameIdDisplay = document.createElement("div");
-    // let startButton = HostPanel.button(
-    //   "light",
-    //   "Start Quiz",
-    //   "HostLobby.startQuiz()",
-    //   "absolute top-4 right-4"
-    // );
-    // setAttributes(header, {
-    //   className: "sticky top-0 w-full bg-pink-800 py-8",
-    //   innerHTML: startButton,
-    // });
-    // header.appendChild(headerContainer);
-    // setAttributes(headerContainer, {
-    //   className:
-    //     "container mx-auto flex flex-col items-center font-bold text-white",
-    //   innerHTML: "Join by entering the game ID:",
-    // });
-    // headerContainer.appendChild(gameIdDisplay);
-    // setAttributes(gameIdDisplay, {
-    //   className:
-    //     "text-4xl font-bold bg-white pt-2 pb-3 px-6 mt-2 rounded-lg text-pink-900 shadow-md",
-    //   innerHTML: eventId,
-    // });
-
-    // let playerListDisplay = document.createElement("div");
-    // setAttributes(playerListDisplay, {
-    //   id: "player-list",
-    //   className: "w-2/3 mx-auto my-8 flex justify-center flex-wrap",
-    // });
-
-    // canvas.append(header, playerListDisplay);
 
     canvas.html(`
       <div class="sticky top-0 w-full bg-pink-800 py-8">
@@ -153,35 +127,11 @@ const HostLobby = new (function () {
   };
 
   this.renderQuestion = (question) => {
-    // let container = document.createElement("div");
-    // let q = document.createElement("div");
-    // let options = document.createElement("div");
-
-    // container.className =
-    //   "relative top-1/2 mx-auto transform -traslate-x-1/2 container mx-auto -translate-y-1/2";
-    // options.className = "grid grid-cols-2 grid-rows-2 gap-3 my-4";
-    // for (let i = 0; i < question.options.length; i++) {
-    //   options.appendChild(
-    //     MainScene.optionButton(question.options[i], false, true)
-    //   );
-    // }
-    // setAttributes(q, {
-    //   className: "text-xl font-bold text-white text-center",
-    //   innerHTML: question.q,
-    // });
-
-    // container.append(q, options);
-    // canvas.innerHTML = "";
-    // canvas.append(this.header(question), container);
-
     canvas.html(
       `
       ${this.header(question)}
-      <div class="flex-1 flex flex-col items-center justify-center mx-auto container md:max-w-lg lg:max-w-xl xl:max-w-3xl px-4 md:px-0">
+      <div class="flex-1 flex flex-col items-center justify-center mx-auto container md:max-w-lg lg:max-w-3xl px-4 md:px-0">
         <div class="text-xl font-bold text-white text-center">${question.q}</div>
-        <!-- <img src="${
-          question.img
-        }" alt="" class="max-w-full max-h-80 object-contain rounded-lg mx-auto" /> DEV -->
         ${
           question.type !== "SA"
             ? '<div id="options" class="w-full grid grid-rows-4 md:grid-cols-2 md:grid-rows-2 gap-3 my-4"></div>'
@@ -196,36 +146,15 @@ const HostLobby = new (function () {
         $("#options").append(OptionButton(question.options[i], false, true));
       }
     }
+
     this.startTimer(question.time - 1, $("#timer"));
   };
 
   this.renderCorrectAnswer = (question) => {
-    // let container = document.createElement("div");
-    // let q = document.createElement("div");
-    // let options = document.createElement("div");
-
-    // container.className =
-    //   "relative top-1/2 mx-auto transform -traslate-x-1/2 container mx-auto -translate-y-1/2";
-    // options.className = "grid grid-cols-2 grid-rows-2 gap-3 my-4";
-    // for (let i = 0; i < question.options.length; i++) {
-    //   options.appendChild(MainScene.optionButton(question.options[i], true, true));
-    // }
-    // setAttributes(q, {
-    //   className: "text-xl font-bold text-white text-center",
-    //   innerHTML: question.q,
-    // });
-
-    // container.append(q, options);
-    // canvas.innerHTML = "";
-    // canvas.append(this.header(question, true, true), container);
     canvas.html(
       `${this.header(question, true, true)}
-      <div id="cAnswer" class="flex-1 flex flex-col items-center justify-center mx-auto container md:max-w-lg lg:max-w-xl xl:max-w-3xl px-4 md:px-0">
+      <div id="cAnswer" class="flex-1 flex flex-col items-center justify-center mx-auto container md:max-w-lg lg:max-w-3xl px-4 md:px-0">
         <div class="text-xl font-bold text-white text-center">${question.q}</div>
-        <!-- <img src="${question.img}" alt="" 
-        class="max-w-full ${
-          question.type === "SA" ? "max-h-96" : "max-h-80"
-        } object-contain rounded-lg mx-auto" /> DEV -->
         ${
           question.type !== "SA"
             ? '<div id="options" class="w-full grid grid-rows-4 md:grid-cols-2 md:grid-rows-2 gap-3 my-4"></div>'
@@ -242,6 +171,49 @@ const HostLobby = new (function () {
       $("#cAnswer").append(
         `<div class="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight bg-white mt-4 text-center w-1/2 mx-auto">${question.options[0]}</div>`
       );
+      if (yai.eventVars.wrongAnswers.length > 0) {
+        $("#cAnswer").append(
+          `<div class="font-bold text-xl text-white text-center mt-4">Wrong answers:</div>
+          <div id="wrongAnswerGrid" class="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 my-4"></div>`
+        );
+      }
+      // render wrong answers to be regraded
+      console.log("counting wrong answers..");
+      wrongAnswers = {};
+      for (var i = 0; i < yai.eventVars.wrongAnswers.length; i++) {
+        var answer = yai.eventVars.wrongAnswers[i];
+        wrongAnswers[answer] = wrongAnswers[answer] ? wrongAnswers[answer] + 1 : 1;
+      }
+      console.log("done counting.");
+      console.log("appending wrong answers..");
+      for (const wrong of Object.entries(wrongAnswers)) {
+        const answer = wrong[0],
+          count = wrong[1];
+        const answerSlug = answer.replace(/[^\w ]+/g, "").replace(/ +/g, "-");
+        $("#wrongAnswerGrid").append(`
+          <div class="border border-white bg-pink-900 text-white rounded-lg p-4 flex flex-col transform ease-in-out">
+            <div class="flex items-center justify-end">${Button(
+              "primary",
+              '<i class="fas fa-check"></i>',
+              "",
+              `transform ease-in-out" id="${answerSlug}`
+            )}</div>
+            <div class="flex-1 text-center my-2">${answer}</div>
+            <div class="text-sm text-right">${count} <i class="fas fa-user ml-2 text-sm"></i></div>
+          </div>
+        `);
+        $(`#${answerSlug}`).hover(
+          () => $(`#${answerSlug}`).html('Mark as correct <i class="fas fa-check"></i>'),
+          () => $(`#${answerSlug}`).html('<i class="fas fa-check"></i>')
+        );
+        $(`#${answerSlug}`).one("click", function () {
+          yai.broadcast({ regrade: answer });
+          $(`#${answerSlug}`).parent().parent().removeClass("bg-pink-900");
+          $(`#${answerSlug}`).unbind("mouseenter mouseleave");
+          $(`#${answerSlug}`).html('Marked as correct <i class="fas fa-check"></i>');
+        });
+        console.log("done appending.");
+      }
     }
     yai.broadcast("showCorrect");
   };
@@ -252,91 +224,41 @@ const HostLobby = new (function () {
 
   this.renderLeaderboard = (leaderboard, final = false) => {
     const leadScore = leaderboard[0].score;
-
-    // let container = document.createElement("div");
-    // let winner = document.createElement("div");
-    // let bars = document.createElement("div");
-    // let quitButton = HostPanel.button(
-    //   "light-outline",
-    //   "Quit",
-    //   "location.reload()",
-    //   "w-40 absolute bottom-4 right-4"
-    // );
-    // setAttributes(container, {
-    //   className:
-    //     "absolute w-1/2 top-1/2 left-1/2 mx-auto transform -translate-y-1/2 -translate-x-1/2",
-    // });
-
-    // winner.className = "my-4 text-center font-bold text-white";
-    // winner.innerHTML = `
-    //   <div class="text-lg ">Congratulations!</div>
-    //   <div class="text-4xl">${leaderboard[0].username}</div>
-    //   <div class="text-lg">Final Score: ${leaderboard[0].score}</div>
-    // `;
-
-    // for (let i = 0; i < leaderboard.length; i++) {
-    //   var userScore = `
-    //     <div class="flex text-white">
-    //       <div class="break-all text-right w-1/4">${leaderboard[i].username}</div>
-    //       <div class="relative ml-4 w-3/4">
-    //         <div class="overflow-hidden h-6 mb-4 text-xs flex rounded-lg">
-    //           <div style="width:${
-    //             (leaderboard[i].score / leadScore) * 100
-    //           }%" class="shadow-none flex flex-col text-center whitespace-nowrap rounded-lg text-pink-900 justify-center bg-pink-300">${
-    //     leaderboard[i].score
-    //   }</div>
-    //         </div>
-    //       </div>          
-    //     </div>
-    //   `;
-    //   bars.innerHTML += userScore;
-    // }
-
-    // if (final) {
-    //   container.appendChild(winner);
-    //   canvas.innerHTML += quitButton;
-    // }
-    // container.appendChild(bars);
-    // canvas.append(container);
-    // if (!final) {
-    //   canvas.append(this.header(yai.eventVars.questions[this.currentQid], true, false));
-    // }
-  
     canvas.html(`
-    ${
-      !final
-        ? this.header(yai.eventVars.questions[this.currentQid], true, false)
-        : Button("light-outline", "Quit", "location.reload()", "w-40 absolute bottom-4 right-4")
-    }
-    <div class="flex-1 flex flex-col items-center justify-center mx-auto container md:max-w-lg lg:max-w-xl xl:max-w-3xl px-4 md:px-0">
       ${
-        final
-          ? `<div class="my-4 text-center font-bold text-white">
-          <div class="text-lg ">Congratulations!</div>
-          <div class="text-4xl">${leaderboard[0].username}</div>
-          <div class="text-lg">Final Score: ${leaderboard[0].score}</div>
-        </div>`
-          : ""
+        !final
+          ? this.header(questions[this.currentQid], true, false)
+          : Button("light-outline", "Quit", "location.reload()", "w-40 absolute bottom-4 right-4")
       }
-      <div id="bars" class="w-full"></div>
-    </div>      
-  `);
-
-  for (let i = 0; i < leaderboard.length; i++) {
-    $("#bars").append(`
-      <div class="flex text-white">
-        <div class="break-all text-right w-1/4">${leaderboard[i].username}</div>
-        <div class="relative ml-4 w-3/4">
-          <div class="overflow-hidden h-6 mb-4 text-xs flex rounded-lg">
-            <div style="width:${(leaderboard[i].score / leadScore) * 100}%" 
-              class="shadow-none flex flex-col text-center whitespace-nowrap rounded-lg text-pink-900 justify-center bg-pink-300">
-              ${leaderboard[i].score}
-            </div>
-          </div>
-        </div>          
-      </div>
+      <div class="flex-1 flex flex-col items-center justify-center mx-auto container md:max-w-lg lg:max-w-3xl px-4 md:px-0">
+        ${
+          final
+            ? `<div class="my-4 text-center font-bold text-white">
+            <div class="text-lg ">Congratulations!</div>
+            <div class="text-4xl">${leaderboard[0].username}</div>
+            <div class="text-lg">Final Score: ${leaderboard[0].score}</div>
+          </div>`
+            : ""
+        }
+        <div id="bars" class="w-full"></div>
+      </div>      
     `);
-  }  
+
+    for (let i = 0; i < leaderboard.length; i++) {
+      $("#bars").append(`
+        <div class="flex text-white">
+          <div class="break-all text-right w-1/4">${leaderboard[i].username}</div>
+          <div class="relative ml-4 w-3/4">
+            <div class="overflow-hidden h-6 mb-4 text-xs flex rounded-lg">
+              <div style="width:${(leaderboard[i].score / leadScore) * 100}%" 
+                class="shadow-none flex flex-col text-center whitespace-nowrap rounded-lg text-pink-900 justify-center bg-pink-300">
+                ${leaderboard[i].score}
+              </div>
+            </div>
+          </div>          
+        </div>
+      `);
+    }
   };
 
   // ============================================================
@@ -344,11 +266,6 @@ const HostLobby = new (function () {
   // ============================================================
 
   this.playerBlock = (str) => {
-    // let playerBlock = document.createElement("div");
-    // setAttributes(playerBlock, {
-    //   className: `py-2 px-6 rounded bg-pink-700 my-2 mx-2 font-bold text-white cursor-pointer hover:shadow-lg transform hover:-translate-y-0.5 hover:-translate-x-0.5 transition ease-in-out`,
-    //   innerHTML: str,
-    // });
     return `
       <div class="py-2 px-6 rounded bg-pink-700 my-2 mx-2 font-bold text-white cursor-pointer hover:shadow-lg transform hover:-translate-y-0.5 hover:-translate-x-0.5 transition ease-in-out">
         ${str}
@@ -357,45 +274,11 @@ const HostLobby = new (function () {
   };
 
   this.header = (question, reveal = false, leaderboard = false) => {
-    // let hBar = document.createElement("div");
-    // let hBarContainer = document.createElement("div");
-    // let nextButton = HostPanel.button(
-    //   "light",
-    //   "Next",
-    //   leaderboard ? "HostLobby.showLeaderboard()" : "HostLobby.nextQuestion()",
-    //   "w-40"
-    // );
-    // let qCounter = document.createElement("div");
-    // setAttributes(qCounter, {
-    //   className: "font-bold text-white",
-    //   innerHTML: `Question ${this.currentQid + 1}/${yai.eventVars.questions.length}`,
-    // });
-    // let aCounter = document.createElement("div");
-    // setAttributes(aCounter, {
-    //   id: "answered",
-    //   className: "font-bold text-white text-right mr-8 mt-4",
-    //   innerText: "Answered 0",
-    // });
-    // let timer = document.createElement("div");
-    // setAttributes(timer, {
-    //   id: "timer",
-    //   className: "font-bold text-white",
-    //   innerHTML: question.time + "s",
-    // });
-
-    // hBar.className = "absolute top-0 w-full flex flex-col items-end";
-    // reveal ? hBarContainer.appendChild(qCounter) : hBarContainer.append(qCounter, timer);
-    // hBarContainer.innerHTML += nextButton;
-    // hBarContainer.className = "bg-pink-700 py-8 px-16 w-full flex items-center justify-between";
-
-    // reveal
-    //   ? hBar.appendChild(hBarContainer)
-    //   : hBar.append(hBarContainer, MainScene.progressBar(question.time), aCounter);
-      return `
+    return `
       <div class="sticky top-0 z-40 w-screen flex flex-col items-end mb-4">
         <div class="bg-pink-700 p-4 pt-8 md:px-8 lg:py-8 lg:px-16 w-full flex items-center justify-between flex-wrap">
           <div class="font-bold text-white">
-            Question ${this.currentQid + 1}/${yai.eventVars.questions.length}
+            Question ${this.currentQid + 1}/${questions.length}
           </div>
           ${!reveal ? `<div id="timer" class="font-bold text-white">${question.time}s</div>` : ""}
           ${Button(
@@ -413,5 +296,5 @@ const HostLobby = new (function () {
         }
       </div>
       `;
-    };
+  };
 })();

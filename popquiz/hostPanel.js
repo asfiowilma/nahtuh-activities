@@ -5,7 +5,7 @@ const HostPanel = new (function () {
     canvas.removeClass("bg-pink-600");
     canvas.addClass("bg-gray-100");
     this.renderHostPanel();
-    this.addQuestion(this.defaultQuestionTemplate);
+    this.addQuestion(this.defaultQuestionTemplate());
     this.renderUtilButton();
     this.renderDropdown();
     this.questionInput();
@@ -94,7 +94,7 @@ const HostPanel = new (function () {
   this.renderDropdown = () => {
     $("#settings").html(this.dropdownSettings.map((d) => this.dropdown(d)).join(""));
     $("#type").change((e) => {
-      if (e.target.value === "SA") yai.eventVars.questions[this.qid].options = [""];
+      if (e.target.value === "SA") questions[this.qid].options = [""];
       this.questionInput();
     });
   };
@@ -129,18 +129,40 @@ const HostPanel = new (function () {
   };
 
   // ============================================================
-  // CRUD yai.eventVars.questions
+  // CRUD questions
   // ============================================================
 
   this.addQuestion = (questionToAdd) => {
-    questionToAdd = questionToAdd || this.defaultQuestionTemplate;
-    yai.eventVars.questions = [...yai.eventVars.questions, questionToAdd];
-    const idx = yai.eventVars.questions.length - 1;
+    questionToAdd = questionToAdd || this.defaultQuestionTemplate();
+    questions = [...questions, questionToAdd];
+    const idx = questions.length - 1;
 
-    $("#question-cards").append(this.questionCard(idx, yai.eventVars.questions[idx]));
+    $("#question-cards").append(this.questionCard(idx, questions[idx]));
 
     this.changeQuestion(idx);
     // console.log("QUESTION ADDED");
+  };
+
+  this.changeAnswer = (idx) => {
+    questions[this.qid].options[idx] = $(`#answer-${this.qid}-${idx}`).val();
+  };
+
+  this.addAnswer = () => {
+    questions[this.qid].options.push("");
+    $("#option-grid").empty();
+    for (let i = 0; i < questions[this.qid].options.length; i++) {
+      const isLast = i === questions[this.qid].options.length - 1;
+      $("#option-grid").append(AnswerInput(questions[this.qid].options[i], i, isLast));
+    }
+  };
+
+  this.deleteAnswer = (idx) => {
+    questions[this.qid].options.splice(idx, 1);
+    $("#option-grid").empty();
+    for (let i = 0; i < questions[this.qid].options.length; i++) {
+      const isLast = i === questions[this.qid].options.length - 1;
+      $("#option-grid").append(AnswerInput(questions[this.qid].options[i], i, isLast));
+    }
   };
 
   this.saveQuestion = () => {
@@ -148,19 +170,29 @@ const HostPanel = new (function () {
     let options = $(".options");
     options = Array.from(options);
 
+    switch (type) {
+      case "MC":
+      case "T/F":
+        options = options.slice(0, type === "T/F" ? 2 : options.length).map((option) => ({
+          b: option.children[0].checked,
+          v: option.children[1].value,
+        }));
+        break;
+      case "SA":
+        options = options.map((option) => option.value);
+        break;
+    }
+
     const savedQuestion = {
       type: type,
       time: $("#time").val(),
       points: $("#points").val(),
       q: $("#question-q").val(),
-      options: options.slice(0, type === "T/F" ? 2 : options.length).map((option) => ({
-        b: option.children[0].checked,
-        v: option.children[1].value,
-      })),
+      options: options,
     };
 
     // console.log(savedQuestion);
-    yai.eventVars.questions[this.qid] = savedQuestion;
+    questions[this.qid] = savedQuestion;
     $(`#qid-${this.qid}`).replaceWith(this.questionCard(this.qid, savedQuestion));
   };
 
@@ -168,10 +200,8 @@ const HostPanel = new (function () {
     let old = this.qid;
     this.qid = idx;
 
-    $(`#qid-${old}`).replaceWith(this.questionCard(old, yai.eventVars.questions[old]));
-    $(`#qid-${this.qid}`).replaceWith(
-      this.questionCard(this.qid, yai.eventVars.questions[this.qid])
-    );
+    $(`#qid-${old}`).replaceWith(this.questionCard(old, questions[old]));
+    $(`#qid-${this.qid}`).replaceWith(this.questionCard(this.qid, questions[this.qid]));
 
     // console.log(`current qid: ${this.qid}`);
 
@@ -181,33 +211,33 @@ const HostPanel = new (function () {
   };
 
   this.duplicateQuestion = () => {
-    const toDuplicate = yai.eventVars.questions[this.qid];
+    const toDuplicate = questions[this.qid];
     this.addQuestion(toDuplicate);
   };
 
   this.deleteQuestion = (qid) => {
-    yai.eventVars.questions.splice(qid, 1);
+    questions.splice(qid, 1);
 
     // resets qid to the first element
     this.qid = 0;
     $("#question-cards").empty();
-    for (let i = 0; i < yai.eventVars.questions.length; i++) {
-      $("#question-cards").append(this.questionCard(i, yai.eventVars.questions[i]));
+    for (let i = 0; i < questions.length; i++) {
+      $("#question-cards").append(this.questionCard(i, questions[i]));
     }
   };
 
   this.importQuestions = () => {
     $("#importJson").click();
     uploadJson("importJson", function (json) {
-      yai.eventVars.questions = JSON.parse(json);
-      // console.log(yai.eventVars.questions[1]);
+      questions = JSON.parse(json);
+      // console.log(questions[1]);
       $("#question-cards").empty();
 
-      for (let i = 0; i < yai.eventVars.questions.length; i++) {
-        // console.log(yai.eventVars.questions[i]);
-        $("#question-cards").append(HostPanel.questionCard(i, yai.eventVars.questions[i]));
+      for (let i = 0; i < questions.length; i++) {
+        // console.log(questions[i]);
+        $("#question-cards").append(HostPanel.questionCard(i, questions[i]));
       }
-      if (yai.eventVars.questions.length > 0) HostPanel.changeQuestion(0);
+      if (questions.length > 0) HostPanel.changeQuestion(0);
       swal({
         icon: "success",
         text: "Question set successfully imported!",
@@ -217,8 +247,7 @@ const HostPanel = new (function () {
   };
 
   this.exportQuestions = () => {
-    var dataStr =
-      "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(yai.eventVars.questions));
+    var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(questions));
     var dlAnchorElem = document.getElementById("export-download");
     dlAnchorElem.setAttribute("href", dataStr);
     dlAnchorElem.setAttribute("download", "questionSet.json");
@@ -235,7 +264,7 @@ const HostPanel = new (function () {
 
   this.validate = () => {
     var text = "";
-    const questionList = yai.eventVars.questions;
+    const questionList = questions;
     if (questionList.length < 1) text = "You must have at least one question.";
     else {
       for (let i = 0; i < questionList.length; i++) {
@@ -244,16 +273,25 @@ const HostPanel = new (function () {
           break;
         }
         var flagCorrectOption = false;
-        for (let j = 0; j < questionList[i].options.length; j++) {
-          if (questionList[i].options[j].v.length === 0) {
-            text = `You can't have an empty option.\nOn Question ${i + 1}`;
-            break;
-          } else if (questionList[i].options[j].b) {
-            flagCorrectOption = true;
+        if (questionList[i].type === "SA") {
+          for (let j = 0; j < questionList[i].options.length; j++) {
+            if (questionList[i].options[j].length === 0) {
+              text = `You can't have an empty option.\nOn Question ${i + 1}`;
+              break;
+            }
           }
-        }
-        if (text.length === 0 && !flagCorrectOption) {
-          text = `You must have at least one correct option.\nOn Question ${i + 1}`;
+        } else {
+          for (let j = 0; j < questionList[i].options.length; j++) {
+            if (questionList[i].options[j].v.length === 0) {
+              text = `You can't have an empty option.\nOn Question ${i + 1}`;
+              break;
+            } else if (questionList[i].options[j].b) {
+              flagCorrectOption = true;
+            }
+          }
+          if (text.length === 0 && !flagCorrectOption) {
+            text = `You must have at least one correct option.\nOn Question ${i + 1}`;
+          }
         }
       }
     }
@@ -275,6 +313,7 @@ const HostPanel = new (function () {
       options: [
         { value: "MC", text: "Multiple Choice" },
         { value: "T/F", text: "True or False" },
+        { value: "SA", text: "Short Answer" },
       ],
     },
     {
@@ -299,19 +338,15 @@ const HostPanel = new (function () {
     },
   ];
 
-  this.defaultQuestionTemplate = {
-    type: "MC",
-    time: "10",
-    points: 1,
-    q: "",
-    options: [
-      { b: false, v: "" },
-      { b: false, v: "" },
-      { b: false, v: "" },
-      { b: false, v: "" },
-    ],
+  this.defaultQuestionTemplate = () => {
+    return {
+      type: "MC",
+      time: "20",
+      points: 1,
+      q: "",
+      options: Array.from({ length: 4 }, (i) => ({ b: false, v: "" })),
+    };
   };
-  this.defaultOption = { b: false, v: "" };
 
   this.dropdownTooltip = (id) => {
     switch (id) {
@@ -341,7 +376,10 @@ const HostPanel = new (function () {
         }</span>
         <span class="ml-1">Q${idx + 1}. ${quiz.q}</span>
       </div>
-      <div class="choices grid grid-cols-2 gap-2">
+      ${
+        quiz.type === "SA"
+          ? `<div class="text-center bg-gray-100 rounded p-1">${quiz.options[0]}</div>`
+          : `<div class="choices grid grid-cols-2 gap-2">
         ${renderOptions
           .map(
             (option) =>
@@ -350,7 +388,8 @@ const HostPanel = new (function () {
               }"></div>`
           )
           .join("")}
-      </div>
+      </div>`
+      }
     </div>
     `;
   };
@@ -358,18 +397,25 @@ const HostPanel = new (function () {
   this.questionInput = () => {
     const type = $("#type").val();
     const length = type === "T/F" ? 2 : 4;
-    
+
     $("#edit-question").html(
       `
     <input id="question-q" value="${
-      yai.eventVars.questions[this.qid].q
+      questions[this.qid].q
     }" class="w-100 mb-4 shadow appearance-none border rounded w-full py-2 
     px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="Type your question here">
     ` + OptionGrid(type)
     );
-    for (let i = 0; i < length; i++) {
-      const optionVal = yai.eventVars.questions[this.qid].options[i] || this.defaultOption;
-      $("#option-grid").append(OptionInput(this.qid, i, optionVal));
+    if (type === "SA") {
+      for (let i = 0; i < questions[this.qid].options.length; i++) {
+        const isLast = i === questions[this.qid].options.length - 1;
+        $("#option-grid").append(AnswerInput(questions[this.qid].options[i], i, isLast));
+      }
+    } else {
+      for (let i = 0; i < length; i++) {
+        const optionVal = questions[this.qid].options[i] || { b: false, v: "" };
+        $("#option-grid").append(OptionInput(this.qid, i, optionVal));
+      }
     }
   };
 
@@ -396,7 +442,7 @@ const HostPanel = new (function () {
          .map(
            (option) => `
        <option ${
-         option.value === yai.eventVars.questions[this.qid][dropdown.id] && `selected="selected"`
+         option.value === questions[this.qid][dropdown.id] && `selected="selected"`
        } value="${option.value}" >${option.text}</option>
        `
          )
