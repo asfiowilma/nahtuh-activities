@@ -14,6 +14,12 @@ const MainScene = new (function () {
     this.renderWaitingScreen();
   };
 
+  this.onLeave = () => {
+    yai.leaveEvent().then(() => {
+      location.reload();
+    });
+  };
+
   this.onIncomingMessage = (content) => {
     if (content.isStarted) {
       isStarted = isStarted;
@@ -31,6 +37,16 @@ const MainScene = new (function () {
       this.currentQuestion = content.nextQuestion;
       this.resetAnswer();
       this.renderQuestion(this.currentQuestion);
+    }
+
+    if (content.regrade && content.regrade == this.answer) {
+      console.log("regrading...");
+      console.log(`user answer = ${this.answer}`);
+      console.log(`to regrade = ${content.regrade}`);
+      this.scoringHandler(true);
+      this.renderShowScore(this.currentQuestion);
+      this.answeredCorrect = false;
+      console.log("finished regrading.");
     }
   };
 
@@ -59,6 +75,9 @@ const MainScene = new (function () {
       this.currentScore += score;
       this.scoreEarned = score;
       this.answeredCorrect = true;
+    } else {
+      console.log("sending wrong answer");
+      yai.eventVars.wrongAnswers = [...yai.eventVars.wrongAnswers, this.answer.toLowerCase()];
     }
     yai.eventVars.leaderboard = {
       ...yai.eventVars.leaderboard,
@@ -111,7 +130,7 @@ const MainScene = new (function () {
         </div>
       </div>
     </div>
-    ` + Button("light-outline", "Quit", "location.reload()", "w-40 absolute bottom-4 right-4")
+    ` + Button("light-outline", "Quit", "MainScene.onLeave()", "w-20 absolute bottom-4 right-4")
     );
   };
 
@@ -128,7 +147,12 @@ const MainScene = new (function () {
             ? '<div id="options" class="w-full grid grid-rows-4 md:grid-cols-2 md:grid-rows-2 gap-3 my-4"></div>'
             : `<div class="flex w-full px-4 w-full xl:w-2/3 mt-4 mx-auto">
             <input id="answer" type="text" placeholder="Enter correct answer" class="options shadow appearance-none border rounded flex-1 w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-            ${Button("primary", "Submit", "MainScene.answerHandler()", `ml-2 flex items-center`)}
+            ${Button(
+              "primary",
+              "Submit",
+              "MainScene.answerHandler()",
+              `ml-2 flex items-center" id="submitAnswer"`
+            )}
             </div>`
         }
       </div>
@@ -140,6 +164,15 @@ const MainScene = new (function () {
       for (let i = 0; i < question.options.length; i++) {
         $("#options").append(OptionButton(question.options[i]));
       }
+    } else {
+      $("#answer").focus();
+      $("#answer").on("keypress", function (e) {
+        if (e.which == 13) {
+          console.log("enter key pressed");
+          e.preventDefault();
+          $("#submitAnswer").click();
+        }
+      });
     }
 
     this.timeRemaining = question.time;
@@ -185,7 +218,9 @@ const MainScene = new (function () {
     canvas.html(
       `
       <div class="flex-1 flex flex-col items-center justify-center mx-auto container md:max-w-lg lg:max-w-xl xl:max-w-3xl px-4 md:px-0 mb-4 py-8">
-        <div class="text-2xl font-bold text-white">${this.answeredCorrect ? "You're correct!" : "Better luck next time~"}</div>
+        <div class="text-2xl font-bold text-white">${
+          this.answeredCorrect ? "You're correct!" : "Better luck next time~"
+        }</div>
         <div class="my-4 text-center font-bold text-white">
           <div class="text-white text-base text-center">Current score:</div>
           <div class="text-bold text-3xl text-center text-white">
@@ -214,8 +249,12 @@ const MainScene = new (function () {
         );
       } else {
         $("#cAnswer").append(
-          `<div class="shadow rounded py-2 px-3 text-gray-700 leading-tight bg-green-400 text-center mx-auto">${this.currentQuestion.options[0]}</div>
-          <div class="shadow appearance-none rounded py-2 px-3 text-white leading-tight bg-blue-900 text-center mx-auto">${this.answer}</div>`
+          `<div class="shadow rounded py-2 px-3 text-gray-700 leading-tight bg-green-400 text-center mx-auto">${
+            this.currentQuestion.options[0]
+          }</div>
+          <div class="shadow appearance-none rounded py-2 px-3 text-white leading-tight bg-blue-900 text-center mx-auto">${
+            this.answer || "unanswered"
+          }</div>`
         );
       }
     }
@@ -228,11 +267,14 @@ const MainScene = new (function () {
     }));
     leaderboard = leaderboard.sort((a, b) => (a.score > b.score ? -1 : 1));
     const rank = leaderboard.findIndex((x) => x.username === username) + 1;
+    const remarks = ["Congratulations!", "Great job!", 'You tried your best :")'];
     canvas.html(
       `
       <div class="flex-1 flex flex-col items-center justify-center mx-auto container md:max-w-lg lg:max-w-xl xl:max-w-3xl px-4 md:px-0 mb-4">
         <div class="my-4 text-center font-bold text-white">
-          <div class="text-lg ">Congratulations!</div>
+          <div class="text-lg ">${
+            rank <= 3 ? remarks[0] : rank == leaderboard.length ? remarks[2] : remarks[1]
+          }</div>
           <div class="text-4xl">
             You ranked ${rank + nth(rank)} out of ${leaderboard.length}
           </div>
@@ -266,7 +308,7 @@ const MainScene = new (function () {
     return `
     <div class="bg-blue-700 p-4 md:py-8 md:px-16 relative w-screen flex items-center justify-between">
       <div class="text-2xl font-bold text-white">${username}</div>
-      ${Button("light-outline", "Quit", "location.reload()", "w-20 md:w-40")}
+      ${Button("light-outline", "Quit", "MainScene.onLeave()", "w-20 md:w-40")}
     </div>
     `;
   };
