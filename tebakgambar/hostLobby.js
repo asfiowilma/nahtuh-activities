@@ -50,6 +50,8 @@ const HostLobby = new (function () {
 
   this.nextQuestion = () => {
     this.currentQid += 1;
+    yai.eventVars.wrongAnswers = [];
+
     if (this.currentQid !== questions.length) {
       yai.broadcast({ nextQId: this.currentQid, nextQuestion: questions[this.currentQid] });
       this.renderQuestion(questions[this.currentQid]);
@@ -194,7 +196,7 @@ const HostLobby = new (function () {
           count = wrong[1];
         const answerSlug = answer.replace(/[^\w ]+/g, "").replace(/ +/g, "-");
         $("#wrongAnswerGrid").append(`
-          <div class="border border-white bg-green-900 text-white rounded-lg p-4 flex flex-col transform ease-in-out">
+          <div class="border border-white bg-blue-900 text-white rounded-lg p-4 flex flex-col transform ease-in-out">
             <div class="flex items-center justify-end">${Button(
               "primary",
               '<i class="fas fa-check"></i>',
@@ -211,7 +213,7 @@ const HostLobby = new (function () {
         );
         $(`#${answerSlug}`).one("click", function () {
           yai.broadcast({ regrade: answer });
-          $(`#${answerSlug}`).parent().parent().removeClass("bg-green-900");
+          $(`#${answerSlug}`).parent().parent().removeClass("bg-blue-900");
           $(`#${answerSlug}`).unbind("mouseenter mouseleave");
           $(`#${answerSlug}`).html('Marked as correct <i class="fas fa-check"></i>');
         });

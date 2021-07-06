@@ -5,7 +5,7 @@ const HostPanel = new (function () {
     canvas.removeClass("bg-green-600");
     canvas.addClass("bg-gray-100");
     this.renderHostPanel();
-    this.addQuestion(this.defaultQuestionTemplate("MC"));
+    this.addQuestion(this.defaultQuestionTemplate());
     this.renderUtilButton();
     this.renderDropdown();
     this.questionInput();
@@ -174,7 +174,7 @@ const HostPanel = new (function () {
   // ============================================================
 
   this.addQuestion = (questionToAdd) => {
-    questionToAdd = questionToAdd || this.defaultQuestionTemplate("MC");
+    questionToAdd = questionToAdd || this.defaultQuestionTemplate();
     questions = [...questions, questionToAdd];
     const idx = questions.length - 1;
 
@@ -409,7 +409,7 @@ const HostPanel = new (function () {
     },
   ];
 
-  this.defaultQuestionTemplate = (type) => {
+  this.defaultQuestionTemplate = () => {
     return {
       type: "MV",
       time: "10",

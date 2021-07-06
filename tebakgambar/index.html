@@ -1,18 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.3/css/all.css" integrity="sha384-SZXxX4whJ79/gErwcOYf+zWLeJdY/qpuqC4cAa9rOGUstPomtqpuNWT9wdPEn2fk" crossorigin="anonymous" />
-    <script src="https://code.jquery.com/jquery-3.6.0.slim.min.js" integrity="sha256-u7e5khyithlIdTpu22PHhENmPcRdFiHRjhAuHcs05RI=" crossorigin="anonymous"></script>
+    <link
+      rel="stylesheet"
+      href="https://use.fontawesome.com/releases/v5.15.3/css/all.css"
+      integrity="sha384-SZXxX4whJ79/gErwcOYf+zWLeJdY/qpuqC4cAa9rOGUstPomtqpuNWT9wdPEn2fk"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://code.jquery.com/jquery-3.6.0.slim.min.js"
+      integrity="sha256-u7e5khyithlIdTpu22PHhENmPcRdFiHRjhAuHcs05RI="
+      crossorigin="anonymous"
+    ></script>
     <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js"></script>
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.7/signalr.min.js"></script>
 
-<!-- PRODUCTION -->
+    <!-- PRODUCTION -->
     <script src="./bundle.js"></script>
     <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/observable-slim.js"></script>
     <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/yai-settings.js"></script>
@@ -26,36 +34,46 @@
     <script src="../js/yai.js"></script> -->
     <title>Guess the Picture</title>
     <style>
-        @keyframes progressbar-countdown {
-            0% {
-                width: 100%;
-            }
-            100% {
-                width: 0%;
-            }
+      @keyframes progressbar-countdown {
+        0% {
+          width: 100%;
         }
-        
-        .tooltip {
-            visibility: hidden;
-            position: absolute;
+        100% {
+          width: 0%;
         }
-        
-        .has-tooltip:hover .tooltip {
-            visibility: visible;
-            z-index: 100;
-        }
-    </style>
-</head>
+      }
 
-<body>
+      .tooltip {
+        visibility: hidden;
+        position: absolute;
+      }
+
+      .has-tooltip:hover .tooltip {
+        visibility: visible;
+        z-index: 100;
+      }
+    </style>
+  </head>
+
+  <body>
     <div id="canvas" class="canvas w-full h-fit-content min-h-screen flex flex-col bg-blue-800">
-        <div id="login-panel" class="flex-1 flex flex-col w-full md:w-96 px-4 mx-auto items-center justify-center">
-            <h1 class="text-center text-3xl md:text-4xl font-bold text-white">Guess the Picture!</h1>
-            <div class="p-4 bg-white rounded-lg mt-4 mb-2 w-full">
-                <form class="flex flex-col justify-center items-stretch">
-                    <label class="hidden" for="gameId">Game ID</label>
-                    <input type="text" class="rounded ring-1 ring-gray-300 px-4 py-2 mb-3 text-center" id="gameId" placeholder="Game ID" />
-                    <div id="enterGameId" class="
+      <div
+        id="login-panel"
+        class="flex-1 flex flex-col w-full md:w-96 px-4 mx-auto items-center justify-center"
+      >
+        <h1 class="text-center text-3xl md:text-4xl font-bold text-white">Guess the Picture!</h1>
+        <div class="p-4 bg-white rounded-lg mt-4 mb-2 w-full">
+          <form class="flex flex-col justify-center items-stretch">
+            <label class="hidden" for="gameId">Game ID</label>
+            <input
+              type="text"
+              class="rounded ring-1 ring-gray-300 px-4 py-2 mb-3 text-center"
+              id="gameId"
+              placeholder="Game ID"
+            />
+            <div
+              id="enterGameId"
+              class="
                 text-center
                 bg-gray-600
                 text-white
@@ -64,19 +82,24 @@
                 py-2
                 cursor-pointer
                 hover:bg-gray-500
-              " onclick="renderUsernameInput(false)">
-                        Enter
-                    </div>
-                </form>
+              "
+              onclick="renderUsernameInput(false)"
+            >
+              Enter
             </div>
-            <div class="text-white hover:text-blue-300 hover:underline cursor-pointer text-center" onclick="renderUsernameInput(true)">
-                Create new Game
-            </div>
+          </form>
         </div>
-
-
-</body>
-<footer>
+        <div
+          class="text-white hover:text-blue-300 hover:underline cursor-pointer text-center"
+          onclick="renderUsernameInput(true)"
+        >
+          Create new Game
+        </div>
+      </div>
+      <a href="https://www.freepik.com/vectors/people" class="text-blue-400 text-sm m-2 absolute bottom-0 left-0">People vector created by freepik - www.freepik.com</a>
+    </div>
+  </body>
+  <footer>
     <!-- DEV -->
     <!-- <script src="/tebakgambar/components.js"></script>
     <script src="/tebakgambar/mainScene.js"></script>
@@ -91,6 +114,5 @@
     <script src="./hostPanel.js"></script>
     <script src="./hostLobby.js"></script>
     <script src="./mainScene.js"></script>
-</footer>
-
+  </footer>
 </html>
