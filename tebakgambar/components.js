@@ -166,7 +166,7 @@ OptionButton = (option, reveal = false, isHost = false, answer = null) => {
   } ease-in-out text-center">
       ${option.v}
     </div>
-  `)
+  `);
   if (!isHost)
     optionBtn.one("click", function () {
       MainScene.answerHandler(option);

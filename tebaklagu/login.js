@@ -48,24 +48,11 @@ function validate(uname) {
   return true;
 }
 
-function createRoom() {
+function joinOrCreateRoom() {
   // console.log("creating room ...");
   username = $("#username").val();
   if (validate(username)) LoginScene.start();
-  else
-    $("#enterBtn").one("click", function () {
-      isHost ? createRoom() : joinRoom();
-    });
-}
-
-function joinRoom() {
-  // console.log("joining room ...");
-  username = $("#username").val();
-  if (validate(username)) LoginScene.start();
-  else
-    $("#enterBtn").one("click", function () {
-      isHost ? createRoom() : joinRoom();
-    });
+  else $("#enterBtn").one("click", () => joinOrCreateRoom());
 }
 
 function renderUsernameInput(newHost = false) {
@@ -106,9 +93,8 @@ function renderUsernameInput(newHost = false) {
       $("#enterBtn").click();
     }
   });
-  $("#enterBtn").one("click", function () {
-    isHost ? createRoom() : joinRoom();
-  });
+  $("#enterBtn").one("click", () => joinOrCreateRoom());
+
   $("#backlink").click(() => canvas.html(loginPanel));
 }
 

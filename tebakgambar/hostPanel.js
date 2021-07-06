@@ -5,7 +5,7 @@ const HostPanel = new (function () {
     canvas.removeClass("bg-blue-800");
     canvas.addClass("bg-gray-100");
     this.renderHostPanel();
-    this.addQuestion(this.defaultQuestionTemplate("MC"));
+    this.addQuestion(this.defaultQuestionTemplate());
     this.renderUtilButton();
     this.renderDropdown();
     this.questionInput();
@@ -108,7 +108,8 @@ const HostPanel = new (function () {
           `HostPanel.deleteQuestion(${this.qid})`,
           "text-sm mr-2"
         ),
-        "Delete", "w-auto -top-8 right-9"
+        "Delete",
+        "w-auto -top-8 right-9"
       ) +
         Tooltip(
           Button(
@@ -117,21 +118,22 @@ const HostPanel = new (function () {
             `HostPanel.duplicateQuestion(${this.qid})`,
             "text-sm"
           ),
-          "Duplicate", "w-auto -top-8 right-0"
+          "Duplicate",
+          "w-auto -top-8 right-0"
         )
     );
   };
 
   this.toggleSidebar = () => {
-    $("#sidebar").toggleClass("-translate-x-full")
-  }
+    $("#sidebar").toggleClass("-translate-x-full");
+  };
 
   // ============================================================
   // CRUD Questions
   // ============================================================
 
   this.addQuestion = (questionToAdd) => {
-    questionToAdd = questionToAdd || this.defaultQuestionTemplate("MC");
+    questionToAdd = questionToAdd || this.defaultQuestionTemplate();
     questions = [...questions, questionToAdd];
     const idx = questions.length - 1;
 
@@ -333,24 +335,15 @@ const HostPanel = new (function () {
     },
   ];
 
-  this.defaultQuestionTemplate = (type) => {
+  this.defaultQuestionTemplate = () => {
     return {
       type: "MC",
       time: "20",
       points: 1,
       img: "",
-      options:
-        type === "SA"
-          ? [""]
-          : [
-              { b: false, v: "" },
-              { b: false, v: "" },
-              { b: false, v: "" },
-              { b: false, v: "" },
-            ],
+      options: Array.from({ length: 4 }, (i) => ({ b: false, v: "" })),
     };
   };
-  this.defaultOption = { b: false, v: "" };
 
   this.dropdownTooltip = (id) => {
     switch (id) {
@@ -413,7 +406,7 @@ const HostPanel = new (function () {
       }
     } else {
       for (let i = 0; i < length; i++) {
-        const optionVal = questions[this.qid].options[i] || this.defaultOption;
+        const optionVal = questions[this.qid].options[i] || { b: false, v: "" };
         $("#option-grid").append(OptionInput(this.qid, i, optionVal));
       }
     }

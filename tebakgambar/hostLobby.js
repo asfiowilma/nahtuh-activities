@@ -232,7 +232,7 @@ const HostLobby = new (function () {
     canvas.html(`
       ${
         !final
-          ? this.header(yai.eventVars.questions[this.currentQid], true, false)
+          ? this.header(questions[this.currentQid], true, false)
           : Button("light-outline", "Quit", "location.reload()", "w-40 absolute bottom-4 right-4")
       }
       <div class="flex-1 flex flex-col items-center justify-center mx-auto container md:max-w-lg lg:max-w-xl xl:max-w-3xl px-4 md:px-0">
