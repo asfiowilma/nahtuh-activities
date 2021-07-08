@@ -1,4 +1,4 @@
-![tebak gambar banner.png](./tebakgambar banner.png)
+![tebakgambar banner](https://user-images.githubusercontent.com/56245115/124872233-338d2d00-dfef-11eb-9450-c48dc6a388dc.png)
 
 > Can you guess what the picture is saying? 
 
