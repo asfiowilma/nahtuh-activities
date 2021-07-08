@@ -4,9 +4,9 @@ Code base for activities deployed on [nahtuh.com](http://dev.nahtuh.com/). Built
 
 ## Contents
 
-1. [Pop! Quiz](./popquiz/readme.md)
-2. [Guess the Picture!](./tebakgambar/readme.md)
-3. [What's that Song?](./tebaklagu/readme.md)
+1. [Pop! Quiz](./popquiz)
+2. [Guess the Picture!](./tebakgambar)
+3. [What's that Song?](./tebaklagu)
 
 ## Commit Tags
 
