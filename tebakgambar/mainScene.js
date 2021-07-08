@@ -75,7 +75,7 @@ const MainScene = new (function () {
       this.currentScore += score;
       this.scoreEarned = score;
       this.answeredCorrect = true;
-    } else {
+    } else if (this.currentQuestion.type === "SA" && !isCorrect) {
       console.log("sending wrong answer");
       yai.eventVars.wrongAnswers = [...yai.eventVars.wrongAnswers, this.answer.toLowerCase()];
     }
