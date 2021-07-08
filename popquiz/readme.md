@@ -1,4 +1,4 @@
-### ![popquiz banner](./popquiz banner.png)
+![popquiz banner](https://user-images.githubusercontent.com/56245115/124871953-e315cf80-dfee-11eb-9f99-3bd27e6181d1.png)
 
 > Build your own set of quizzes and compete with others to be the smartest in the room!
 
