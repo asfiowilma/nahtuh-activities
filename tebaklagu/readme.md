@@ -1,4 +1,4 @@
-![tebaklagu banner.png](./tebaklagu banner.png)
+![tebaklagu banner](https://user-images.githubusercontent.com/56245115/124872321-50296500-dfef-11eb-93b0-37a733d39216.png)
 
 > Listen to a snippet of a song and guess the title!  
 
