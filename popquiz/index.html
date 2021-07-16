@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.3/css/all.css" integrity="sha384-SZXxX4whJ79/gErwcOYf+zWLeJdY/qpuqC4cAa9rOGUstPomtqpuNWT9wdPEn2fk" crossorigin="anonymous" />
-    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet"/>
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet" />
     <script src="https://code.jquery.com/jquery-3.6.0.slim.min.js" integrity="sha256-u7e5khyithlIdTpu22PHhENmPcRdFiHRjhAuHcs05RI=" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.7/signalr.min.js"></script>
@@ -40,69 +40,289 @@
     </style>
   </head>
   <body>
-    <div id="canvas" class="canvas w-full h-fit-content min-h-screen flex flex-col bg-pink-600">
-      <div
-        id="login-panel"
-        class="flex-1 flex flex-col w-full md:w-96 px-4 mx-auto items-center justify-center"
-      >
+    <div id="canvas" class="canvas w-full h-fit-content min-h-screen flex flex-col bg-gradient-to-br from-pink-400 to-pink-600">
+      <!-- LOGIN PANEL -->
+      <div id="login-panel" class="flex-1 flex flex-col w-full md:w-96 px-4 mx-auto items-center justify-center">
         <h1 class="text-center text-3xl md:text-4xl font-bold text-white">Pop! Quiz</h1>
-        <div class="p-4 bg-white rounded-lg mt-4 mb-2 w-full shadow-md">
+        <div class="p-4 bg-white rounded-lg mt-4 mb-2 w-full shadow-lg">
           <form class="flex flex-col justify-center items-stretch">
             <label class="hidden" for="gameId">Game ID</label>
-            <input
-              type="text"
-              class="rounded ring-1 ring-gray-300 px-4 py-2 mb-3 text-center"
-              id="gameId"
-              placeholder="Game ID"
-            />
-            <div
-              id="enterGameId"
-              class="
-                text-center
-                bg-gray-600
-                text-white
-                rounded
-                font-bold
-                py-2
-                cursor-pointer
-                hover:bg-gray-500
-              "
-              onclick="renderUsernameInput(false)"
-            >
-              Enter
-            </div>
+            <input type="text" class="rounded ring-1 ring-gray-300 px-4 py-2 mb-3 text-center" id="game-id" placeholder="Game ID" />
+            <div id="enter-game-id" class="btn btn-dark font-bold py-2">Enter</div>
           </form>
         </div>
-        <div
-          class="
-            text-white
-            hover:text-pink-300
-            hover:underline
-            cursor-pointer
-            text-center
-          "
-          onclick="renderUsernameInput(true)"
-        >
-          Create new Game
+        <div id="create-link" class="text-white hover:text-pink-300 hover:underline text-center cursor-pointer">Create new Game</div>
+      </div>
+
+      <!-- USERNAME PANEL -->
+      <div id="username-panel" class="flex-1 flex flex-col w-full md:w-96 px-4 mx-auto items-center justify-center hidden">
+        <div id="create-or-enter" class="text-center text-3xl md:text-4xl font-bold text-white"></div>
+        <div class="p-4 bg-white shadow-lg rounded-lg mt-4 mb-2 w-full">
+          <div class="flex flex-col justify-center items-stretch">
+            <input type="text" id="username" class="rounded ring-1 ring-gray-300 px-4 py-2 mb-3 text-center" />
+            <div id="enter-button" class="btn btn-dark font-bold py-2"></div>
+          </div>
+        </div>
+        <div id="backlink" class="text-white hover:text-pink-300 hover:underline cursor-pointer text-center">Back</div>
+      </div>
+
+      <!-- HOST PANEL -->
+      <div id="host-panel" class="container mx-auto py-8 px-4 lg:px-0 flex items-start hidden">
+        <div id="menu-toggle" class="rounded-full bg-pink-500 h-10 w-10 flex items-center justify-center z-50 shadow-lg fixed top-2 left-2 block md:hidden"><i class="fas fa-bars text-white"></i></div>
+        <div id="sidebar" class="bg-white w-60 fixed top-8 left-0 z-40 md:translate-x-0 md:relative md:top-0 md:left-0 rounded-lg flex flex-col align-stretch p-4 transition ease-in-out transform -translate-x-full h-screen md:h-full overflow-y-auto pb-12 md:pb-4">
+          <div class="flex flex-col mb-2">
+            <div class="font-bold">Your username:</div>
+            <span id="hp-username"></span>
+          </div>
+          <div class="flex flex-col">
+            <div class="font-bold">Game ID:</div>
+            <span id="hp-event-id"></span>
+          </div>
+          <hr class="my-2" />
+          <div class="font-bold mb-2 relative inline-flex items-center justify-between">
+            Import / Export:
+            <i class="fas fa-question-circle text-gray-300" title="Import a question set you made before, or export the current question set for future use."></i>
+          </div>
+          <div class="grid grid-cols-2 gap-4 mb-1">
+            <div class="w-full">
+              <div id="hp-import-btn" class="btn btn-primary-outline w-full">Import</div>
+              <input id="importJson" value="import json" type="file" accept="application/json" style="display: none" />
+            </div>
+            <a id="export-download"> <div id="hp-export-btn" class="btn btn-primary-outline w-full">Export</div></a>
+          </div>
+          <hr class="my-2" />
+          <div class="font-bold mb-1">Questions:</div>
+          <div id="question-cards">
+            <div class="q-card hidden my-2 bg-gradient-to-t from-pink-200 to-pink-300 scale-105 p-2 rounded cursor-pointer transform hover:scale-105 transistion duration-300 ease-in-out">
+              <div class="mb-2">
+                <span class="q-type bg-pink-200 text-pink-600 border border-pink-600 rounded-full py-0.5 px-2 text-xs font-bold"></span>
+                <span class="q-header ml-1"></span>
+              </div>
+              <div class="correct-answer grid grid-cols-2 gap-2"></div>
+            </div>
+          </div>
+          <div id="hp-add-question-btn" class="btn btn-secondary w-full">Add Question</div>
+        </div>
+        <div id="panel" class="flex-1 flex-col md:ml-4">
+          <div id="mainPanel" class="bg-white rounded-lg p-4 relative w-full">
+            <div class="flex w-full justify-between">
+              <div class="flex-1 mr-4">Use this panel to edit your question set.</div>
+              <div id="util-buttons" class="btn-wrapper flex relative">
+                <div id="hp-delete-question-btn" title="Delete question" class="btn btn-secondary-outline text-sm mr-2"><i class="fas fa-trash-alt"></i></div>
+                <div id="hp-clone-question-btn" title="Duplicate question" class="btn btn-secondary text-sm"><i class="fas fa-clone"></i></div>
+              </div>
+            </div>
+            <form class="mt-6">
+              <!-- DROPDOWN SETTINGS -->
+              <div id="settings" class="settings grid grid-rows-3 md:grid-rows-1 md:grid-cols-3 gap-2">
+                <!-- QUESTION TYPE -->
+                <div class="type flex flex-col align-stretch rounded">
+                  <label for="type" class="font-bold mb-2 flex justify-between items-center">
+                    <span>Question Type:</span>
+                    <i title="The amount of options depends on the type of question" class="fas fa-question-circle text-gray-300"></i>
+                  </label>
+                  <div class="inline-block relative">
+                    <select name="type" id="type" class="appearance-none w-full bg-white border border-gray-400 hover:border-gray-500 px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none focus:shadow-outline"></select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700"><i class="fas fa-chevron-down text-gray-500"></i></div>
+                  </div>
+                </div>
+
+                <!-- TIME LIMIT -->
+                <div class="time flex flex-col align-stretch rounded">
+                  <label for="time" class="font-bold mb-2 flex justify-between items-center">
+                    <span>Time Limit:</span>
+                    <i title="The time limit for answering each question" class="fas fa-question-circle text-gray-300"></i>
+                  </label>
+                  <div class="inline-block relative">
+                    <select name="time" id="time" class="appearance-none w-full bg-white border border-gray-400 hover:border-gray-500 px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none focus:shadow-outline"></select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700"><i class="fas fa-chevron-down text-gray-500"></i></div>
+                  </div>
+                </div>
+
+                <!-- POINT REWARD -->
+                <div class="points flex flex-col align-stretch rounded">
+                  <label for="points" class="font-bold mb-2 flex justify-between items-center">
+                    <span>Points:</span>
+                    <i title="Amount of points player can gain for this question" class="fas fa-question-circle text-gray-300"></i>
+                  </label>
+                  <div class="inline-block relative">
+                    <select name="points" id="points" class="appearance-none w-full bg-white border border-gray-400 hover:border-gray-500 px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none focus:shadow-outline"></select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700"><i class="fas fa-chevron-down text-gray-500"></i></div>
+                  </div>
+                </div>
+              </div>
+              <hr class="my-4" />
+
+              <!-- EDIT QUESTION PANEL -->
+              <div id="edit-question">
+                <!-- ANSWER INPUT TEMPLATE -->
+                <div class="hidden answer-input flex items-center">
+                  <input type="text" placeholder="Enter correct answer" class="option-input w-100 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                  <div class="btn btn-danger-outline delete-answer-btn ml-2"><i class="fa fa-trash"></i></div>
+                  <div class="btn btn-secondary-outline add-answer-btn ml-2"><i class="fa fa-plus"></i></div>
+                </div>
+
+                <!-- OPTION INPUT TEMPLATE -->
+                <div class="hidden option-input flex items-center">
+                  <input type="radio" name="isCorrect" class="form-radio h-6 w-6 mr-2 text-pink-600" />
+                  <input type="text" class="w-100 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                </div>
+
+                <!-- QUESTION INPUT -->
+                <input id="hp-question-q" class="w-100 mb-4 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="Type your question here" />
+                <div id="hp-option-grid-sa" class="grid gap-4 grid-cols-1"></div>
+                <div id="hp-option-grid-mc" class="grid gap-4 grid-rows-4 md:grid-rows-none md:grid-cols-2"></div>
+                <div id="hp-option-grid-tf" class="grid gap-4 grid-rows-2 md:grid-rows-none md:grid-cols-2"></div>
+              </div>
+              <div class="btnwrapper flex justify-end mt-4">
+                <div id="hp-save-question-btn" class="btn btn-primary w-full md:w-40">Save</div>
+              </div>
+            </form>
+          </div>
+          <div id="startPanel" class="bg-white rounded-lg p-4 mt-4 text-center w-full">
+            When you're ready to start the quiz, press start.
+            <div class="flex mt-2 justify-center">
+              <div id="hp-start-quiz-btn" class="btn btn-primary w-40 px-4 text-lg ml-4">Start</div>
+            </div>
+          </div>
         </div>
       </div>
-      <a href="https://www.vecteezy.com/free-vector/vector" class="text-pink-400 text-sm m-2 absolute bottom-0 left-0">Vector Vectors by Vecteezy</a>
+
+      <!-- LOBBY -->
+      <div id="lobby" class="hidden flex-1 flex flex-col">
+        <!-- WAITING SCREEN -->
+        <div id="waiting-for-players" class="hidden w-full">
+          <div class="sticky top-0 w-full bg-gradient-to-b from-pink-800 via-pink-700 to-transparent py-8 pb-24">
+            <div class="container mx-auto flex flex-col items-center font-bold text-white">
+              Join by entering the game ID:
+              <div class="bg-white mt-2 rounded-lg shadow-md pt-2 pb-4 px-4">
+                <div id="hl-event-id" class="text-4xl font-bold text-pink-900 pb-3"></div>
+                <div id="hl-start-quiz-btn" class="btn btn-dark">Start Quiz</div>
+              </div>
+            </div>
+          </div>
+          <div class="hidden player-block py-2 px-6 rounded bg-pink-700 my-2 mx-2 font-bold text-white cursor-pointer hover:shadow-lg transform hover:-translate-y-0.5 hover:-translate-x-0.5 transition ease-in-out"></div>
+          <div id="player-list" class="flex-1 w-5/6 md:w-2/3 mx-auto -mt-8 mb-8 flex justify-center items-start flex-wrap"></div>
+        </div>
+
+        <!-- PLAYER WAITING SCREEN -->
+        <div id="waiting-for-host" class="hidden flex-1 flex items-center justify-center px-4 md:px-0">
+          <div class="bg-white shadow-lg flex flex-col p-4 rounded-lg w-full md:w-1/2 mx-auto items-center">
+            <div class="pl-username text-center text-4xl font-bold text-pink-800"></div>
+            <div class="text-center text-xl font-bold">You're in! Check if your name is on the host's screen.</div>
+            <hr class="my-4 w-full" />
+            <div class="text-center text-xl font-bold text-pink-600">Waiting for host to start quiz...</div>
+          </div>
+        </div>
+        <div class="pl-quit-btn btn btn-light-outline w-40 absolute bottom-4 right-4">Quit</div>
+
+        <!-- HEADER -->
+        <div id="lobby-header" class="hidden sticky top-0 z-40 w-screen flex flex-col items-end mb-4">
+          <div class="bg-pink-700 p-4 pt-8 md:px-8 lg:py-8 lg:px-16 w-full flex items-center justify-between flex-wrap">
+            <div id="question-count" class="font-bold text-white"></div>
+            <div id="timer" class="font-bold text-white"></div>
+            <div id="next-or-skip-btn" class="btn btn-light w-full mt-2 md:mt-0 md:w-40">Skip</div>
+          </div>
+          <div id="progress-bar" class="absolute top-4 w-full px-4 md:px-8 lg:px-16">
+            <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-white container mx-auto">
+              <div class="progress-animate shadow-none flex flex-col text-center whitespace-nowrap text-pink-900 justify-center bg-pink-500" style="animation: progressbar-countdown"></div>
+            </div>
+          </div>
+          <div id="answered" class="hidden font-bold text-white text-right mr-8 mt-2 md:mt-4">Answered 0</div>
+        </div>
+
+        <!-- QUESTION DISPLAY -->
+        <div id="question-display" class="hidden flex-1 flex flex-col items-center justify-center mx-auto container md:max-w-lg lg:max-w-3xl px-4 md:px-0">
+          <div id="pl-reveal-remark" class="hidden text-2xl font-bold text-white"></div>
+          <div id="pl-reveal-score" class="hidden my-4 text-center font-bold text-white">
+            <div class="text-white text-base text-center">Current score:</div>
+            <div id="pl-current-score" class="text-bold text-3xl text-center text-white"></div>
+          </div>
+          <div id="display-question-q" class="hidden text-xl font-bold text-white text-center">${question.q}</div>
+          <div id="display-options" class="hidden w-full grid grid-rows-4 md:grid-cols-2 md:grid-rows-2 gap-3 my-4"></div>
+          <div id="pl-short-answer" class="hidden flex w-full mt-4">
+            <input id="pl-short-answer-input" type="text" placeholder="Enter correct answer" class="options shadow appearance-none border rounded flex-1 w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+            <div id="pl-submit-answer-btn" class="btn btn-primary ml-2 flex items-center">Submit</div>
+          </div>
+          <div id="display-correct-answer" class="hidden mt-4 shadow rounded py-2 px-6 text-gray-700 leading-tight bg-green-400 text-center mx-auto"></div>
+          <div id="display-wrong-answer" class="hidden mt-4 shadow appearance-none rounded py-2 px-6 text-white leading-tight bg-pink-900 text-center mx-auto"></div>
+
+          <!-- WRONG ANSWERS TO REGRADE -->
+          <div id="hl-wrong-answers" class="hidden w-full">
+            <div class="font-bold text-xl text-white text-center mt-4">Wrong answers:</div>
+
+            <!-- WRONG ANSWER BLOCK TEMPLATE -->
+            <div class="wrong-answer-block hidden border border-white bg-pink-900 text-white rounded-lg p-4 flex flex-col transform ease-in-out">
+              <div class="flex items-center justify-end">
+                <div class="wab-regrade-btn btn btn-primary transform ease-in-out"><span class="hidden">Mark as correct</span><i class="fas fa-check"></i></div>
+              </div>
+              <div class="wab-answer flex-1 text-center my-2"></div>
+              <div class="wab-count text-sm text-right"><i class="fas fa-user ml-2 text-sm"></i></div>
+            </div>
+
+            <!-- WRONG ANSWER DISPLAY -->
+            <div id="wrong-answer-grid" class="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 my-4"></div>
+          </div>
+        </div>
+
+        <!-- PLAYER ANSWERED / TIME UP SCREEN -->
+        <div id="waiting-for-reveal" class="hidden flex-1 flex flex-col items-center justify-center mx-auto container md:max-w-lg lg:max-w-xl xl:max-w-3xl px-4 md:px-0 mb-4">
+          <div class="text-2xl font-bold text-white text-center flex flex-col items-center">
+            <span id="pl-waiting-remarks"></span>
+            <span> Waiting for host to reveal answer..</span>
+          </div>
+        </div>
+
+        <!-- LEADERBOARD -->
+        <div id="leaderboard" class="hidden flex-1 flex flex-col items-center justify-center mx-auto container md:max-w-lg lg:max-w-3xl px-4 md:px-0">
+          <div id="leaderboard-heading" class="text-lg font-bold text-white">Congratulations!</div>
+          <div id="leaderboard-final" class="hidden my-4 text-center font-bold text-white">
+            <div id="leaderboard-winner-name" class="text-4xl"></div>
+            <div id="leaderboard-winner-score" class="text-lg"></div>
+          </div>
+
+          <!-- BAR TEMPLATE -->
+          <table class="hidden">
+            <tr class="score-bar flex text-white">
+              <td class="score-bar-name text-right border-none p-1 whitespace-nowrap w-max"></td>
+              <td class="relative border-none p-1 w-full">
+                <div class="overflow-hidden h-6 mb-4 text-xs flex rounded-lg">
+                  <div class="score-bar-score shadow-none flex flex-col text-center whitespace-nowrap rounded-lg text-pink-900 justify-center bg-pink-300"></div>
+                </div>
+              </td>
+            </tr>
+          </table>
+
+          <!-- SCORE BARS -->
+          <table id="bars" class="w-full mt-4 table-auto border-none"></table>
+        </div>
+
+        <!-- PLAYER FINAL RANK -->
+        <div id="display-final-rank" class="hidden flex-1 flex flex-col items-center justify-center mx-auto container md:max-w-lg lg:max-w-xl xl:max-w-3xl px-4 md:px-0 mb-4">
+          <div class="my-4 text-center font-bold text-white">
+            <div id="pl-final-remark" class="text-lg"></div>
+            <div id="pl-final-rank" class="text-4xl"></div>
+            <div id="pl-final-score" class="text-lg"></div>
+          </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div id="lobby-footer" class="hidden bg-pink-700 p-4 md:py-8 md:px-16 relative w-screen flex items-center justify-between">
+          <div class="pl-username text-2xl font-bold text-white"></div>
+          <div class="pl-quit-btn btn btn-light-outline w-20 md:w-40">Quit</div>
+        </div>
+      </div>
+
+      <!-- CREDITS -->
+      <a id="credits" href="https://www.vecteezy.com/free-vector/vector" class="text-pink-400 text-sm m-2 absolute bottom-0 left-0">Vector Vectors by Vecteezy</a>
     </div>
   </body>
   <footer>
-    <!-- DEV -->
-    <!-- <script src="/popquiz/components.js"></script>
-    <script src="/popquiz/mainScene.js"></script>
-    <script src="/popquiz/hostLobby.js"></script>
-    <script src="/popquiz/hostPanel.js"></script>
-    <script src="/popquiz/login.js"></script>
-    <script src="/popquiz/index.js"></script> -->
-    <!-- PRODUCTION -->
-    <script src="./components.js"></script>
-    <script src="./index.js"></script>
-    <script src="./login.js"></script>
-    <script src="./hostPanel.js"></script>
-    <script src="./hostLobby.js"></script>
-    <script src="./mainScene.js"></script>
+    <script src="./popquiz/components.js"></script>
+    <script src="./popquiz/playerLobby.js"></script>
+    <script src="./popquiz/hostLobby.js"></script>
+    <script src="./popquiz/hostPanel.js"></script>
+    <script src="./popquiz/login.js"></script>
+    <script src="./popquiz/index.js"></script>
   </footer>
 </html>

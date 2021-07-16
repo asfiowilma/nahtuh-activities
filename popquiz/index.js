@@ -8,6 +8,19 @@ var playerList = [];
 var questions = [];
 
 const BASE_SCORE = 200;
+const hp = HostPanel,
+  hl = HostLobby,
+  pl = PlayerLobby;
+
+const scenes = ["#login-panel", "#username-panel", "#host-panel", "#lobby"];
+const lobbyScenes = [
+  "#waiting-for-players",
+  "#waiting-for-reveal",
+  "#waiting-for-host",
+  "#question-display",
+  "#leaderboard",
+  "#display-final-rank",
+];
 
 yai.onParticipantJoined = onPlayerJoin;
 yai.onIncomingMessage = onIncomingMessage;
@@ -26,14 +39,30 @@ function onPlayerLeave(message) {
 
 function onIncomingMessage(data) {
   // console.log(data);
-  if (!isHost) MainScene.onIncomingMessage(data.content);
+  if (!isHost) PlayerLobby.onIncomingMessage(data.content);
 }
 
 function onEventVariableChanged(message) {
   // console.log(message);
-  // MainScene.onEventVariableChanged(message);
+  // PlayerLobby.onEventVariableChanged(message);
   HostLobby.onEventVariableChanged(message);
 }
+
+/* PLUGINS */
+
+$.fn.submitOnEnter = function (submitId) {
+  this.on("keypress", function (e) {
+    if (e.key == "Enter") {
+      e.preventDefault();
+      $(submitId).click();
+    }
+  });
+  return this;
+};
+
+$.fn.replaceClass = function (pFromClass, pToClass) {
+  return this.removeClass(pFromClass).addClass(pToClass);
+};
 
 function uploadJson(id, callback) {
   document.getElementById(id).onchange = function (evt) {
@@ -58,10 +87,12 @@ function uploadJson(id, callback) {
 
 function detectJoinLink() {
   eventId = new URLSearchParams(window.location.search).get("id");
+  username = new URLSearchParams(window.location.search).get("username");
+  if (username) $("#username").val(username);
   if (eventId) {
-    $("#gameId").val(eventId);
-    $("#gameId").attr('readonly', true);
-    $("#enterGameId").click();
+    $("#game-id").val(eventId);
+    $("#game-id").attr("readonly", true);
+    $("#enter-game-id").click();
   }
 }
 
@@ -72,6 +103,8 @@ function nth(n) {
 function dev() {
   username = "litha";
   isHost = true;
+  $("#login-panel").toggleClass("hidden");
+  $("#username-panel").toggleClass("hidden");
   LoginScene.start();
 }
 

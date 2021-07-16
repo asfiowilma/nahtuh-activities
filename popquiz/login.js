@@ -1,6 +1,6 @@
 const LoginScene = new (function () {
   this.start = () => {
-    $("#enterBtn").html('<i class="fas fa-spinner animate-spin"></i>');
+    $("#enter-button").html('<i class="fas fa-spinner animate-spin"></i>');
     if (isHost) createGame();
     else joinGame();
   };
@@ -8,13 +8,7 @@ const LoginScene = new (function () {
   async function createGame() {
     let loginResponse = await identityManager.login(username, "eventId");
 
-    let createEventResponse = await yai.createEvent(
-      "XPQ",
-      "",
-      username,
-      "",
-      loginResponse.accessToken
-    );
+    let createEventResponse = await yai.createEvent("XPQ", "", username, "", loginResponse.accessToken);
     // console.log(createEventResponse);
     eventId = createEventResponse.eventInfo.eventId;
     // console.log(eventId);
@@ -28,9 +22,17 @@ const LoginScene = new (function () {
   }
 
   async function joinGame() {
-    let joinEventResponse = await yai.join(eventId, username, "");
-    // console.log(joinEventResponse);
-    MainScene.start();
+    let joinEventResponse = await yai
+      .join(eventId, username, "")
+      .then(() => {
+        PlayerLobby.start();
+      })
+      .catch((error) => {
+        swal({ icon: "warning", text: error, button: false });
+        $("#enter-button").text("Enter");
+        $("#enter-button").one("click", () => joinOrCreateRoom());
+      });
+    console.log(joinEventResponse);
   }
 })();
 
@@ -49,13 +51,12 @@ function joinOrCreateRoom() {
   // console.log("creating room ...");
   username = $("#username").val();
   if (validate(username)) LoginScene.start();
-  else $("#enterBtn").one("click", () => joinOrCreateRoom());
+  else $("#enter-button").one("click", () => joinOrCreateRoom());
 }
 
 function renderUsernameInput(newHost = false) {
   isHost = newHost;
-  eventId = !isHost ? $("#gameId").val() : "";
-  loginPanel = $("#login-panel");
+  eventId = !isHost ? $("#game-id").val() : "";
 
   if (!isHost && !eventId) {
     swal({
@@ -65,40 +66,21 @@ function renderUsernameInput(newHost = false) {
     }).then(() => location.reload());
   }
 
-  canvas.html(`
-    <div id="username-panel" class="flex-1 flex flex-col w-full md:w-96 px-4 mx-auto items-center justify-center">
-      <div class="text-center text-3xl md:text-4xl font-bold text-white">
-        ${isHost ? "Create new Room" : "Enter Game"}
-      </div>
-      <div class="p-4 bg-white rounded-lg mt-4 mb-2 w-full">
-        <div class="flex flex-col justify-center items-stretch">
-          <input type="text" id="username" class="rounded ring-1 ring-gray-300 px-4 py-2 mb-3 text-center" placeholder="Enter your ${
-            isHost ? "user" : "player"
-          } name">
-          <div id="enterBtn" class="text-center disabled:opacity-50 bg-gray-600 text-white rounded font-bold py-2 cursor-pointer hover:bg-gray-500">${
-            isHost ? "Create Room" : "Enter"
-          }</div>
-        </div>
-      </div>
-      <div id="backlink" class="text-white hover:text-pink-300 hover:underline cursor-pointer text-center">Back</div>
-    </div>
-  `);
-  $("#username").focus();
-  $("#username").on("keypress", function (e) {
-    if (e.which == 13) {
-      e.preventDefault();
-      $("#enterBtn").click();
-    }
-  });
+  $("#login-panel").toggleClass("hidden");
+  $("#username-panel").toggleClass("hidden");
 
-  $("#enterBtn").one("click", () => joinOrCreateRoom());
-  $("#backlink").click(() => canvas.html(loginPanel));
+  $("#username").focus();
+  $("#username").submitOnEnter("#enter-button");
+
+  $("#create-or-enter").text(isHost ? "Create new Room" : "Enter Game");
+  $("#enter-button").text(isHost ? "Create Room" : "Enter");
+  $("#username").attr("placeholder", `Enter your ${isHost ? "user" : "player"} name`);
 }
 
-$("#gameId").focus();
-$("#gameId").on("keypress", function (e) {
-  if (e.which == 13) {
-    e.preventDefault();
-    $("#enterGameId").click();
-  }
+$(document).ready(function () {
+  styleButtons();
+  setButtonsOnClick();
+
+  $("#game-id").focus();
+  $("#game-id").submitOnEnter("#enter-game-id");
 });
