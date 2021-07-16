@@ -76,24 +76,6 @@ function toggleHideQuestionDisplay(componentsToUnhide) {
   componentsToUnhide.forEach((show) => $(show).removeClass("hidden"));
 }
 
-const Button = (type, text, onclick, style) => {
-  let color, tColor, hover;
-  switch (type) {
-    case "danger":
-      color = "bg-red-500";
-      tColor = "white";
-      hover = "bg-red-600";
-      break;
-  }
-  return `
-   <div
-     class="px-2 py-1 text-center ${color} hover:${hover} cursor-pointer rounded text-${tColor} ${style}" onclick="${onclick}" 
-   >
-     ${text}
-   </div>
- `;
-};
-
 const OptionInput = (qid, idx, option) => {
   const optionInput = $(".option-input").first().clone();
   optionInput.removeClass("hidden");
