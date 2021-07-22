@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.3/css/all.css" integrity="sha384-SZXxX4whJ79/gErwcOYf+zWLeJdY/qpuqC4cAa9rOGUstPomtqpuNWT9wdPEn2fk" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" />
+    <script src="https://code.jquery.com/jquery-3.6.0.slim.min.js" integrity="sha256-u7e5khyithlIdTpu22PHhENmPcRdFiHRjhAuHcs05RI=" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.7/signalr.min.js"></script>
+    <!-- PRODUCTION -->
+    <!-- <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/observable-slim.js"></script>
+    <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/yai-settings.js"></script>
+    <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/identitymanager.js"></script>
+    <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/yai.js"></script> -->
+    <!-- DEV -->
+    <script src="../js/observable-slim.js"></script>
+    <script src="../js/yai-settings.js"></script>
+    <script src="../js/identitymanager.js"></script>
+    <script src="../js/yai.js"></script>
+    <title>Hangman</title>
+    <style>
+      .animate-wiggle {
+        animation: wiggle 0.5s ease-in-out 2;
+      }
+
+      @keyframes wiggle {
+        0%,
+        100% {
+          transform: rotate(-3deg);
+        }
+        50% {
+          transform: rotate(3deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="canvas" class="canvas w-full h-fit-content min-h-screen flex flex-col justify-center bg-gradient-to-br from-gray-700 to-gray-900">
+      <!-- LOGIN PANEL -->
+      <div id="login-panel" class="flex-1 flex flex-col w-full md:w-96 px-4 mx-auto items-center justify-center">
+        <h1 class="text-center text-3xl md:text-4xl font-bold text-white">Hangman Game</h1>
+        <div class="p-4 bg-white rounded-lg mt-4 mb-2 w-full shadow-lg">
+          <form class="flex flex-col justify-center items-stretch">
+            <label class="hidden" for="game-id">Game ID</label>
+            <input type="text" class="rounded ring-1 ring-gray-300 px-4 py-2 mb-3 text-center" id="game-id" placeholder="Game ID" />
+            <div id="enter-game-id" class="btn btn-dark font-bold py-2">Enter</div>
+          </form>
+        </div>
+        <div id="create-link" class="text-white hover:text-gray-300 hover:underline text-center cursor-pointer">Create new Game</div>
+      </div>
+
+      <!-- USERNAME PANEL -->
+      <div id="username-panel" class="hidden flex-1 flex flex-col w-full md:w-96 px-4 mx-auto items-center justify-center">
+        <div id="create-or-enter" class="text-center text-3xl md:text-4xl font-bold text-white"></div>
+        <div class="p-4 bg-white shadow-lg rounded-lg mt-4 mb-2 w-full">
+          <div class="flex flex-col justify-center items-stretch">
+            <input type="text" id="username" class="rounded ring-1 ring-gray-300 px-4 py-2 mb-3 text-center" />
+            <div id="enter-button" class="btn btn-dark font-bold py-2"></div>
+          </div>
+        </div>
+        <div id="backlink" class="text-white hover:text-gray-300 hover:underline cursor-pointer text-center">Back</div>
+      </div>
+
+      <!-- LOBBY -->
+      <div id="lobby" class="hidden container mx-auto my-8 flex">
+        <!-- SIDEBAR -->
+        <div id="sidebar" class="md:w-80">
+          <!-- GAME ID & USERNAME -->
+          <div id="game-info" class="w-full rounded-lg flex flex-col p-4 border border-gray-500 mb-4">
+            <div class="text-gray-200">Game ID:</div>
+            <div class="text-white bg-white shadow-lg rounded-lg text-center my-1 p-2 flex items-center justify-center">
+              <span id="game-id-display" class="text-2xl font-bold mr-2 text-gray-700"></span>
+              <i id="copy-game-id-btn" class="fas fa-copy cursor-pointer text-yellow-500 hover:text-yellow-600 text-xl" title="Copy to clipboard"></i>
+            </div>
+            <div class="text-gray-200 flex justify-between items-center">
+              <span class="flex">
+                <span>Username: </span>
+                <span id="username-display" class="ml-1 text-yellow-500">litha</span>
+              </span>
+              <span id="copied-feedback" class="opacity-0 transition ease-in-out text-gray-500 text-sm">Copied!</span>
+            </div>
+          </div>
+
+          <!-- PLAYER LIST -->
+          <div id="player-list" class="w-full rounded-lg flex flex-col p-4 border border-gray-500 mb-4">
+            <div class="text-gray-200 flex justify-between">
+              <span> Player List </span>
+              <span id="hide-player-list-btn" class="text-gray-500 text-sm cursor-pointer hover:text-gray-400"> hide </span>
+            </div>
+            <!-- BLOCK TEMPLATE -->
+            <div class="hidden player bg-yellow-500 rounded mr-1 mb-1 text-white text-sm font-bold py-0.5 px-3 shadow-lg"></div>
+            <!-- PLAYER LIST DISPLAY -->
+            <div id="players" class="flex flex-wrap mt-2"></div>
+          </div>
+
+          <!-- LEADERBOARD -->
+          <div id="leaderboard" class="w-full rounded-lg flex flex-col p-4 border border-gray-500">
+            <div class="text-gray-200 flex justify-between">
+              <span> Top 5 Leaderboard </span>
+              <span id="hide-leaderboard-btn" class="text-gray-500 text-sm cursor-pointer hover:text-gray-400"> hide </span>
+            </div>
+            <table class="hidden mt-2">
+              <tr class="score-bar text-white">
+                <td class="score-bar-rank border-none p-1 whitespace-nowrap w-max">1st</td>
+                <td class="relative border-none py-1 w-full">
+                  <div class="overflow-hidden h-6 text-xs flex rounded-full">
+                    <div class="score-bar-score shadow-none flex flex-col px-2 whitespace-nowrap rounded-full text-white justify-center bg-gradient-to-r from-yellow-500 to-yellow-600"></div>
+                  </div>
+                </td>
+              </tr>
+            </table>
+            <table id="bars" class="w-full table-auto border-none"></table>
+          </div>
+        </div>
+
+        <!-- MAIN PANEL -->
+        <div id="panel" class="flex-1 flex flex-col text-white rounded-lg p-4 border border-gray-500 ml-4">
+          <!-- GAME SETUP -->
+          <div id="game-setup" class="hidden flex-1 flex flex-col">
+            <div class="flex-1 flex flex-col justify-center mx-auto">
+              <!-- GAME SETTINGS -->
+              <div class="grid grid-cols-2 gap-2 mb-4">
+                <!-- WINNING CONDITIONS -->
+                <div class="flex flex-col align-stretch rounded">
+                  <label for="select-end-game" class="my-1 flex justify-between items-center">
+                    <span>Winning Condition:</span>
+                    <i title="Decides how to end the game" class="fas fa-question-circle text-gray-300"></i>
+                  </label>
+                  <div class="inline-block relative text-gray-700">
+                    <select name="select-end-game" id="select-end-game" class="appearance-none w-full bg-white border border-gray-400 hover:border-gray-500 px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none focus:shadow-outline"></select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700"><i class="fas fa-chevron-down text-gray-500"></i></div>
+                  </div>
+                </div>
+
+                <!-- BY TIME LIMIT -->
+                <div id="time-limit" class="flex flex-col align-stretch rounded">
+                  <label for="select-time-limit" class="my-1 flex justify-between items-center">
+                    <span>After:</span>
+                    <i title="Ends the game after the time specified" class="fas fa-question-circle text-gray-300"></i>
+                  </label>
+                  <div class="inline-block relative text-gray-700">
+                    <select name="select-time-limit" id="select-time-limit" class="appearance-none w-full bg-white border border-gray-400 hover:border-gray-500 px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none focus:shadow-outline"></select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700"><i class="fas fa-chevron-down text-gray-500"></i></div>
+                  </div>
+                </div>
+
+                <!-- BY WINNING PLAYERS -->
+                <div id="winner-limit" class="hidden flex flex-col align-stretch rounded">
+                  <label for="select-winner-limit" class="my-1 flex justify-between items-center">
+                    <span>After:</span>
+                    <i title="Ends the game after there are enough winners" class="fas fa-question-circle text-gray-300"></i>
+                  </label>
+                  <div class="inline-block relative text-gray-700">
+                    <select name="select-winner-limit" id="select-winner-limit" class="appearance-none w-full bg-white border border-gray-400 hover:border-gray-500 px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none focus:shadow-outline"></select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700"><i class="fas fa-chevron-down text-gray-500"></i></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex justify-between items-center">
+                <label for="word-to-guess"><i class="fas fa-keyboard"></i> Word</label>
+                <i id="toggle-word-visibility" class="fas fa-eye text-yellow-400 hover:text-yellow-500 cursor-pointer"></i>
+              </div>
+              <input type="password" id="word-to-guess" class="rounded ring-1 ring-gray-300 w-96 px-4 py-2 mb-3 text-center text-gray-700" placeholder="Enter a word for players to guess" />
+              <label for="category"><i class="fas fa-cubes"></i> Category</label>
+              <input type="text" id="category" class="rounded ring-1 ring-gray-300 w-96 px-4 py-2 mb-3 text-center text-gray-700" placeholder="Enter the word's category" />
+              <div id="start-game-btn" class="btn btn-dark font-bold py-2">Start Game</div>
+              <div class="text-gray-500 text-sm text-center">
+                <div>Wait for everyone to get ready before starting the game.</div>
+                <div">Late players cannot join an ongoing game.
+              </div>
+            </div>
+          </div>
+
+          <!-- GAME PLAY -->
+          <div id="game-play" class="hidden flex-1 flex flex-col">
+            <div class="flex justify-between">
+              <div id="timer" class="hidden"></div>
+              <div id="winner-count" class="flex items-center text-xl" title="Winners"><span>0</span><i class="fas fa-crown ml-2"></i></div>
+              <div id="hearts" class="hidden relative w-full text-right text-xl" title="Remaining Life">
+                <div><i class="fas fa-heart mr-2"></i><span id="life">5</span></div>
+                <div id="broken-heart" class="opacity-0 absolute top-0 right-0 transform transition transition ease-in-out text-red-500"><i class="fas fa-heart-broken mr-0.5"></i><span class="text-lg">-1</span></div>
+              </div>
+            </div>
+            <div id="category-display" class="text-center text-lg mt-8"></div>
+
+            <!-- TEMPLATE -->
+            <div class="hidden char bg-white mx-0.5 w-6 h-8 rounded-lg flex items-center justify-center"></div>
+            <div class="hidden char not-alpha bg-transparent mx-0.5 w-4 h-8 rounded-lg flex items-center justify-center"></div>
+            <div class="hidden keycap bg-gray-100 shadow-lg rounded w-10 h-10 flex items-center justify-center cursor-pointer hover:bg-yellow-300"></div>
+
+            <!-- WORD GUESS -->
+            <div id="word" class="w-full flex justify-center mt-4 text-2xl font-bold"></div>
+
+            <!-- KEYBOARD -->
+            <div id="keyboard" class="hidden grid grid-cols-6 grid-rows-5 gap-2 mx-auto my-8 text-gray-700 text-xl font-bold"></div>
+
+            <!-- HINTS -->
+            <div id="hints" class="hidden my-8 grid grid-rows-3 gap-3 w-80 mx-auto">
+              <div class="text-center font-bold text-lg">Hints:</div>
+              <div id="reveal-first-letter" class="btn btn-primary-outline">Reveal First Letter</div>
+              <div id="reveal-random-letter" class="btn btn-primary-outline">Reveal a Random Letter</div>
+              <div id="elim-unused-letter" class="btn btn-primary-outline">Eliminate 13 Unused Letters</div>
+            </div>
+
+            <!-- REPLAY -->
+            <div id="replay-btn" class="hidden btn btn-primary w-40 py-3 mx-auto">Replay?</div>
+          </div>
+
+          <!-- WAITING FOR HOST -->
+          <div id="waiting-for-host" class="hidden flex-1 flex flex-col items-center justify-center">
+            <div class="flex flex-col items-center justify-center flex-1">
+              <i class="fas fa-fan fa-4x animate-spin"></i>
+              <div class="text-xl mt-2">Loading word ...</div>
+            </div>
+          </div>
+
+          <!-- FULL LEADERBOARD -->
+          <div id="full-leaderboard" class="hidden flex-1 flex flex-col items-center">
+            <div class="text-xl font-bold mb-8">Leaderboard</div>
+            <table class="hidden">
+              <tr class="full-score-bar text-white">
+                <td class="score-bar-name border-none p-1 whitespace-nowrap w-max text-right"></td>
+                <td class="relative border-none py-1 w-full">
+                  <div class="overflow-hidden h-6 text-xs flex rounded-full">
+                    <div class="score-bar-score text-center shadow-none flex flex-col px-2 whitespace-nowrap rounded-full text-white justify-center bg-gradient-to-r from-yellow-500 to-yellow-600"></div>
+                  </div>
+                </td>
+              </tr>
+            </table>
+            <table id="full-bars" class="w-full table-auto border-none px-4"></table>
+          </div>
+
+          <!-- HISTORY -->
+          <div id="word-history" class="hidden flex-1 flex flex-col items-center">
+            <div class="text-xl font-bold mb-8">Word History</div>
+            <!-- ROW TEMPLATE -->
+            <table class="hidden">
+              <tr class="history-row">
+                <td class="history-word">albert einstein</td>
+                <td class="history-category">famous people</td>
+                <td class="history-winners">4<i class="fas fa-user ml-2"></i></td>
+                <td class="history-iWon"><i class="fas fa-heart text-yellow-500"></i></td>
+              </tr>
+            </table>
+            <table id="history-table" class="w-full table-auto border-separate border-none px-4 text-center">
+              <tr>
+                <th class="rounded-full bg-gradient-to-b from-yellow-500 to-yellow-600">Word</th>
+                <th class="rounded-full bg-gradient-to-b from-yellow-500 to-yellow-600">Category</th>
+                <th class="rounded-full bg-gradient-to-b from-yellow-500 to-yellow-600">Winners</th>
+                <th></th>
+              </tr>
+              <tr class="history-row">
+                <td colspan="3" class="text-center py-10 bg-gray-700 rounded-lg">Previous words will appear here after every game.</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- NAVIGATION BUTTONS -->
+          <div id="navigation" class="self-end w-full flex items-end justify-between mt-8">
+            <div id="leave-game-btn" class="btn btn-danger-outline">Leave Game</div>
+            <div class="flex">
+              <div id="leaderboard-btn" class="btn btn-light-outline">Full Leaderboard</div>
+              <div id="history-btn" class="btn btn-light-outline ml-2">History</div>
+              <div id="play-game-btn" class="btn btn-primary ml-2">Play Game</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CREDITS -->
+      <!-- <a id="credits" href="https://www.vecteezy.com/free-vector/vector" class="text-gray-400 text-sm m-2 absolute bottom-0 left-0">Vector Vectors by Vecteezy</a> -->
+      <div id="credits" class="text-gray-400 text-sm m-2 absolute bottom-0 left-0">Music by <a href="/users/zen_man-4257870/?tab=audio&amp;utm_source=link-attribution&amp;utm_medium=referral&amp;utm_campaign=audio&amp;utm_content=2699">Zen_Man</a> from <a href="https://pixabay.com/?utm_source=link-attribution&amp;utm_medium=referral&amp;utm_campaign=music&amp;utm_content=2699">Pixabay</a></div>
+    </div>
+  </body>
+  <footer>
+    <script src="./hangman/components.js"></script>
+    <script src="./hangman/lobby.js"></script>
+    <script src="./hangman/login.js"></script>
+    <script src="./hangman/index.js"></script>
+  </footer>
+</html>
