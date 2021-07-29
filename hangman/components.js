@@ -60,8 +60,19 @@ function setButtonsOnClick() {
   });
   $("#hide-player-list-btn").click(() => $("#players").toggleClass("hidden"));
   $("#hide-leaderboard-btn").click(() => $("#bars").toggleClass("hidden"));
+  $("#hide-sidebar").click(() => $("#sidebar").toggleClass("hidden"));
+  $("#mob-game-info").click(() => mobileTopBarSwitcher("#game-info"));
+  $("#mob-player-list").click(() => mobileTopBarSwitcher("#player-list"));
+  $("#mob-leaderboard").click(() => mobileTopBarSwitcher("#leaderboard"));
+  $("#mob-mute, #mute").click(() => {
+    $("#mob-mute, #mute").toggleClass("fa-volume-mute").toggleClass("fa-volume-up");
+    isMuted = !isMuted;
+    $('audio').prop("muted", isMuted);  // toggle mute 1/0
+    console.log("audio toggle isMuted " + isMuted);
+  });
 
   /* GAME SETUP */
+  $("#category").submitOnEnter("#start-game-btn");
   $("#start-game-btn").click(() => lobby.startGame());
   $("#toggle-word-visibility").click(() => {
     $("#toggle-word-visibility").toggleClass("fa-eye-slash");
@@ -75,6 +86,7 @@ function sceneSwitcher(scene, isInLobby = true) {
   (isInLobby ? lobbyScenes : scenes).forEach((s) => $(s).addClass("hidden"));
   console.log(`switching scene into ${scene}`);
   $(scene).unhide();
+  sceneSwitchingSound.play();
 
   switch (scene) {
     case "#full-leaderboard":
@@ -92,6 +104,13 @@ function sceneSwitcher(scene, isInLobby = true) {
 function navButtonSwitcher(locationButton) {
   lobbyNavButtons.forEach((s) => $(s).unhide());
   $(locationButton).addClass("hidden");
+}
+
+function mobileTopBarSwitcher(show) {
+  const contents = ["#game-info", "#player-list", "#leaderboard"];
+  const isClosed = $(show).hasClass("hidden");
+  contents.forEach((content) => $(content).addClass("hidden"));
+  if (isClosed) $(show).unhide();
 }
 
 /* COMPONENTS */
@@ -120,9 +139,12 @@ const HistoryRow = (history) => {
   row.find(".history-word").text(history.word);
   row.find(".history-category").text(history.category);
   row.find(".history-winners").text(history.winners);
-  if (isHost) row.find(".history-iWon").find("i").addClass("hidden");
+  if (isHost) row.find(".history-iWon").find(".fa-heart").addClass("hidden");
   else if (!history.iWon)
-    row.find(".history-iWon").find("i").replaceClass("fa-heart text-yellow-500", "fa-heart-broken text-red-500");
+    row
+      .find(".history-iWon")
+      .find(".fa-heart")
+      .replaceClass("fa-heart text-yellow-500", "fa-heart-broken text-red-500");
 
   return row;
 };
@@ -133,6 +155,7 @@ const KeyboardKey = (char) => {
   keycap.text(char);
   keycap.attr("id", char);
   keycap.one("click", () => lobby.keypressHandler(char));
+  keycap.hover(() => btnHoverSound.play());
   return keycap;
 };
 
@@ -156,10 +179,22 @@ function Sound(src) {
   this.sound.setAttribute("controls", "none");
   this.sound.style.display = "none";
   document.body.appendChild(this.sound);
-  this.play = function(){
-    this.sound.play();
-  }
-  this.stop = function(){
+  this.play = function () {
+    if (!isMuted) this.sound.play();
+    return this;
+  };
+  this.loop = function () {
+    this.sound.loop = true;
+    return this;
+  };
+  this.then = function (playThis) {
+    this.sound.addEventListener("ended", playThis);
+  };
+  this.bgm = function () {
+    this.sound.volume = 0.1;
+    return this;
+  };
+  this.stop = function () {
     this.sound.pause();
-  }
+  };
 }

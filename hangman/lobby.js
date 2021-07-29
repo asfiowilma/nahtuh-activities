@@ -3,9 +3,11 @@ Lobby = new (function () {
   this.history = [];
   this.guesses = [];
   this.hearts = 5;
+  this.iWon = false;
 
   this.start = () => {
     sceneSwitcher("#lobby", false);
+    $("#credits").addClass("hidden");
     $("#username-display").text(username);
     $("#game-id-display").text(eventId);
     this.renderPlayerList();
@@ -61,6 +63,7 @@ Lobby = new (function () {
 
   this.gamePlay = () => {
     sceneSwitcher("#game-play");
+    gameStartSound.play().then(bgLoopSound.bgm().loop().play());
 
     $("#hearts").unhide();
     this.renderKeyboard();
@@ -90,6 +93,9 @@ Lobby = new (function () {
   };
 
   this.gameOver = () => {
+    bgLoopSound.stop();
+    if (!this.iWon) youLoseSound.play();
+    if (this.hearts == 0) $("#hearts").find(".fa-heart").replaceClass("fa-heart", "fa-heart-broken") 
     const toBeRevealed = Object.keys(this.game.word).filter((char) => !this.guesses.includes(char));
     for (char of toBeRevealed) this.revealLetter(char);
 
@@ -98,23 +104,28 @@ Lobby = new (function () {
   };
 
   this.gameWon = () => {
+    bgLoopSound.stop();
+    youWinSound.play();
+    this.iWon = true;
     $("#word").addClass("text-yellow-500 animate__animated animate__tada");
+    $(".keycap").replaceClass("cursor-pointer", "cursor-not-allowed").unbind("click");
     if (!isHost) yai.broadcast({ iWon: this.hearts });
   };
 
   this.startGame = () => {
+    const word = $("#word-to-guess").val().toUpperCase();
     const category = $("#category").val();
     const endGame = $("#select-end-game").val();
     const limit = (endGame === "time-limit" ? $("#select-time-limit") : $("#select-winner-limit")).val();
 
-    const word = $("#word-to-guess").val().toUpperCase();
+    if (!this.validateWord(word, category)) return;
     const wordObject = this.wordObjectify(word);
 
     var data = {
       word: wordObject,
       category: category || "no category",
       endGame: endGame,
-      limit: limit,
+      limit: limit || playerList.length,
     };
 
     console.log(data);
@@ -157,11 +168,15 @@ Lobby = new (function () {
     this.game = null;
     this.guesses = [];
     this.hearts = 5;
+    this.iWon = false;
+    this.timerInterval = null;
     $("#word-to-guess").val("");
     $("#category").val("");
     $("#life").text(5);
     $("#winner-count").find("span").text(0);
     $("#word").removeClass("text-yellow-500 text-red-500 animate__tada animate__pulse");
+    $("#hearts").replaceClass("text-red-100 text-red-200 text-red-300 text-red-400 text-red-500", "text-white")
+    $("#hearts").find(".heart-life").replaceClass("fa-heart-broken", "fa-heart") 
     $(".keycap").replaceClass("cursor-not-allowed", "cursor-pointer");
     $("#reveal-first-letter, #reveal-random-letter, #elim-unused-letter").replaceClass(
       "cursor-not-allowed opacity-20",
@@ -188,11 +203,18 @@ Lobby = new (function () {
     const encodedChar = encoded[alphabet.indexOf(char)];
 
     if (this.game.word[char]) {
+      correctSound.play();
       $(".char-" + encodedChar).text(char);
       $(".char-" + encodedChar).replaceClass("bg-white", "bg-transparent animate__animated animate__rubberBand");
       $("#" + char).addClass("animate__animated animate__tada");
     } else {
+      wrongSound.play();
       this.hearts = this.hearts - 1;
+      if (this.hearts == 4) $("#hearts").replaceClass("text-white", "text-red-100")
+      else if (this.hearts == 3) $("#hearts").replaceClass("text-red-100", "text-red-200")
+      else if (this.hearts == 2) $("#hearts").replaceClass("text-red-200", "text-red-300")
+      else if (this.hearts == 1) $("#hearts").replaceClass("text-red-300", "text-red-400")
+      else if (this.hearts == 0) $("#hearts").replaceClass("text-red-400", "text-red-500")
       $("#life").text(this.hearts);
       $("#" + char).addClass("animate__animated animate__headShake");
       this.renderBrokenHeart();
@@ -256,6 +278,21 @@ Lobby = new (function () {
       };
     yai.eventVars.leaderboard = leaderboard;
     console.log(yai.eventVars.leaderboard);
+  };
+
+  this.validateWord = (word, category) => {
+    var text = "";
+    var alphabetChar = word.split("").filter((char) => alphabet.includes(char));
+    if (alphabetChar.length < 3) text = "Minimum word length is 3 letters long.";
+    else if (word.length > 20) text = "Maximum word length is 20 characters long.";
+    else if (category.length < 2) text = "Category is too short. (min 2 characters)";
+    else if (category.length > 20) text = "Category is too long. (max 20 characters)";
+
+    if (text.length > 0) {
+      swal({ icon: "warning", text: text, button: false });
+      return false;
+    }
+    return true;
   };
 
   this.startTimer = (timer, display) => {
@@ -415,7 +452,7 @@ Lobby = new (function () {
     const maxScore = leaderboard[0]?.score;
     const bars = isTop5 ? $("#bars") : $("#full-bars");
     bars.empty();
-    for (i in leaderboard.slice(0, isTop5 ? leaderboard.length : 5)) {
+    for (i in leaderboard.slice(0, isTop5 ? 5 : leaderboard.length)) {
       const player = leaderboard[i];
       const percent = (player.score / maxScore) * 100 + 2;
       bars.append(
