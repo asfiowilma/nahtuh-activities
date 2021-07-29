@@ -80,7 +80,7 @@ const OptionInput = (qid, idx, option) => {
   const optionInput = $(".option-input").first().clone();
   optionInput.removeClass("hidden");
 
-  const radioInput = optionInput.find(".form-radio");
+  const radioInput = optionInput.find("input[type=radio]");
   radioInput.attr("id", `q-${qid}-o-${idx}-b`);
   radioInput.attr("checked", option.b);
 
@@ -131,7 +131,7 @@ const OptionButton = (option, reveal = false, isHost = false, answer = null) => 
       ${option.v}
     </div>
   `);
-  if (!isHost)
+  if (!isHost && !reveal)
     optionBtn.one("click", function () {
       console.log(`${option.v} is clicked 😄`);
       PlayerLobby.answerHandler(option);
@@ -141,16 +141,16 @@ const OptionButton = (option, reveal = false, isHost = false, answer = null) => 
 
 const HostLobbyHeader = (reveal = false, leaderboard = false) => {
   $("#lobby-header").removeClass("hidden");
-  $("#question-count").text(`Question ${this.currentQid + 1}/${questions.length}`);
+  $("#question-count").text(`Question ${hl.currentQid + 1}/${questions.length}`);
 
   $("#next-or-skip-btn").unbind("click");
   if (reveal && leaderboard) {
-    $("#next-or-skip-btn").click(() => this.showLeaderboard());
+    $("#next-or-skip-btn").click(() => hl.showLeaderboard());
   } else {
-    $("#next-or-skip-btn").click(() => this.nextQuestion());
+    $("#next-or-skip-btn").click(() => hl.nextQuestion());
   }
 
-  const time = questions[this.currentQid].time;
+  const time = questions[hl.currentQid].time;
 
   if (!reveal) {
     $("#timer").text(time + "s");
@@ -168,7 +168,7 @@ const HostLobbyHeader = (reveal = false, leaderboard = false) => {
 
 const PlayerLobbyHeader = (time) => {
   $("#lobby-header").removeClass("hidden");
-  $("#question-count").text(`Question ${this.currentQid + 1}/${this.totalQuestions}`);
+  $("#question-count").text(`Question ${pl.currentQid + 1}/${pl.totalQuestions}`);
   $("#timer").text(time + "s");
   ProgressBar(time);
 };

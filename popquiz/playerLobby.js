@@ -1,17 +1,22 @@
 const PlayerLobby = new (function () {
+  this.hostId = "";
+  this.totalQuestions = 0;
+  this.scoreEarned = 0;
+
   this.currentQuestion = null;
   this.currentQid = 0;
-  this.totalQuestions = 0;
   this.currentScore = 0;
-  this.scoreEarned = 0;
   this.answeredCorrect = false;
   this.answer = null;
+
   this.timerInterval = null;
   this.timeRemaining = 0;
 
   this.start = () => {
     sceneSwitcher("#lobby");
     $("#credits").toggleClass("hidden");
+
+    findHost().then((host) => this.hostId = host.participantId);
     this.renderWaitingScreen();
   };
 
@@ -32,9 +37,9 @@ const PlayerLobby = new (function () {
       this.stopTimer();
       this.renderShowScore(this.currentQuestion);
       this.answeredCorrect = false;
-    } else if (content === "quizCompleted") {
-      this.renderFinalScreen();
-    } else if (content.nextQuestion != null) {
+    } else if (content?.leaderboard) {
+      this.renderFinalScreen(content.leaderboard);
+    } else if (content?.nextQuestion) {
       this.currentQid = content.nextQId;
       this.currentQuestion = content.nextQuestion;
       this.resetAnswer();
@@ -77,14 +82,11 @@ const PlayerLobby = new (function () {
       this.currentScore += score;
       this.scoreEarned = score;
       this.answeredCorrect = true;
-    } else if (this.currentQuestion.type === "SA" && !isCorrect) {
+    } else if (this.currentQuestion.type === "SA" && !isCorrect && this.answer && /\S/.test(this.answer)) {
       console.log("sending wrong answer");
       yai.eventVars.wrongAnswers = [...yai.eventVars.wrongAnswers, this.answer.toLowerCase()];
     }
-    yai.eventVars.leaderboard = {
-      ...yai.eventVars.leaderboard,
-      [username]: this.currentScore,
-    };
+    yai.sendToUser(this.hostId, { iAnswered: this.scoreEarned });
   };
 
   this.answerHandler = (option) => {
@@ -126,7 +128,7 @@ const PlayerLobby = new (function () {
     sceneSwitcher("#question-display", true);
     const componentsToDisplay = ["#display-question-q"];
 
-    HostLobbyHeader(question.time);
+    PlayerLobbyHeader(question.time);
     $("#display-question-q").text(question.q);
 
     if (question.type !== "SA") {
@@ -185,24 +187,18 @@ const PlayerLobby = new (function () {
       } else {
         componentsToDisplay.push("#display-wrong-answer");
         $("#display-correct-answer").text(this.currentQuestion.options[0]);
-        $("#display-wrong-answer").text(this.answer || "unanswered");
+        $("#display-wrong-answer").text(this.answer && /\S/.test(this.answer) ? this.answer : "unanswered");
       }
     }
     toggleHideQuestionDisplay(componentsToDisplay);
   };
 
-  this.renderFinalScreen = () => {
-    var leaderboard = Object.entries(yai.eventVars.leaderboard).map((e) => ({
-      username: e[0],
-      score: e[1],
-    }));
-    leaderboard = leaderboard.sort((a, b) => (a.score > b.score ? -1 : 1));
-    const rank = leaderboard.findIndex((x) => x.username === username) + 1;
+  this.renderFinalScreen = (lb) => {
+    const rank = lb.findIndex((x) => x.username === username) + 1;
     const remarks = ["Congratulations!", "Great job!", 'You tried your best :")'];
-    sceneSwitcher("#display-final-rank", true)
-    $("#pl-final-remark").text(rank <= 3 ? remarks[0] : rank == leaderboard.length ? remarks[2] : remarks[1]);
-    $("#pl-final-rank").text(`You ranked ${rank + nth(rank)} out of ${leaderboard.length}`);
+    sceneSwitcher("#display-final-rank", true);
+    $("#pl-final-remark").text(rank <= 3 ? remarks[0] : rank == lb.length ? remarks[2] : remarks[1]);
+    $("#pl-final-rank").text(`You ranked ${rank + nth(rank)} out of ${lb.length}`);
     $("#pl-final-score").text(`Final Score: ${this.currentScore}`);
   };
-
 })();

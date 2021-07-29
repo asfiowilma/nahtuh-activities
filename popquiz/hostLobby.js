@@ -17,11 +17,7 @@ const HostLobby = new (function () {
   // ============================================================
 
   this.onPlayerJoin = (message) => {
-    yai.eventVars.leaderboard = {
-      ...yai.eventVars.leaderboard,
-      [message.participantName]: 0,
-    };
-
+    leaderboard[message.participantName] = 0;
     this.renderPlayerList();
   };
 
@@ -31,9 +27,23 @@ const HostLobby = new (function () {
   };
 
   this.onEventVariableChanged = (message) => {
-    if (isStarted && message.name === "leaderboard") {
-      this.answered++;
-      this.rerenderPlayerAnswered();
+    // if (isStarted && message.name === "leaderboard") {
+    //   this.answered++;
+    //   this.rerenderPlayerAnswered();
+    // }
+  };
+
+  this.onIncomingMessage = (message) => {
+    console.log(message);
+    if (message.content?.iAnswered >= 0) {
+      var sender = playerList.find((p) => p.participantId == message.senderId);
+      console.log(sender);
+      var senderName = sender.participantName;
+      leaderboard[senderName] = (leaderboard[senderName] || 0) + message.content.iAnswered;
+      console.log(leaderboard);
+
+      this.answered = this.answered + 1;
+      $("#answer-count").text(this.answered);
     }
   };
 
@@ -56,9 +66,9 @@ const HostLobby = new (function () {
       yai.broadcast({ nextQId: this.currentQid, nextQuestion: questions[this.currentQid] });
       this.renderQuestion(questions[this.currentQid]);
       this.answered = 0;
+      $("#answer-count").text(this.answered);
     } else {
-      this.showLeaderboard(yai.eventVars.leaderboard, true);
-      yai.broadcast("quizCompleted");
+      this.showLeaderboard(true);
     }
   };
 
@@ -79,12 +89,14 @@ const HostLobby = new (function () {
   };
 
   this.showLeaderboard = (final = false) => {
-    var leaderboard = Object.entries(yai.eventVars.leaderboard).map((e) => ({
+    var lb = Object.entries(leaderboard).map((e) => ({
       username: e[0],
       score: e[1],
     }));
-    leaderboard = leaderboard.sort((a, b) => (a.score > b.score ? -1 : 1));
-    this.renderLeaderboard(final ? leaderboard : leaderboard.slice(0, 5), final);
+    lb = lb.sort((a, b) => (a.score > b.score ? -1 : 1));
+    lb = lb.filter((a) => playerList.some((b) => b.participantName == a.username));
+    this.renderLeaderboard(final ? lb : lb.slice(0, 5), final);
+    if (final) yai.broadcast({ leaderboard: lb });
   };
 
   // ============================================================
@@ -92,6 +104,8 @@ const HostLobby = new (function () {
   // ============================================================
 
   this.renderPlayerList = () => {
+    $("#player-count").text(playerList.length);
+    console.log(`player count=${playerList.length}`);
     $("#player-list").empty();
 
     if (playerList.length === 0) $("#player-list").append(PlayerBlock("Waiting for players..."));
@@ -159,14 +173,10 @@ const HostLobby = new (function () {
     yai.broadcast("showCorrect");
   };
 
-  this.rerenderPlayerAnswered = () => {
-    $("#answered").text(`Answered ${this.answered}`);
-  };
-
-  this.renderLeaderboard = (leaderboard, final = false) => {
+  this.renderLeaderboard = (lb, final = false) => {
     console.log("rendering leaderboard");
     sceneSwitcher("#leaderboard", true);
-    const winner = leaderboard[0];
+    const winner = lb[0];
 
     if (final) {
       $("#lobby-header").addClass("hidden");
@@ -180,7 +190,7 @@ const HostLobby = new (function () {
     }
 
     $("#bars").empty();
-    for (player of leaderboard.slice(0, final ? leaderboard.length : 5)) {
+    for (player of lb.slice(0, final ? lb.length : 5)) {
       $("#bars").append(LeaderboardScoreBar(player.username, player.score, winner.score));
     }
   };

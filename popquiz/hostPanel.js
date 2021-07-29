@@ -80,19 +80,24 @@ const HostPanel = new (function () {
   this.saveQuestion = () => {
     const type = $("#type").val();
     const optionType = type === "T/F" ? "tf" : type.toLowerCase();
-    let options = $(`#hp-option-grid-${optionType}`).find(".option-input");
-    options = Array.from(options);
-
+    let options;
+    
     switch (type) {
       case "MC":
       case "T/F":
+        options = $(`#hp-option-grid-${optionType}`).find(".option-input");
+        options = Array.from(options);
+        console.log(options);
         options = options.slice(0, type === "T/F" ? 2 : options.length).map((option) => ({
           b: option.children[0].checked,
           v: option.children[1].value,
         }));
         break;
       case "SA":
-        options = options.map((option) => option.value);
+        options = $(`#hp-option-grid-${optionType}`).find(".answer-input");
+        options = Array.from(options);
+        console.log(options);
+        options = options.map((option) => option.children[0].value);
         break;
     }
 

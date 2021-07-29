@@ -13,9 +13,6 @@ const LoginScene = new (function () {
     eventId = createEventResponse.eventInfo.eventId;
     // console.log(eventId);
 
-    yai.eventVars.quiz = { isStarted: false };
-    yai.eventVars.questions = [];
-    yai.eventVars.leaderboard = {};
     yai.eventVars.wrongAnswers = [];
 
     HostPanel.start();
@@ -38,7 +35,8 @@ const LoginScene = new (function () {
 
 function validate(uname) {
   var text = "";
-  if (uname.length < 3) text = "Username should be at least 3 characters long.";
+  if (/\S/.test(uname)) text = "Username cannot be empty.";
+  else if (uname.length < 3) text = "Username should be at least 3 characters long.";
   else if (uname.length > 20) text = "Username can only be at most 20 characters long.";
   if (text.length !== 0) {
     swal({ icon: "warning", text: text, button: false });

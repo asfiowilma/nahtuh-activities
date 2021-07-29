@@ -14,11 +14,6 @@
     <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/yai-settings.js"></script>
     <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/identitymanager.js"></script>
     <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/yai.js"></script>
-    <!-- DEV -->
-    <!-- <script src="../js/observable-slim.js"></script>
-    <script src="../js/yai-settings.js"></script>
-    <script src="../js/identitymanager.js"></script>
-    <script src="../js/yai.js"></script> -->
     <title>Pop! Quiz</title>
     <style>
       @keyframes progressbar-countdown {
@@ -157,7 +152,7 @@
               <div id="edit-question">
                 <!-- ANSWER INPUT TEMPLATE -->
                 <div class="hidden answer-input flex items-center">
-                  <input type="text" placeholder="Enter correct answer" class="option-input w-100 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                  <input type="text" placeholder="Enter correct answer" class="w-100 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                   <div class="btn btn-danger-outline delete-answer-btn ml-2"><i class="fa fa-trash"></i></div>
                   <div class="btn btn-secondary-outline add-answer-btn ml-2"><i class="fa fa-plus"></i></div>
                 </div>
@@ -192,7 +187,7 @@
       <div id="lobby" class="hidden flex-1 flex flex-col">
         <!-- WAITING SCREEN -->
         <div id="waiting-for-players" class="hidden w-full">
-          <div class="sticky top-0 w-full bg-gradient-to-b from-pink-800 via-pink-700 to-transparent py-8 pb-24">
+          <div class="sticky z-10 top-0 w-full bg-gradient-to-b from-pink-800 via-pink-700 to-transparent py-8 pb-24">
             <div class="container mx-auto flex flex-col items-center font-bold text-white">
               Join by entering the game ID:
               <div class="bg-white mt-2 rounded-lg shadow-md pt-2 pb-4 px-4">
@@ -200,6 +195,7 @@
                 <div id="hl-start-quiz-btn" class="btn btn-dark">Start Quiz</div>
               </div>
             </div>
+            <div class="fixed top-4 left-4 text-white"><span id="player-count">0</span> <i class="fas fa-user ml-1"></i></div>
           </div>
           <div class="hidden player-block py-2 px-6 rounded bg-pink-700 my-2 mx-2 font-bold text-white cursor-pointer hover:shadow-lg transform hover:-translate-y-0.5 hover:-translate-x-0.5 transition ease-in-out"></div>
           <div id="player-list" class="flex-1 w-5/6 md:w-2/3 mx-auto -mt-8 mb-8 flex justify-center items-start flex-wrap"></div>
@@ -214,7 +210,7 @@
             <div class="text-center text-xl font-bold text-pink-600">Waiting for host to start quiz...</div>
           </div>
         </div>
-        <div class="pl-quit-btn btn btn-light-outline w-40 absolute bottom-4 right-4">Quit</div>
+        <div class="pl-quit-btn btn btn-light-outline w-40 fixed bottom-4 right-4">Quit</div>
 
         <!-- HEADER -->
         <div id="lobby-header" class="hidden sticky top-0 z-40 w-screen flex flex-col items-end mb-4">
@@ -228,7 +224,7 @@
               <div class="progress-animate shadow-none flex flex-col text-center whitespace-nowrap text-pink-900 justify-center bg-pink-500" style="animation: progressbar-countdown"></div>
             </div>
           </div>
-          <div id="answered" class="hidden font-bold text-white text-right mr-8 mt-2 md:mt-4">Answered 0</div>
+          <div id="answered" class="hidden font-bold text-white text-right mr-8 mt-2 md:mt-4">Answered <span id="answer-count">0</span></div>
         </div>
 
         <!-- QUESTION DISPLAY -->
@@ -274,7 +270,7 @@
         </div>
 
         <!-- LEADERBOARD -->
-        <div id="leaderboard" class="hidden flex-1 flex flex-col items-center justify-center mx-auto container md:max-w-lg lg:max-w-3xl px-4 md:px-0">
+        <div id="leaderboard" class="hidden flex-1 flex flex-col items-center justify-center mx-auto container md:max-w-lg lg:max-w-3xl px-4 md:px-0 py-8">
           <div id="leaderboard-heading" class="text-lg font-bold text-white">Congratulations!</div>
           <div id="leaderboard-final" class="hidden my-4 text-center font-bold text-white">
             <div id="leaderboard-winner-name" class="text-4xl"></div>
@@ -283,10 +279,10 @@
 
           <!-- BAR TEMPLATE -->
           <table class="hidden">
-            <tr class="score-bar flex text-white">
+            <tr class="score-bar text-white">
               <td class="score-bar-name text-right border-none p-1 whitespace-nowrap w-max"></td>
               <td class="relative border-none p-1 w-full">
-                <div class="overflow-hidden h-6 mb-4 text-xs flex rounded-lg">
+                <div class="overflow-hidden h-6 text-xs flex rounded-lg">
                   <div class="score-bar-score shadow-none flex flex-col text-center whitespace-nowrap rounded-lg text-pink-900 justify-center bg-pink-300"></div>
                 </div>
               </td>
@@ -318,11 +314,11 @@
     </div>
   </body>
   <footer>
-    <script src="./popquiz/components.js"></script>
-    <script src="./popquiz/playerLobby.js"></script>
-    <script src="./popquiz/hostLobby.js"></script>
-    <script src="./popquiz/hostPanel.js"></script>
-    <script src="./popquiz/login.js"></script>
-    <script src="./popquiz/index.js"></script>
+    <script src="./components.js"></script>
+    <script src="./playerLobby.js"></script>
+    <script src="./hostLobby.js"></script>
+    <script src="./hostPanel.js"></script>
+    <script src="./login.js"></script>
+    <script src="./index.js"></script>
   </footer>
 </html>

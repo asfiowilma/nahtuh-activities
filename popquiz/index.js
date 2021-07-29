@@ -6,6 +6,7 @@ var isAcceptingPlayers = false;
 var isStarted = false;
 var playerList = [];
 var questions = [];
+var leaderboard = {};
 
 const BASE_SCORE = 200;
 const hp = HostPanel,
@@ -29,23 +30,28 @@ yai.onParticipantLeave = onPlayerLeave;
 
 function onPlayerJoin(message) {
   playerList.push(message);
-  HostLobby.onPlayerJoin(message);
+  hl.onPlayerJoin(message);
 }
 
 function onPlayerLeave(message) {
-  playerList.pop(message);
-  HostLobby.onPlayerLeave(message);
+  console.log(`player is leaving`);
+  yai.getParticipantList().then((newList) => {
+    playerList = newList.filter((p) => !p.isHost);
+    hl.renderPlayerList(message);
+  });
+  console.log(playerList);
 }
 
 function onIncomingMessage(data) {
   // console.log(data);
-  if (!isHost) PlayerLobby.onIncomingMessage(data.content);
+  hl.onIncomingMessage(data)
+  if (!isHost) pl.onIncomingMessage(data.content);
 }
 
 function onEventVariableChanged(message) {
   // console.log(message);
   // PlayerLobby.onEventVariableChanged(message);
-  HostLobby.onEventVariableChanged(message);
+  hl.onEventVariableChanged(message);
 }
 
 /* PLUGINS */
@@ -63,6 +69,8 @@ $.fn.submitOnEnter = function (submitId) {
 $.fn.replaceClass = function (pFromClass, pToClass) {
   return this.removeClass(pFromClass).addClass(pToClass);
 };
+
+/* UTILS */
 
 function uploadJson(id, callback) {
   document.getElementById(id).onchange = function (evt) {
@@ -98,6 +106,12 @@ function detectJoinLink() {
 
 function nth(n) {
   return [, "st", "nd", "rd"][(n / 10) % 10 ^ 1 && n % 10] || "th";
+}
+
+async function findHost() {
+  var participants = await yai.getParticipantList();
+  var host = participants.find((player) => player.isHost);
+  return host;
 }
 
 function dev() {
