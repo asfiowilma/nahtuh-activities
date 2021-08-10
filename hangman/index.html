@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.3/css/all.css" integrity="sha384-SZXxX4whJ79/gErwcOYf+zWLeJdY/qpuqC4cAa9rOGUstPomtqpuNWT9wdPEn2fk" crossorigin="anonymous" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
     <link rel="stylesheet" href="./styles.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
     <script src="https://code.jquery.com/jquery-3.6.0.slim.min.js" integrity="sha256-u7e5khyithlIdTpu22PHhENmPcRdFiHRjhAuHcs05RI=" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.7/signalr.min.js"></script>
@@ -15,33 +16,14 @@
     <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/yai-settings.js"></script>
     <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/identitymanager.js"></script>
     <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/yai.js"></script>
+    <script type="module" src="/js/components/index.js"></script>
     <title>Hangman</title>
   </head>
   <body>
     <div id="canvas" class="canvas w-full h-fit-content min-h-screen flex flex-col justify-center bg-gradient-to-br from-gray-700 to-gray-900">
       <!-- LOGIN PANEL -->
       <div id="login-panel" class="flex-1 flex flex-col w-full md:w-96 px-4 mx-auto items-center justify-center">
-        <h1 class="text-center text-3xl md:text-4xl font-bold text-white">Hangman Game</h1>
-        <div class="p-4 bg-white rounded-lg mt-4 mb-2 w-full shadow-lg">
-          <form class="flex flex-col justify-center items-stretch">
-            <label class="hidden" for="game-id">Game ID</label>
-            <input type="text" class="rounded ring-1 ring-gray-300 px-4 py-2 mb-3 text-center" id="game-id" placeholder="Game ID" />
-            <div id="enter-game-id" class="btn btn-dark font-bold py-2">Enter</div>
-          </form>
-        </div>
-        <div id="create-link" class="text-white hover:text-gray-300 hover:underline text-center cursor-pointer">Create new Game</div>
-      </div>
-
-      <!-- USERNAME PANEL -->
-      <div id="username-panel" class="hidden flex-1 flex flex-col w-full md:w-96 px-4 mx-auto items-center justify-center">
-        <div id="create-or-enter" class="text-center text-3xl md:text-4xl font-bold text-white"></div>
-        <div class="p-4 bg-white shadow-lg rounded-lg mt-4 mb-2 w-full">
-          <div class="flex flex-col justify-center items-stretch">
-            <input type="text" id="username" class="rounded ring-1 ring-gray-300 px-4 py-2 mb-3 text-center" />
-            <div id="enter-button" class="btn btn-dark font-bold py-2"></div>
-          </div>
-        </div>
-        <div id="backlink" class="text-white hover:text-gray-300 hover:underline cursor-pointer text-center">Back</div>
+        <create-event-component id="create-event" colorLink="#FFFBEB" colorprimary="#F59E0B" colorsecondary="#D97706"></create-event-component>
       </div>
 
       <!-- LOBBY -->
@@ -277,7 +259,6 @@
       <!-- CREDITS -->
       <!-- <a id="credits" href="https://www.vecteezy.com/free-vector/vector" class="text-gray-400 text-sm m-2 absolute bottom-0 left-0">Vector Vectors by Vecteezy</a> -->
       <div id="credits" class="text-gray-600 text-sm m-2 absolute bottom-0 left-0">
-        <a href="https://www.vecteezy.com/free-vector/hangman">Hangman Vectors by Vecteezy</a>
         <div>Music by Zen_Man from <a href="https://pixabay.com/?utm_source=link-attribution&amp;utm_medium=referral&amp;utm_campaign=music&amp;utm_content=2699">Pixabay</a></div>
       </div>
     </div>
@@ -285,7 +266,6 @@
   <footer>
     <script src="./components.js"></script>
     <script src="./lobby.js"></script>
-    <script src="./login.js"></script>
     <script src="./index.js"></script>
   </footer>
 </html>

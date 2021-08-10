@@ -6,6 +6,9 @@ var playerList = [];
 var isHost = false;
 var isMuted = false;
 
+var createEvent = document.getElementById("create-event");
+createEvent.onStart = onConnected;
+
 yai.onParticipantJoined = onPlayerJoin;
 yai.onIncomingMessage = onIncomingMessage;
 yai.onEventVariableChanged = onEventVariableChanged;
@@ -18,6 +21,23 @@ const lobbyScenes = ["#game-setup", "#game-play", "#waiting-for-host", "#full-le
 const lobbyNavButtons = ["#leaderboard-btn", "#history-btn", "#play-game-btn"];
 const lobby = Lobby;
 
+function onConnected(data) {
+  isHost = data.participant.isHost;
+  username = data.participant.participantName;  
+  eventId = data.eventInfo.eventId
+  console.log(isHost, username, eventId);
+
+  if (isHost) {
+    yai.eventVars.words = [];
+    yai.eventVars.leaderboard = {};
+  } else {
+    yai.getParticipantList().then((participants) => {
+      playerList = participants.filter((player) => !player.isHost);
+      lobby.renderPlayerList();
+    });
+  }
+  Lobby.start();
+}
 
 function onPlayerJoin(player) {
   playerList.push(player);
@@ -84,17 +104,6 @@ var youLoseSound = new Sound(ROOT + "sounds/you-lose.wav");
 
 /* UTILS */
 
-function detectJoinLink() {
-  eventId = new URLSearchParams(window.location.search).get("id");
-  username = new URLSearchParams(window.location.search).get("username");
-  if (username) $("#username").val(username);
-  if (eventId) {
-    $("#game-id").val(eventId);
-    $("#game-id").attr("readonly", true);
-    $("#enter-game-id").click();
-  }
-}
-
 function nth(n) {
   return [, "st", "nd", "rd"][(n / 10) % 10 ^ 1 && n % 10] || "th";
 }
@@ -125,4 +134,7 @@ function dev() {
   LoginScene.start();
 }
 
-detectJoinLink();
+$(document).ready(function () {
+  styleButtons();
+  setButtonsOnClick();
+});
