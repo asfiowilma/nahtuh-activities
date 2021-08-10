@@ -1,0 +1,18 @@
+{
+  "name": "popquiz",
+  "version": "1.0.0",
+  "description": "![popquiz banner](https://user-images.githubusercontent.com/56245115/124871953-e315cf80-dfee-11eb-9f99-3bd27e6181d1.png)",
+  "main": "index.js",
+  "dependencies": {
+    "autoprefixer": "^10.3.1",
+    "postcss-cli": "^8.3.1",
+    "tailwindcss": "^2.2.7"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "build": "postcss styles/styles.css -o styles.css",
+    "prod": "SET NODE_ENV=production&& postcss styles/styles.css -o styles.css"
+  },
+  "author": "lyth",
+  "license": "ISC"
+}

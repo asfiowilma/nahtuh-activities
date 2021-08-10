@@ -28,24 +28,49 @@ yai.onIncomingMessage = onIncomingMessage;
 yai.onEventVariableChanged = onEventVariableChanged;
 yai.onParticipantLeave = onPlayerLeave;
 
+function onConnected(data) {
+  isHost = data.participant.isHost;
+  username = data.participant.participantName;
+  eventId = data.eventInfo.eventId;
+
+  if (isHost) {
+    yai.eventVars.wrongAnswers = [];
+    if (!yai.isLoadingActivitySet && !yai.isActivitySetOwner) {
+      $("#hp-update-set").addClass("hidden");
+    } else if (yai.isLoadingActivitySet) {
+      console.log("loading activity set...");
+      if (yai.isActivitySetOwner) {
+        $("#hp-update-set").click(() =>
+          swal({
+            title: "Update Activity Set",
+            text: "Your previous activity set will be overwritten.\nAre you sure?",
+            buttons: ["Nevermind", "Update"],
+          }).then((value) => {
+            if (value) hp.updateActivitySet();
+          })
+        );
+      }
+      loadActivitySet();
+    }
+    HostPanel.start();
+  } else {
+    PlayerLobby.start();
+  }
+}
+
+function onAlert(message) {
+  swal({ icon: "warning", text: message, button: false });
+}
+
 function onPlayerJoin(message) {
   playerList.push(message);
   hl.onPlayerJoin(message);
 }
 
-function onPlayerLeave(message) {
-  console.log(`player is leaving`);
-  yai.getParticipantList().then((newList) => {
-    playerList = newList.filter((p) => !p.isHost);
-    hl.renderPlayerList(message);
-  });
-  console.log(playerList);
-}
-
 function onIncomingMessage(data) {
   // console.log(data);
-  hl.onIncomingMessage(data)
-  if (!isHost) pl.onIncomingMessage(data.content);
+  if (isHost) hl.onIncomingMessage(data);
+  else pl.onIncomingMessage(data.content);
 }
 
 function onEventVariableChanged(message) {
@@ -93,17 +118,6 @@ function uploadJson(id, callback) {
   };
 }
 
-function detectJoinLink() {
-  eventId = new URLSearchParams(window.location.search).get("id");
-  username = new URLSearchParams(window.location.search).get("username");
-  if (username) $("#username").val(username);
-  if (eventId) {
-    $("#game-id").val(eventId);
-    $("#game-id").attr("readonly", true);
-    $("#enter-game-id").click();
-  }
-}
-
 function nth(n) {
   return [, "st", "nd", "rd"][(n / 10) % 10 ^ 1 && n % 10] || "th";
 }
@@ -114,12 +128,22 @@ async function findHost() {
   return host;
 }
 
-function dev() {
-  username = "litha";
-  isHost = true;
-  $("#login-panel").toggleClass("hidden");
-  $("#username-panel").toggleClass("hidden");
-  LoginScene.start();
+async function loadActivitySet() {
+  let config = await yai.getActivitySetData();
+  console.log(config);
+  questions = [];
+  $("#question-cards").empty();
+  for (question of config.questions) {
+    hp.addQuestion(question);
+  }
+  if (questions.length > 0) hp.changeQuestion(0);
 }
 
-detectJoinLink();
+$(document).ready(function () {
+  styleButtons();
+  setButtonsOnClick();
+
+  var createEvent = document.getElementById("create-event");
+  createEvent.onStart = onConnected;
+  createEvent.onAlert = onAlert;
+});

@@ -16,14 +16,12 @@ const PlayerLobby = new (function () {
     sceneSwitcher("#lobby");
     $("#credits").toggleClass("hidden");
 
-    findHost().then((host) => this.hostId = host.participantId);
+    findHost().then((host) => (this.hostId = host.participantId));
     this.renderWaitingScreen();
   };
 
   this.onLeave = () => {
-    yai.leaveEvent().then(() => {
-      location.reload();
-    });
+    location.reload();
   };
 
   this.onIncomingMessage = (content) => {
@@ -122,6 +120,22 @@ const PlayerLobby = new (function () {
   this.renderWaitingScreen = () => {
     sceneSwitcher("#waiting-for-host", true);
     $(".pl-username").text(username);
+    $("#waiting-for-host").append(`<lobby-component id="waiting-room"></lobby-component>`);
+
+    var waitingRoom = document.getElementById("waiting-room");
+    waitingRoom.eventId = eventId;
+    waitingRoom.onStart = this.startQuiz;
+    waitingRoom.leaveEvent = this.onLeave;
+
+    // add listeners
+    waitingRoom.listenOnJoin(yai, onPlayerJoin);
+    waitingRoom.listenOnLeave(yai, onPlayerLeave);
+    waitingRoom.listenOnVariableChange(yai);
+
+    // customize colors
+    waitingRoom.colorDanger = "#9D174D";
+    waitingRoom.colorPrimary = "#EC4899";
+    waitingRoom.colorSecondary = "#BE185D";
   };
 
   this.renderQuestion = (question) => {
@@ -139,6 +153,7 @@ const PlayerLobby = new (function () {
       }
     } else {
       componentsToDisplay.push("#pl-short-answer");
+      $("#pl-short-answer-input").val("");
       $("#pl-short-answer-input").focus();
       $("#pl-short-answer-input").submitOnEnter("#pl-submit-answer-btn");
     }

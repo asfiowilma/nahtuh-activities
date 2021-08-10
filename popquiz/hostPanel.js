@@ -2,7 +2,6 @@ const HostPanel = new (function () {
   this.qid = 0;
 
   this.start = () => {
-    canvas.replaceClass("from-pink-400 to-pink-600", "bg-gray-100");
     sceneSwitcher("#host-panel");
     $("#credits").toggleClass("hidden");
 
@@ -44,13 +43,13 @@ const HostPanel = new (function () {
   // ============================================================
 
   this.addQuestion = (questionToAdd) => {
+    console.log("Adding Question");
     questionToAdd = questionToAdd || this.defaultQuestionTemplate();
     questions = [...questions, questionToAdd];
     const idx = questions.length - 1;
 
-    $("#question-cards").append(this.questionCard(idx, questions[idx]));
+    $("#question-cards").append(QuestionCard(idx, questions[idx]));
     this.changeQuestion(idx);
-    // console.log("QUESTION ADDED");
   };
 
   this.changeAnswer = (idx, newValue) => {
@@ -81,13 +80,12 @@ const HostPanel = new (function () {
     const type = $("#type").val();
     const optionType = type === "T/F" ? "tf" : type.toLowerCase();
     let options;
-    
+
     switch (type) {
       case "MC":
       case "T/F":
         options = $(`#hp-option-grid-${optionType}`).find(".option-input");
         options = Array.from(options);
-        console.log(options);
         options = options.slice(0, type === "T/F" ? 2 : options.length).map((option) => ({
           b: option.children[0].checked,
           v: option.children[1].value,
@@ -96,7 +94,6 @@ const HostPanel = new (function () {
       case "SA":
         options = $(`#hp-option-grid-${optionType}`).find(".answer-input");
         options = Array.from(options);
-        console.log(options);
         options = options.map((option) => option.children[0].value);
         break;
     }
@@ -110,9 +107,8 @@ const HostPanel = new (function () {
     };
 
     questions[this.qid] = savedQuestion;
-
-    const oldQuestionCard = $(`.q-card:nth-child(${this.qid + 2})`);
-    const newQuestionCard = this.questionCard(this.qid, savedQuestion);
+    const oldQuestionCard = $(`.q-card:eq(${this.qid + 1})`);
+    const newQuestionCard = QuestionCard(this.qid, savedQuestion);
     oldQuestionCard.replaceWith(newQuestionCard);
   };
 
@@ -120,8 +116,8 @@ const HostPanel = new (function () {
     let old = this.qid;
     this.qid = idx;
 
-    let oldCard = $(`.q-card:nth-child(${old + 2})`);
-    let newCard = $(`.q-card:nth-child(${idx + 2})`);
+    let oldCard = $(`.q-card:eq(${old + 1})`);
+    let newCard = $(`.q-card:eq(${idx + 1})`);
 
     oldCard.replaceClass("from-pink-200 to-pink-300 scale-105", "from-gray-200 to-gray-200");
     newCard.replaceClass("from-gray-200 to-gray-200", "from-pink-200 to-pink-300 scale-105");
@@ -139,11 +135,11 @@ const HostPanel = new (function () {
 
   this.deleteQuestion = (qid) => {
     questions.splice(qid, 1);
-    $(`.q-card:nth-child(${qid + 2})`).remove();
+    $(`.q-card:eq(${qid + 1})`).remove();
 
     //replace question card numbering
     for (let idx = 0; idx < questions.length; idx++) {
-      const qCard = $(`.q-card:nth-child(${idx + 2})`);
+      const qCard = $(`.q-card:eq(${idx + 1})`);
       qCard.find(".q-header").text(`Q${idx + 1}. ${questions[idx].q}`);
       qCard.unbind("click");
       qCard.click(() => this.changeQuestion(idx));
@@ -153,20 +149,16 @@ const HostPanel = new (function () {
     this.changeQuestion(0);
   };
 
-  this.importQuestions = () => {
-    $("#importJson").click();
-    uploadJson("importJson", function (json) {
+  this.importJson = () => {
+    $("#import-json").click();
+    uploadJson("import-json", function (json) {
       const importedQuestions = JSON.parse(json);
-
       questions = [];
-      $(".q-card:not(:nth-child(1))").remove(); //removes all qcards except the template
-
+      $("#question-cards").empty();
       for (question of importedQuestions) {
         hp.addQuestion(question);
-        // $("#question-cards").append(HostPanel.questionCard(i, questions[i]));
       }
       if (questions.length > 0) hp.changeQuestion(0);
-
       swal({
         icon: "success",
         text: "Question set successfully imported!",
@@ -175,9 +167,45 @@ const HostPanel = new (function () {
     });
   };
 
-  this.exportQuestions = () => {
+  this.exportAsActivitySet = () => {
+    const title = $("#activity-set-title").val();
+    const desc = $("#activity-set-desc").val();
+    const thumbnail = activitySetThumbnail;
+    const config = { questions: questions };
+
+    if (this.validate())
+      yai
+        .createActivitySet(desc, title, username, config, thumbnail)
+        .then(() => {
+          toggleModal();
+          swal({
+            icon: "success",
+            text: "Question set successfully made into an activity set!",
+            button: false,
+          });
+        })
+        .catch((err) => swal({ icon: "error", text: err, button: false }));
+  };
+
+  this.updateActivitySet = () => {
+    const config = { questions: questions };
+
+    if (this.validate())
+      yai
+        .updateActivitySetConfig(config)
+        .then(() => {
+          swal({
+            icon: "success",
+            text: "Activity set successfully updated!",
+            button: false,
+          });
+        })
+        .catch((err) => swal({ icon: "error", text: err, button: false }));
+  };
+
+  this.exportAsJson = () => {
     var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(questions));
-    var dlAnchorElem = document.getElementById("export-download");
+    var dlAnchorElem = document.getElementById("hp-export-json");
     dlAnchorElem.setAttribute("href", dataStr);
     dlAnchorElem.setAttribute("download", "questionSet.json");
     swal({
@@ -267,47 +295,16 @@ const HostPanel = new (function () {
   this.defaultQuestionTemplate = () => {
     return {
       type: "MC",
-      time: "20",
+      time: "10",
       points: 1,
       q: "",
-      options: Array.from({ length: 4 }, (i) => ({ b: false, v: "" })),
+      options: Array.from({ length: 4 }, (_) => ({ b: false, v: "" })),
     };
   };
 
   // ============================================================
   // Components
   // ============================================================
-
-  this.questionCard = (idx, quiz) => {
-    const qCard = $(".q-card:nth-child(1)").clone();
-    qCard.removeClass("hidden");
-    qCard.find(".q-type").text(quiz.type);
-    qCard.find(".q-header").text(`Q${idx + 1}. ${quiz.q}`);
-    qCard.find(".q-type").text(quiz.type);
-    qCard.click(() => this.changeQuestion(idx));
-
-    const correctAnswer = qCard.find(".correct-answer").empty();
-    switch (quiz.type) {
-      case "SA":
-        correctAnswer.replaceClass("grid-cols-2", "grid-cols-1");
-        correctAnswer.append(`<div class="text-center bg-gray-100 rounded p-1">${quiz.options[0]}</div>`);
-        break;
-      case "MC":
-        for (opt of quiz.options) {
-          var bgColor = opt.b ? "bg-pink-400" : "bg-gray-100";
-          correctAnswer.append(`<div class="choice rounded ${bgColor} h-4"></div>`);
-        }
-        break;
-      case "T/F":
-        for (opt of quiz.options.slice(0, 2)) {
-          var bgColor = opt.b ? "bg-pink-400" : "bg-gray-100";
-          correctAnswer.append(`<div class="choice rounded ${bgColor} h-6"></div>`);
-        }
-        break;
-    }
-
-    return qCard;
-  };
 
   this.questionInput = () => {
     const type = $("#type").val();

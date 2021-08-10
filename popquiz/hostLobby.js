@@ -4,12 +4,10 @@ const HostLobby = new (function () {
   this.answered = 0;
 
   this.start = () => {
-    canvas.replaceClass("bg-gray-100", "from-pink-400 to-pink-600");
     sceneSwitcher("#lobby");
 
     $("#hl-event-id").text(eventId);
-    sceneSwitcher("#waiting-for-players", true);
-    this.renderPlayerList();
+    this.renderWaitingRoom();
   };
 
   // ============================================================
@@ -18,20 +16,13 @@ const HostLobby = new (function () {
 
   this.onPlayerJoin = (message) => {
     leaderboard[message.participantName] = 0;
-    this.renderPlayerList();
   };
 
   this.onPlayerLeave = (message) => {
     delete yai.eventVars.leaderboard[message.participantName];
-    this.renderPlayerList();
   };
 
-  this.onEventVariableChanged = (message) => {
-    // if (isStarted && message.name === "leaderboard") {
-    //   this.answered++;
-    //   this.rerenderPlayerAnswered();
-    // }
-  };
+  this.onEventVariableChanged = (message) => {};
 
   this.onIncomingMessage = (message) => {
     console.log(message);
@@ -55,6 +46,7 @@ const HostLobby = new (function () {
       nextQId: this.currentQid,
       nextQuestion: questions[this.currentQid],
     });
+    canvas.replaceClass("bg-gray-100", "bg-gradient-to-br from-pink-400 to-pink-600");
     this.renderQuestion(questions[this.currentQid]);
   };
 
@@ -103,15 +95,24 @@ const HostLobby = new (function () {
   // Renderer Scripts
   // ============================================================
 
-  this.renderPlayerList = () => {
-    $("#player-count").text(playerList.length);
-    console.log(`player count=${playerList.length}`);
-    $("#player-list").empty();
+  this.renderWaitingRoom = () => {
+    sceneSwitcher("#waiting-for-players", true);
+    $("#waiting-for-players").append(`<lobby-component id="waiting-room"></lobby-component>`);
 
-    if (playerList.length === 0) $("#player-list").append(PlayerBlock("Waiting for players..."));
-    else {
-      for (player of playerList) $("#player-list").append(PlayerBlock(player.participantName));
-    }
+    var waitingRoom = document.getElementById("waiting-room");
+    waitingRoom.eventId = eventId;
+    waitingRoom.onStart = this.startQuiz;
+    waitingRoom.leaveEvent = pl.onLeave;
+
+    // add listeners
+    waitingRoom.listenOnJoin(yai, onPlayerJoin);
+    waitingRoom.listenOnLeave(yai, onPlayerLeave);
+    waitingRoom.listenOnVariableChange(yai);
+
+    // customize colors
+    waitingRoom.colorDanger = "#9D174D";
+    waitingRoom.colorPrimary = "#EC4899";
+    waitingRoom.colorSecondary = "#BE185D";
   };
 
   this.renderQuestion = (question) => {
@@ -163,6 +164,7 @@ const HostLobby = new (function () {
         }
         console.log("done counting.");
         console.log("appending wrong answers..");
+        $("#wrong-answer-grid").empty();
         for (const answer in wrongAnswers) {
           const count = wrongAnswers[answer];
           $("#wrong-answer-grid").append(WrongAnswerBlock(answer, count));

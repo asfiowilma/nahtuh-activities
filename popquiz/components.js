@@ -3,10 +3,14 @@
 // ============================================================
 
 function styleButtons() {
+  $(".input-form").replaceClass(
+    "input-form",
+    "shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+  );
   $(".btn").replaceClass("btn", "px-2 py-1 text-center cursor-pointer rounded transition ease-in-out");
   $(".btn-primary").replaceClass(
     "btn-primary",
-    "bg-gradient-to-br from-pink-400 to-pink-500 hover:bg-pink-400 text-white"
+    "bg-gradient-to-br from-pink-400 to-pink-500 hover:to-pink-600 text-white"
   );
   $(".btn-primary-outline").replaceClass(
     "btn-primary-outline",
@@ -31,26 +35,33 @@ function styleButtons() {
 }
 
 function setButtonsOnClick() {
-  /* LOGIN PANEL */
-  $("#enter-game-id").click(() => renderUsernameInput(false));
-  $("#create-link").click(() => renderUsernameInput(true));
-
-  $("#enter-button").one("click", () => joinOrCreateRoom());
-  $("#backlink").click(() => {
-    $("#login-panel").toggleClass("hidden");
-    $("#username-panel").toggleClass("hidden");
-  });
-
   /* HOST PANEL */
   $("#menu-toggle").click(() => hp.toggleSidebar());
   $("#hp-start-quiz-btn").click(() => hp.startQuiz());
   $("#hp-add-question-btn").click(() => hp.addQuestion());
   $("#hp-save-question-btn").click(() => hp.saveQuestion());
-  $("#hp-import-btn").click(() => hp.importQuestions());
-  $("#hp-export-btn").click(() => hp.exportQuestions());
+  $("#hp-import-btn").click(() => hp.importJson());
+  $("#hp-export-json").click(() => hp.exportAsJson());
+  $("#hp-export-set").click(() => toggleModal());
+  $("#hp-export-set-btn").click(() => hp.exportAsActivitySet());
+
+  $(".modal-overlay").click(() => toggleModal());
+  $(".modal-close, .modal-close").click(() => toggleModal());
+
+  document.onkeydown = function (e) {
+    e = e || window.event;
+    var isEscape = false;
+    if ("key" in e) {
+      isEscape = e.key === "Escape" || e.key === "Esc";
+    } else {
+      isEscape = e.code === "Escape";
+    }
+    if (isEscape && $("body").hasClass("modal-active")) {
+      toggleModal();
+    }
+  };
 
   /* LOBBY */
-  $("#hl-start-quiz-btn").click(() => hl.startQuiz());
   $("#pl-submit-answer-btn").click(() => pl.answerHandler());
   $(".pl-quit-btn").click(() => pl.onLeave());
 }
@@ -74,6 +85,58 @@ function toggleHideQuestionDisplay(componentsToUnhide) {
   ];
   componentsToHide.forEach((hide) => $(hide).addClass("hidden"));
   componentsToUnhide.forEach((show) => $(show).removeClass("hidden"));
+}
+
+function toggleModal() {
+  $(".modal").toggleClass("opacity-0 pointer-events-none");
+  $("body").toggleClass("modal-active");
+}
+
+var activitySetThumbnail = "";
+function imageViewer(img) {
+  return {
+    imageUrl: img || "",
+
+    clearPreview() {
+      document.getElementById("activity-set-thumbnail").value = null;
+      this.imageUrl = "";
+      activitySetThumbnail = "";
+      styleButtons();
+    },
+
+    fileChosen(event) {
+      this.fileToDataUrl(event, (src) => (this.imageUrl = src));
+    },
+
+    fileToDataUrl(event, callback) {
+      if (!event.target.files.length) return;
+      const files = [...event.target.files];
+
+      if (files[0].size > 1024 * 1024) {
+        Compress.compress(files, {
+          size: 1, // the max size in MB, defaults to 2MB
+          quality: 0.6, // the quality of the image, max is 1
+        }).then((result) => {
+          // returns an array of compressed images
+          const img = result[0];
+          const base64str = "data:image/jpeg;charset=utf-8;base64, " + img.data;
+          console.log(img.endSizeInMb + "MiB");
+          activitySetThumbnail = img;
+          callback(base64str);
+        });
+      } else {
+        let file = event.target.files[0];
+        let reader = new FileReader();
+        activitySetThumbnail = file;
+
+        reader.readAsDataURL(file);
+        reader.onload = (e) => {
+          callback(e.target.result);
+          console.log(files[0].size / 1024 / 1024 + "MiB");
+        };
+      }
+    },
+  };
 }
 
 const OptionInput = (qid, idx, option) => {
@@ -106,19 +169,6 @@ const AnswerInput = (value, idx, isLast) => {
   return answerInput;
 };
 
-const OptionGrid = (type) => {
-  return `<div id="option-grid" class="grid ${
-    type === "SA" ? "grid-cols-1" : `grid-rows-${type === "T/F" ? 2 : 4} md:grid-rows-none md:grid-cols-2`
-  } gap-4"></div>`;
-};
-
-const ProgressBar = (duration) => {
-  $("#progress-bar").removeClass("hidden");
-  const progress = $(".progress-animate").clone();
-  progress.css("animation-duration", duration + "s");
-  $("#progress-bar div").append(progress);
-};
-
 const OptionButton = (option, reveal = false, isHost = false, answer = null) => {
   var optionBtn = $(`
     <div class="w-full text-black bg-white ${reveal && option.b ? "bg-green-400 text-white" : ""} ${
@@ -137,6 +187,13 @@ const OptionButton = (option, reveal = false, isHost = false, answer = null) => 
       PlayerLobby.answerHandler(option);
     });
   return optionBtn;
+};
+
+const ProgressBar = (duration) => {
+  $("#progress-bar").removeClass("hidden");
+  const progress = $(".progress-animate").clone();
+  progress.css("animation-duration", duration + "s");
+  $(".progress-animate").replaceWith(progress);
 };
 
 const HostLobbyHeader = (reveal = false, leaderboard = false) => {
@@ -207,4 +264,35 @@ const LeaderboardScoreBar = (uname, score, winner) => {
   scoreBar.find(".score-bar-score").css("width", (score / winner) * 100 + 2 + "%");
 
   return scoreBar;
+};
+
+const QuestionCard = (idx, quiz) => {
+  const qCard = $(".q-card").first().clone();
+  qCard.removeClass("hidden");
+  qCard.find(".q-type").text(quiz.type);
+  qCard.find(".q-header").text(`Q${idx + 1}. ${quiz.q}`);
+  qCard.find(".q-type").text(quiz.type);
+  qCard.click(() => hp.changeQuestion(idx));
+
+  const correctAnswer = qCard.find(".correct-answer").empty();
+  switch (quiz.type) {
+    case "SA":
+      correctAnswer.replaceClass("grid-cols-2", "grid-cols-1");
+      correctAnswer.append(`<div class="text-center bg-gray-100 rounded p-1">${quiz.options[0]}</div>`);
+      break;
+    case "MC":
+      for (opt of quiz.options) {
+        var bgColor = opt.b ? "bg-pink-400" : "bg-gray-100";
+        correctAnswer.append(`<div class="choice rounded ${bgColor} h-4"></div>`);
+      }
+      break;
+    case "T/F":
+      for (opt of quiz.options.slice(0, 2)) {
+        var bgColor = opt.b ? "bg-pink-400" : "bg-gray-100";
+        correctAnswer.append(`<div class="choice rounded ${bgColor} h-6"></div>`);
+      }
+      break;
+  }
+
+  return qCard;
 };
