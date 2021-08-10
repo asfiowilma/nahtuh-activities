@@ -1,0 +1,16 @@
+{
+  "overrides": [
+    {
+      "files": "**/*.html", 
+      "options": {
+        "printWidth": 3000
+      }
+    },
+    {
+      "files": "**/*.js", 
+      "options": {
+        "printWidth": 120
+      }
+    }
+  ]
+}
