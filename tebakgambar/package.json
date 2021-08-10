@@ -1,0 +1,17 @@
+{
+  "name": "tebakgambar",
+  "version": "1.0.0",
+  "description": "![tebakgambar banner](https://user-images.githubusercontent.com/56245115/124872233-338d2d00-dfef-11eb-9450-c48dc6a388dc.png)",
+  "main": "index.js",
+  "scripts": {
+    "build": "postcss styles/styles.css -o styles.css",
+    "prod": "SET NODE_ENV=production&& postcss styles/styles.css -o styles.css"
+  },
+  "author": "lyth",
+  "license": "ISC",
+  "dependencies": {
+    "autoprefixer": "^10.3.1",
+    "postcss-cli": "^8.3.1",
+    "tailwindcss": "^2.2.7"
+  }
+}
