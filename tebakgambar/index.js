@@ -6,34 +6,88 @@ var isAcceptingPlayers = false;
 var isStarted = false;
 var playerList = [];
 var questions = [];
+var leaderboard = {};
 var loadedImage = null;
 
 const BASE_SCORE = 200;
+const hp = HostPanel,
+  hl = HostLobby,
+  pl = PlayerLobby;
+
+const scenes = ["#login-panel", "#username-panel", "#host-panel", "#lobby"];
+const lobbyScenes = [
+  "#waiting-for-players",
+  "#waiting-for-reveal",
+  "#waiting-for-host",
+  "#question-display",
+  "#leaderboard",
+  "#display-final-rank",
+];
 
 yai.onParticipantJoined = onPlayerJoin;
-yai.onParticipantLeave = onPlayerLeave;
 yai.onIncomingMessage = onIncomingMessage;
-yai.onEventVariableChanged = onEventVariableChanged;
+
+function onConnected(data) {
+  isHost = data.participant.isHost;
+  username = data.participant.participantName;
+  eventId = data.eventInfo.eventId;
+
+  if (isHost) {
+    yai.eventVars.wrongAnswers = [];
+    if (!yai.isLoadingActivitySet && !yai.isActivitySetOwner) {
+      $("#hp-update-set").addClass("hidden");
+    } else if (yai.isLoadingActivitySet) {
+      console.log("loading activity set...");
+      if (yai.isActivitySetOwner) {
+        $("#hp-update-set").click(() =>
+          swal({
+            title: "Update Activity Set",
+            text: "Your previous activity set will be overwritten.\nAre you sure?",
+            buttons: ["Nevermind", "Update"],
+          }).then((value) => {
+            if (value) hp.updateActivitySet();
+          })
+        );
+      }
+      loadActivitySet();
+    }
+    HostPanel.start();
+  } else {
+    PlayerLobby.start();
+  }
+}
+
+function onAlert(message) {
+  swal({ icon: "warning", text: message, button: false });
+}
 
 function onPlayerJoin(message) {
   playerList.push(message);
-  HostLobby.onPlayerJoin(message);
-}
-
-function onPlayerLeave(message) {
-  playerList.pop(message);
-  HostLobby.onPlayerLeave(message);
+  hl.onPlayerJoin(message);
 }
 
 function onIncomingMessage(data) {
   // console.log(data);
-  if (!isHost) MainScene.onIncomingMessage(data.content);
+  if (isHost) hl.onIncomingMessage(data);
+  else pl.onIncomingMessage(data.content);
 }
+/* PLUGINS */
 
-function onEventVariableChanged(message) {
-  // console.log(message);
-  HostLobby.onEventVariableChanged(message);
-}
+$.fn.submitOnEnter = function (submitId) {
+  this.on("keypress", function (e) {
+    if (e.key == "Enter") {
+      e.preventDefault();
+      $(submitId).click();
+    }
+  });
+  return this;
+};
+
+$.fn.replaceClass = function (pFromClass, pToClass) {
+  return this.removeClass(pFromClass).addClass(pToClass);
+};
+
+/* UTILS */
 
 function uploadJson(id, callback) {
   document.getElementById(id).onchange = function (evt) {
@@ -56,64 +110,36 @@ function uploadJson(id, callback) {
   };
 }
 
-function imageViewer(img) {
-  return {
-    imageUrl: img || "",
-
-    fileChosen(event) {
-      this.fileToDataUrl(event, (src) => (this.imageUrl = src));
-    },
-
-    fileToDataUrl(event, callback) {
-      if (!event.target.files.length) return;
-      const files = [...event.target.files];
-
-      if (files[0].size > 1024 * 1024) {
-        Compress.compress(files, {
-          size: 1, // the max size in MB, defaults to 2MB
-          quality: 0.6, // the quality of the image, max is 1
-        }).then((result) => {
-          // returns an array of compressed images
-          const img = result[0];
-          const base64str = "data:image/jpeg;charset=utf-8;base64, " + img.data;
-          console.log(img.endSizeInMb + "MiB");
-          callback(base64str);
-          loadedImage = base64str;
-        });
-      } else {
-        let file = event.target.files[0],
-          reader = new FileReader();
-
-        reader.readAsDataURL(file);
-        reader.onload = (e) => {
-          callback(e.target.result);
-          console.log(files[0].size / 1024 / 1024 + "MiB");
-          loadedImage = e.target.result;
-        };
-      }
-    },
-  };
-}
-
-function detectJoinLink() {
-  eventId = new URLSearchParams(window.location.search).get("id");
-  if (eventId) {
-    $("#gameId").val(eventId);
-    $("#gameId").attr("readonly", true);
-    $("#enterGameId").click();
-  }
-}
-
 function nth(n) {
   return [, "st", "nd", "rd"][(n / 10) % 10 ^ 1 && n % 10] || "th";
 }
 
-detectJoinLink();
-
-function dev() {
-  username = "litha";
-  isHost = true;
-  LoginScene.start();
+async function findHost() {
+  var participants = await yai.getParticipantList();
+  var host = participants.find((player) => player.isHost);
+  return host;
 }
 
-// dev();
+async function loadActivitySet() {
+  let config = await yai.getActivitySetData();
+  console.log(config);
+  questions = [];
+  $("#question-cards").empty();
+  for (question of config.questions) {
+    hp.addQuestion(question);
+  }
+  if (questions.length > 0) hp.changeQuestion(0);
+}
+
+$(document).ready(function () {
+  styleButtons();
+  setButtonsOnClick();
+
+  var createEvent = document.getElementById("create-event");
+  createEvent.onStart = onConnected;
+  createEvent.onAlert = onAlert;
+});
+
+document.addEventListener("alpine:init", () => {
+  Alpine.data("imageViewer", imageViewer);
+});
