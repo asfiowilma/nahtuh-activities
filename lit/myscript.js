@@ -23,9 +23,6 @@ function renderLobby(data) {
   lobbyComponent.eventId = data.eventInfo.eventId;
   lobbyComponent.onStart = renderGame;
   lobbyComponent.leaveEvent = leaveEvent;
-  lobbyComponent.listenOnJoin(yai, onParticipantJoined);
-  lobbyComponent.listenOnLeave(yai, onParticipantLeave);
-  lobbyComponent.listenOnVariableChange(yai);
 
   // lobbyComponent.colorDanger = "#9D174D";
   // lobbyComponent.colorPrimary = "#EC4899";
