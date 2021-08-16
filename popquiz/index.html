@@ -11,8 +11,8 @@
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.7/signalr.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js"></script>
-    <!-- <script src="/js/components/index.js" type="module"></script> -->
-    
+    <!-- <script src="./js/components/index.js" type="module"></script> -->
+
     <script src="https://yaidevstraccwebapp.blob.core.windows.net/components/index.js" type="module"></script>
     <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/observable-slim.js"></script>
     <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/yai-settings.js"></script>
@@ -197,17 +197,18 @@
         <div id="waiting-for-host" class="hidden"></div>
 
         <!-- HEADER -->
-        <div id="lobby-header" class="hidden sticky top-0 z-40 w-screen flex flex-col items-end mb-4">
-          <div class="bg-pink-700 p-4 pt-8 md:px-8 lg:py-8 lg:px-16 w-full flex items-center justify-between flex-wrap">
+        <div id="lobby-header" class="hidden sticky top-0 z-40 w-full flex flex-col items-start p-4 lg:p-8 lg:pb-0 lg:-mb-10">
+          <div class="bg-pink-100 bg-opacity-20 backdrop-filter backdrop-blur-xl p-4 md:p-6 lg:p-8 w-full rounded-xl flex items-center justify-between flex-wrap">
+            <div id="progress-bar" class="w-full">
+              <div class="overflow-hidden h-4 mb-4 text-xs flex rounded-full bg-white mx-auto">
+                <div class="progress-animate bg-pink-500" style="animation: progressbar-countdown"></div>
+              </div>
+            </div>
             <div id="question-count" class="font-bold text-white"></div>
             <div id="timer" class="font-bold text-white"></div>
-            <div id="next-or-skip-btn" class="btn btn-light w-full mt-2 md:mt-0 md:w-40">Skip</div>
+            <div id="next-or-skip-btn" class="btn btn-light-outline w-full mt-2 md:mt-0 md:w-40">Skip</div>
           </div>
-          <div id="progress-bar" class="absolute top-4 w-full px-4 md:px-8 lg:px-16">
-            <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-white container mx-auto">
-              <div class="progress-animate shadow-none flex flex-col text-center whitespace-nowrap text-pink-900 justify-center bg-pink-500" style="animation: progressbar-countdown"></div>
-            </div>
-          </div>
+
           <div id="answered" class="hidden font-bold text-white text-right mr-8 mt-2 md:mt-4">Answered <span id="answer-count">0</span></div>
         </div>
 
@@ -224,15 +225,15 @@
             <input id="pl-short-answer-input" type="text" placeholder="Enter correct answer" class="options input-form" />
             <div id="pl-submit-answer-btn" class="btn btn-primary ml-2 flex items-center">Submit</div>
           </div>
-          <div id="display-correct-answer" class="hidden mt-4 shadow rounded py-2 px-6 text-gray-700 leading-tight bg-green-400 text-center mx-auto"></div>
-          <div id="display-wrong-answer" class="hidden mt-4 shadow appearance-none rounded py-2 px-6 text-white leading-tight bg-pink-900 text-center mx-auto"></div>
+          <div id="display-correct-answer" class="hidden mt-4 rounded py-2 px-6 text-gray-700 bg-green-400 text-center mx-auto"></div>
+          <div id="display-wrong-answer" class="hidden mt-4 rounded py-2 px-6 text-white bg-pink-900 bg-opacity-50 text-center mx-auto"></div>
 
           <!-- WRONG ANSWERS TO REGRADE -->
           <div id="hl-wrong-answers" class="hidden w-full">
             <div class="font-bold text-xl text-white text-center mt-4">Wrong answers:</div>
 
             <!-- WRONG ANSWER BLOCK TEMPLATE -->
-            <div class="wrong-answer-block hidden border border-white bg-pink-900 text-white rounded-lg p-4 flex flex-col transform ease-in-out">
+            <div class="wrong-answer-block hidden bg-pink-900 bg-opacity-50 text-white rounded-lg p-4 flex flex-col transform ease-in-out">
               <div class="flex items-center justify-end">
                 <div class="wab-regrade-btn btn btn-primary transform ease-in-out"><span class="hidden">Mark as correct</span><i class="fas fa-check"></i></div>
               </div>
@@ -251,7 +252,7 @@
             <span id="pl-waiting-remarks"></span>
             <span> Waiting for host to reveal answer..</span>
           </div>
-        </div>
+        </div>        
 
         <!-- LEADERBOARD -->
         <div id="leaderboard" class="hidden flex-1 flex flex-col items-center justify-center mx-auto container md:max-w-lg lg:max-w-3xl px-4 md:px-0 py-8">
@@ -260,6 +261,10 @@
             <div id="leaderboard-winner-name" class="text-4xl"></div>
             <div id="leaderboard-winner-score" class="text-lg"></div>
           </div>
+          <div class="hidden btn-wrapper my-4 flex gap-2">
+            <div class="final-score-btn btn btn-light-outline">Final Score</div>
+            <div class="leaderboard-btn btn btn-light">Leaderboard</div>
+          </div>
 
           <!-- BAR TEMPLATE -->
           <table class="hidden">
@@ -267,7 +272,7 @@
               <td class="score-bar-name text-right border-none p-1 whitespace-nowrap w-max"></td>
               <td class="relative border-none p-1 w-full">
                 <div class="overflow-hidden h-6 text-xs flex rounded-lg">
-                  <div class="score-bar-score shadow-none flex flex-col text-center whitespace-nowrap rounded-lg text-pink-900 justify-center bg-pink-300"></div>
+                  <div class="score-bar-score shadow-none flex flex-col text-center whitespace-nowrap rounded-lg text-pink-900 justify-center bg-pink-200"></div>
                 </div>
               </td>
             </tr>
@@ -275,21 +280,27 @@
 
           <!-- SCORE BARS -->
           <table id="bars" class="w-full mt-4 table-auto border-none"></table>
-        </div>
-
+        </div>     
+        
         <!-- PLAYER FINAL RANK -->
         <div id="display-final-rank" class="hidden flex-1 flex flex-col items-center justify-center mx-auto container md:max-w-lg lg:max-w-xl xl:max-w-3xl px-4 md:px-0 mb-4">
           <div class="my-4 text-center font-bold text-white">
             <div id="pl-final-remark" class="text-lg"></div>
             <div id="pl-final-rank" class="text-4xl"></div>
-            <div id="pl-final-score" class="text-lg"></div>
+            <div id="pl-final-score" class="text-lg"></div>            
+          </div>
+          <div class="btn-wrapper my-4 flex gap-2">
+            <div class="final-score-btn btn btn-light">Final Score</div>
+            <div class="leaderboard-btn btn btn-light-outline">Leaderboard</div>
           </div>
         </div>
 
         <!-- FOOTER -->
-        <div id="lobby-footer" class="hidden bg-pink-700 p-4 md:py-8 md:px-16 relative w-screen flex items-center justify-between">
-          <div class="pl-username text-2xl font-bold text-white"></div>
-          <div class="pl-quit-btn btn btn-light-outline w-20 md:w-40">Quit</div>
+        <div id="lobby-footer" class="hidden p-4 md:p-6 lg:px-8 relative w-full">
+          <div class="bg-pink-100 bg-opacity-20 backdrop-filter backdrop-blur-xl rounded-xl w-full flex items-center justify-between p-4 md:pl-6">
+            <div class="pl-username text-2xl font-bold text-white truncate mr-4"></div>
+            <div class="pl-quit-btn btn btn-light-outline whitespace-nowrap"><i class="fas fa-sign-out-alt mr-2"></i>Leave</div>
+          </div>
         </div>
       </div>
 

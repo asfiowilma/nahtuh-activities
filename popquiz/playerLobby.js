@@ -21,7 +21,9 @@ const PlayerLobby = new (function () {
   };
 
   this.onLeave = () => {
-    location.reload();
+    swal({ icon: "warning", text: "Are you sure you want to leave?", buttons: true }).then((value) => {
+      if (value) yai.leaveEvent().then(() => history.back());
+    });
   };
 
   this.onIncomingMessage = (content) => {
@@ -29,6 +31,7 @@ const PlayerLobby = new (function () {
       isStarted = isStarted;
       this.totalQuestions = content.totalQuestions;
       $("#lobby-footer").removeClass("hidden");
+      canvas.replaceClass("bg-gray-100", "bg-gradient-to-br from-pink-400 to-pink-600");
     }
 
     if (content === "showCorrect") {
@@ -125,12 +128,7 @@ const PlayerLobby = new (function () {
     var waitingRoom = document.getElementById("waiting-room");
     waitingRoom.eventId = eventId;
     waitingRoom.onStart = this.startQuiz;
-    waitingRoom.leaveEvent = this.onLeave;
-
-    // add listeners
-    waitingRoom.listenOnJoin(yai, onPlayerJoin);
-    waitingRoom.listenOnLeave(yai, onPlayerLeave);
-    waitingRoom.listenOnVariableChange(yai);
+    waitingRoom.leaveEvent = () => history.back();
 
     // customize colors
     waitingRoom.colorDanger = "#9D174D";
@@ -209,11 +207,20 @@ const PlayerLobby = new (function () {
   };
 
   this.renderFinalScreen = (lb) => {
+    const winner = lb[0];
     const rank = lb.findIndex((x) => x.username === username) + 1;
     const remarks = ["Congratulations!", "Great job!", 'You tried your best :")'];
     sceneSwitcher("#display-final-rank", true);
     $("#pl-final-remark").text(rank <= 3 ? remarks[0] : rank == lb.length ? remarks[2] : remarks[1]);
     $("#pl-final-rank").text(`You ranked ${rank + nth(rank)} out of ${lb.length}`);
     $("#pl-final-score").text(`Final Score: ${this.currentScore}`);
+
+    $(".btn-wrapper").removeClass("hidden");
+    $("#leaderboard-heading").text("Final Leaderboard");
+    $("#leaderboard-heading").addClass("text-4xl");
+    $("#bars").empty();
+    for (player of lb) {
+      $("#bars").append(LeaderboardScoreBar(player.username, player.score, winner.score));
+    }
   };
 })();

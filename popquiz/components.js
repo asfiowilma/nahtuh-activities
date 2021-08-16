@@ -64,6 +64,8 @@ function setButtonsOnClick() {
   /* LOBBY */
   $("#pl-submit-answer-btn").click(() => pl.answerHandler());
   $(".pl-quit-btn").click(() => pl.onLeave());
+  $(".final-score-btn").click(() => sceneSwitcher("#display-final-rank", true));
+  $(".leaderboard-btn").click(() => sceneSwitcher("#leaderboard", true));
 }
 
 function sceneSwitcher(scene, isInLobby = false) {
@@ -174,7 +176,7 @@ const OptionButton = (option, reveal = false, isHost = false, answer = null) => 
     <div class="w-full text-black bg-white ${reveal && option.b ? "bg-green-400 text-white" : ""} ${
     reveal && !option.b ? "scale-90" : ""
   } ${
-    reveal && answer && !answer.b && option.v === answer.v ? "bg-pink-900 text-white" : ""
+    reveal && answer && !answer.b && option.v === answer.v ? "bg-pink-900 bg-opacity-50 text-white" : ""
   } rounded-lg shadow px-4 py-6 cursor-pointer hover:bg-pink-50 transform transition ${
     !reveal && !isHost ? "hover:scale-105" : ""
   } ease-in-out text-center">
@@ -208,15 +210,19 @@ const HostLobbyHeader = (reveal = false, leaderboard = false) => {
   }
 
   const time = questions[hl.currentQid].time;
+  const outlineBtn = "border border-white text-white hover:text-black";
+  const solidBtn = "bg-white text-black";
 
   if (!reveal) {
     $("#timer").text(time + "s");
     $("#timer").removeClass("hidden");
     $("#answered").removeClass("hidden");
     $("#next-or-skip-btn").text("Skip");
+    $("#next-or-skip-btn").replaceClass(solidBtn, outlineBtn);
     ProgressBar(time);
   } else {
     $("#next-or-skip-btn").text("Next");
+    $("#next-or-skip-btn").replaceClass(outlineBtn, solidBtn);
     $("progress-bar").addClass("hidden");
     $("#timer").addClass("hidden");
     $("#answered").addClass("hidden");
@@ -225,31 +231,26 @@ const HostLobbyHeader = (reveal = false, leaderboard = false) => {
 
 const PlayerLobbyHeader = (time) => {
   $("#lobby-header").removeClass("hidden");
+  $("#next-or-skip-btn").addClass("hidden");
   $("#question-count").text(`Question ${pl.currentQid + 1}/${pl.totalQuestions}`);
   $("#timer").text(time + "s");
   ProgressBar(time);
 };
 
-const PlayerBlock = (str) => {
-  return $(".player-block").first().clone().removeClass("hidden").text(str);
-};
-
 const WrongAnswerBlock = (answer, count) => {
-  // const answerSlug = answer.replace(/[^\w ]+/g, "").replace(/ +/g, "-");
   const wrongBlock = $(".wrong-answer-block").first().clone();
   wrongBlock.removeClass("hidden");
   wrongBlock.find(".wab-answer").text(answer);
   wrongBlock.find(".wab-count").prepend(count);
 
   const regradeBtn = wrongBlock.find(".wab-regrade-btn");
-  // wrongBlock.find(".wab-regrade-btn").attr("id", answerSlug);
   regradeBtn.hover(
     () => regradeBtn.find("span").removeClass("hidden"),
     () => regradeBtn.find("span").addClass("hidden")
   );
   regradeBtn.one("click", function () {
     yai.broadcast({ regrade: answer });
-    wrongBlock.removeClass("bg-pink-900");
+    wrongBlock.replaceClass("bg-opacity-50", "bg-opacity-10");
     regradeBtn.unbind("mouseenter mouseleave");
     regradeBtn.find("span").text("Marked as correct");
   });
@@ -262,6 +263,10 @@ const LeaderboardScoreBar = (uname, score, winner) => {
   scoreBar.find(".score-bar-name").text(uname);
   scoreBar.find(".score-bar-score").text(score);
   scoreBar.find(".score-bar-score").css("width", (score / winner) * 100 + 2 + "%");
+
+  if (!isHost && uname != username) {
+    scoreBar.find(".score-bar-score").addClass("bg-opacity-40");
+  }
 
   return scoreBar;
 };

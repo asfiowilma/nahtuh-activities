@@ -5,8 +5,6 @@ const HostLobby = new (function () {
 
   this.start = () => {
     sceneSwitcher("#lobby");
-
-    $("#hl-event-id").text(eventId);
     this.renderWaitingRoom();
   };
 
@@ -22,8 +20,6 @@ const HostLobby = new (function () {
     delete yai.eventVars.leaderboard[message.participantName];
   };
 
-  this.onEventVariableChanged = (message) => {};
-
   this.onIncomingMessage = (message) => {
     console.log(message);
     if (message.content?.iAnswered >= 0) {
@@ -31,7 +27,6 @@ const HostLobby = new (function () {
       console.log(sender);
       var senderName = sender.participantName;
       leaderboard[senderName] = (leaderboard[senderName] || 0) + message.content.iAnswered;
-      console.log(leaderboard);
 
       this.answered = this.answered + 1;
       $("#answer-count").text(this.answered);
@@ -46,7 +41,7 @@ const HostLobby = new (function () {
       nextQId: this.currentQid,
       nextQuestion: questions[this.currentQid],
     });
-    canvas.replaceClass("bg-gray-100", "bg-gradient-to-br from-pink-400 to-pink-600");
+    canvas.replaceClass("bg-gray-light", "bg-gradient-to-br from-pink-400 to-pink-600");
     this.renderQuestion(questions[this.currentQid]);
   };
 
@@ -102,12 +97,7 @@ const HostLobby = new (function () {
     var waitingRoom = document.getElementById("waiting-room");
     waitingRoom.eventId = eventId;
     waitingRoom.onStart = this.startQuiz;
-    waitingRoom.leaveEvent = pl.onLeave;
-
-    // add listeners
-    waitingRoom.listenOnJoin(yai, onPlayerJoin);
-    waitingRoom.listenOnLeave(yai, onPlayerLeave);
-    waitingRoom.listenOnVariableChange(yai);
+    waitingRoom.leaveEvent = () => location.reload();
 
     // customize colors
     waitingRoom.colorDanger = "#9D174D";

@@ -25,8 +25,6 @@ const lobbyScenes = [
 
 yai.onParticipantJoined = onPlayerJoin;
 yai.onIncomingMessage = onIncomingMessage;
-yai.onEventVariableChanged = onEventVariableChanged;
-yai.onParticipantLeave = onPlayerLeave;
 
 function onConnected(data) {
   isHost = data.participant.isHost;
@@ -71,12 +69,6 @@ function onIncomingMessage(data) {
   // console.log(data);
   if (isHost) hl.onIncomingMessage(data);
   else pl.onIncomingMessage(data.content);
-}
-
-function onEventVariableChanged(message) {
-  // console.log(message);
-  // PlayerLobby.onEventVariableChanged(message);
-  hl.onEventVariableChanged(message);
 }
 
 /* PLUGINS */
