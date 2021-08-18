@@ -25,6 +25,7 @@ const lobbyScenes = [
 ];
 
 yai.onParticipantJoined = onPlayerJoin;
+yai.onParticipantLeave = onPlayerLeave;
 yai.onIncomingMessage = onIncomingMessage;
 
 function onConnected(data) {
@@ -64,6 +65,10 @@ function onAlert(message) {
 function onPlayerJoin(message) {
   playerList.push(message);
   hl.onPlayerJoin(message);
+}
+
+function onPlayerLeave(message) {
+  hl.onPlayerLeave(message);
 }
 
 function onIncomingMessage(data) {

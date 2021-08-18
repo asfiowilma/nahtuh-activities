@@ -205,6 +205,8 @@ const HostLobbyHeader = (reveal = false, leaderboard = false) => {
   $("#next-or-skip-btn").unbind("click");
   if (reveal && leaderboard) {
     $("#next-or-skip-btn").click(() => hl.showLeaderboard());
+  } else if (!reveal) {
+    $("#next-or-skip-btn").click(() => hl.stopTimer());
   } else {
     $("#next-or-skip-btn").click(() => hl.nextQuestion());
   }

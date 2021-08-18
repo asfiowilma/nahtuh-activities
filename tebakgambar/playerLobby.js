@@ -27,11 +27,14 @@ const PlayerLobby = new (function () {
   };
 
   this.onIncomingMessage = (content) => {
+    if (canvas.hasClass("bg-gray-light")) {
+      canvas.replaceClass("bg-gray-light", "bg-gradient-to-br from-blue-400 to-blue-600");
+      $("#lobby-footer").removeClass("hidden");
+    }
+
     if (content.isStarted) {
       isStarted = isStarted;
       this.totalQuestions = content.totalQuestions;
-      $("#lobby-footer").removeClass("hidden");
-      canvas.replaceClass("bg-gray-100", "bg-gradient-to-br from-blue-400 to-blue-600");
     }
 
     if (content === "showCorrect") {
