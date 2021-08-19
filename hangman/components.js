@@ -54,7 +54,7 @@ function setButtonsOnClick() {
     $temp.val(eventId).select();
     document.execCommand("copy");
     $temp.remove();
-    console.log("copied to clipboard");
+    // console.log("copied to clipboard");
     $("#copied-feedback").removeClass("opacity-0");
     setTimeout(() => $("#copied-feedback").addClass("opacity-0"), 1500);
   });
@@ -67,8 +67,8 @@ function setButtonsOnClick() {
   $("#mob-mute, #mute").click(() => {
     $("#mob-mute, #mute").toggleClass("fa-volume-mute").toggleClass("fa-volume-up");
     isMuted = !isMuted;
-    $('audio').prop("muted", isMuted);  // toggle mute 1/0
-    console.log("audio toggle isMuted " + isMuted);
+    $("audio").prop("muted", isMuted); // toggle mute 1/0
+    // console.log("audio toggle isMuted " + isMuted);
   });
 
   /* GAME SETUP */
@@ -84,7 +84,7 @@ function setButtonsOnClick() {
 
 function sceneSwitcher(scene, isInLobby = true) {
   (isInLobby ? lobbyScenes : scenes).forEach((s) => $(s).addClass("hidden"));
-  console.log(`switching scene into ${scene}`);
+  // console.log(`switching scene into ${scene}`);
   $(scene).unhide();
   sceneSwitchingSound.play();
 
@@ -119,7 +119,7 @@ const CharBlock = (char) => {
   const block = (isAlpha(char) ? $(".char") : $(".not-alpha")).first().clone();
   if (isAlpha(char)) {
     const encodedChar = encoded[alphabet.indexOf(char)];
-    console.log(char, encodedChar);
+    // console.log(char, encodedChar);
     block.addClass("char-" + encodedChar);
   } else if (char !== "SPACE") block.text(char);
   block.unhide();
@@ -131,6 +131,11 @@ const FullScoreBlock = (name, score, percent) => {
   block.find(".score-bar-name").text(name ? name : "Player");
   block.find(".score-bar-score").css("width", percent + "%");
   block.find(".score-bar-score").text(name ? score : "");
+
+  if (!isHost && name != username) {
+    block.find(".score-bar-score").addClass("opacity-70");
+  }
+
   return block;
 };
 
@@ -169,6 +174,11 @@ const ScoreBlock = (rank, name, score, percent) => {
   block.find(".score-bar-rank").text(rank + nth(rank));
   block.find(".score-bar-score").css("width", percent + "%");
   block.find(".score-bar-score").text(`${name ? name : ""} ${name ? "-" : ""} ${name ? score : ""}`);
+
+  if (!isHost && name != username) {
+    block.find(".score-bar-score").addClass("opacity-70");
+  }
+
   return block;
 };
 

@@ -1,5 +1,5 @@
 console.log(process.env.NODE_ENV);
-const purge = process.env.NODE_ENV === "production"
+const purge = process.env.NODE_ENV === "production";
 module.exports = {
   purge: {
     enabled: purge,
@@ -15,5 +15,5 @@ module.exports = {
   variants: {
     extend: {},
   },
-  plugins: [],
+  plugins: [require("ps-scrollbar-tailwind")],
 };

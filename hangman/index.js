@@ -6,9 +6,6 @@ var playerList = [];
 var isHost = false;
 var isMuted = false;
 
-var createEvent = document.getElementById("create-event");
-createEvent.onStart = onConnected;
-
 yai.onParticipantJoined = onPlayerJoin;
 yai.onIncomingMessage = onIncomingMessage;
 yai.onEventVariableChanged = onEventVariableChanged;
@@ -23,9 +20,9 @@ const lobby = Lobby;
 
 function onConnected(data) {
   isHost = data.participant.isHost;
-  username = data.participant.participantName;  
-  eventId = data.eventInfo.eventId
-  console.log(isHost, username, eventId);
+  username = data.participant.participantName;
+  eventId = data.eventInfo.eventId;
+  // console.log(isHost, username, eventId);
 
   if (isHost) {
     yai.eventVars.words = [];
@@ -39,22 +36,25 @@ function onConnected(data) {
   Lobby.start();
 }
 
+function onAlert(message) {
+  console.log(message);
+  swal({ icon: "warning", text: message, button: false });
+}
+
 function onPlayerJoin(player) {
   playerList.push(player);
   lobby.renderPlayerList();
 }
 
 function onPlayerLeave(player) {
-  console.log(`player is leaving`);
   yai.getParticipantList().then((newList) => {
     playerList = newList.filter((p) => !p.isHost);
     lobby.renderPlayerList();
   });
-  console.log(playerList);
 }
 
 function onIncomingMessage(message) {
-  console.log(message);
+  // console.log(message);
   if (message.content.iWon) lobby.somebodyWon(message.senderId, message.content.iWon);
   else if (!isHost) lobby.onIncomingMessage(message.content);
 }
@@ -62,11 +62,11 @@ function onIncomingMessage(message) {
 function onEventVariableChanged(message) {
   if (message.name == "words") lobby.renderHistory();
   if (message.name == "leaderboard") lobby.onLeaderboardChange();
-  console.log(message);
+  // console.log(message);
 }
 
 function leave() {
-  console.log("leaving event");
+  // console.log("leaving event");
   yai.leaveEvent().then(() => location.reload());
 }
 
@@ -92,15 +92,15 @@ $.fn.unhide = function () {
 
 /* SOUNDS */
 
-var btnHoverSound = new Sound(ROOT + "sounds/btn-hover.ogg");
-var sceneSwitchingSound = new Sound(ROOT + "sounds/scene-switcher.wav");
-var bgLoopSound = new Sound(ROOT + "sounds/bg-loop.mp3");
-var gameStartSound = new Sound(ROOT + "sounds/game-start.ogg");
+var btnHoverSound = new Sound("./sounds/btn-hover.ogg");
+var sceneSwitchingSound = new Sound("./sounds/scene-switcher.wav");
+var bgLoopSound = new Sound("./sounds/bg-loop.mp3");
+var gameStartSound = new Sound("./sounds/game-start.ogg");
 
-var correctSound = new Sound(ROOT + "sounds/correct-letter.wav");
-var wrongSound = new Sound(ROOT + "sounds/wrong-letter.wav");
-var youWinSound = new Sound(ROOT + "sounds/you-won.wav");
-var youLoseSound = new Sound(ROOT + "sounds/you-lose.wav");
+var correctSound = new Sound("./sounds/correct-letter.wav");
+var wrongSound = new Sound("./sounds/wrong-letter.wav");
+var youWinSound = new Sound("./sounds/you-won.wav");
+var youLoseSound = new Sound("./sounds/you-lose.wav");
 
 /* UTILS */
 
@@ -126,15 +126,11 @@ function shuffle(string) {
     .join("");
 }
 
-function dev() {
-  username = "litha";
-  isHost = true;
-  $("#login-panel").toggleClass("hidden");
-  $("#username-panel").toggleClass("hidden");
-  LoginScene.start();
-}
-
 $(document).ready(function () {
   styleButtons();
   setButtonsOnClick();
+
+  var createEvent = document.getElementById("create-event");
+  createEvent.onStart = onConnected;
+  createEvent.onAlert = onAlert;
 });

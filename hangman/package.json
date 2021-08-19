@@ -16,5 +16,8 @@
     "sweetalert": "^2.1.2",
     "tailwindcss": "^2.2.7",
     "watch": "^1.0.2"
+  },
+  "devDependencies": {
+    "ps-scrollbar-tailwind": "0.0.1"
   }
 }

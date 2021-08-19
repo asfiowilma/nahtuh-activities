@@ -12,11 +12,11 @@
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.7/signalr.min.js"></script>
     <!-- PRODUCTION -->
+    <script src="https://yaidevstraccwebapp.blob.core.windows.net/components/index.js" type="module"></script>
     <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/observable-slim.js"></script>
     <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/yai-settings.js"></script>
     <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/identitymanager.js"></script>
     <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/yai.js"></script>
-    <script type="module" src="/js/components/index.js"></script>
     <title>Hangman</title>
   </head>
   <body>
@@ -64,7 +64,7 @@
             <!-- BLOCK TEMPLATE -->
             <div class="hidden player bg-yellow-500 rounded mr-1 mb-1 text-white text-sm font-bold py-0.5 px-3 shadow-lg"></div>
             <!-- PLAYER LIST DISPLAY -->
-            <div id="players" class="flex flex-wrap mt-2"></div>
+            <div id="players" class="flex flex-wrap mt-2 overflow-y-auto max-h-40 scrollbar scrollbar-width-2 scrollbar-track-gray-700 scrollbar-thumb-gray-500 scrollbar-thumb-radius-full"></div> 
           </div>
 
           <!-- LEADERBOARD -->
@@ -156,8 +156,8 @@
             <!-- GAME PLAY -->
             <div id="game-play" class="hidden flex-1 flex flex-col">
               <div class="flex justify-between">
-                <div id="timer" class="hidden"></div>
-                <div id="winner-count" class="flex items-center text-xl" title="Winners"><span>0</span><i class="fas fa-crown ml-2"></i></div>
+                <div id="timer" class="hidden whitespace-nowrap text-xl self-center mr-4"><i class="fas fa-stopwatch mr-2"></i><span></span></div>
+                <div id="winner-count" class="flex items-center text-xl" title="Winners"><i class="fas fa-crown mr-2"></i><span>0</span></div>
                 <div id="hearts" class="hidden relative w-full text-right text-3xl" title="Remaining Life">
                   <div><i class="heart-life fas fa-heart mr-2"></i><span id="life">5</span></div>
                   <div id="broken-heart" class="opacity-0 absolute top-0 right-0 transform transition transition ease-in-out text-red-500"><i class="fas fa-heart-broken mr-0.5 text-xl"></i><span class="text-lg">-1</span></div>
@@ -192,7 +192,7 @@
             <div id="waiting-for-host" class="hidden flex-1 flex flex-col items-center justify-center">
               <div class="flex flex-col items-center justify-center flex-1">
                 <i class="fas fa-fan fa-4x animate-spin"></i>
-                <div class="text-xl mt-2">Loading word ...</div>
+                <div class="text-xl mt-2">Waiting for players ...</div>
               </div>
             </div>
 

@@ -30,7 +30,7 @@ Lobby = new (function () {
 
   this.onComingWord = (data) => {
     this.game = data;
-    console.log(this.game.word);
+    // console.log(this.game.word);
     this.gamePlay();
   };
 
@@ -42,6 +42,7 @@ Lobby = new (function () {
 
   this.onReplayGame = () => {
     sceneSwitcher("#waiting-for-host");
+    $("#waiting-for-host div div").text("Loading new word ...");
     this.resetGame();
   };
 
@@ -65,6 +66,12 @@ Lobby = new (function () {
     sceneSwitcher("#game-play");
     gameStartSound.play().then(bgLoopSound.bgm().loop().play());
 
+    if (this.game.endGame === "time-limit") {
+      $("#winner-count").addClass("flex-1");
+      $("#timer").unhide();
+      this.startTimer(this.game.limit - 1, $("#timer span"));
+    }
+
     $("#hearts").unhide();
     this.renderKeyboard();
     this.renderWord();
@@ -85,7 +92,7 @@ Lobby = new (function () {
   this.gameCountdown = () => {
     if (this.game.endGame === "time-limit") {
       $("#timer").unhide();
-      if (this.timerInterval == null) this.startTimer(this.game.limit, $("#timer"));
+      if (this.timerInterval == null) this.startTimer(this.game.limit, $("#timer span"));
     } else if (this.game.endGame === "winner-limit") {
       $("#timer").addClass("hidden");
       if (Object.keys(this.game["winners"])?.length == this.game.limit) this.endGame();
@@ -95,7 +102,7 @@ Lobby = new (function () {
   this.gameOver = () => {
     bgLoopSound.stop();
     if (!this.iWon) youLoseSound.play();
-    if (this.hearts == 0) $("#hearts").find(".fa-heart").replaceClass("fa-heart", "fa-heart-broken") 
+    if (this.hearts == 0) $("#hearts").find(".fa-heart").replaceClass("fa-heart", "fa-heart-broken");
     const toBeRevealed = Object.keys(this.game.word).filter((char) => !this.guesses.includes(char));
     for (char of toBeRevealed) this.revealLetter(char);
 
@@ -128,7 +135,7 @@ Lobby = new (function () {
       limit: limit || playerList.length,
     };
 
-    console.log(data);
+    // console.log(data);
     yai.broadcast(data);
 
     data = { ...data, winners: {}, answer: word };
@@ -141,7 +148,7 @@ Lobby = new (function () {
     yai.broadcast({ gameEnded: this.game.answer });
     const data = { word: this.game.answer, category: this.game.category, winners: this.game.winners };
     yai.eventVars.words = [...yai.eventVars.words, data];
-    console.log(yai.eventVars.words);
+    // console.log(yai.eventVars.words);
     this.renderHistory();
     this.updateLeaderboard();
     this.onLeaderboardChange();
@@ -173,10 +180,12 @@ Lobby = new (function () {
     $("#word-to-guess").val("");
     $("#category").val("");
     $("#life").text(5);
+    $("#timer").addClass("hidden");
     $("#winner-count").find("span").text(0);
+    $("#winner-count").removeClass("flex-1");
     $("#word").removeClass("text-yellow-500 text-red-500 animate__tada animate__pulse");
-    $("#hearts").replaceClass("text-red-100 text-red-200 text-red-300 text-red-400 text-red-500", "text-white")
-    $("#hearts").find(".heart-life").replaceClass("fa-heart-broken", "fa-heart") 
+    $("#hearts").replaceClass("text-red-100 text-red-200 text-red-300 text-red-400 text-red-500", "text-white");
+    $("#hearts").find(".heart-life").replaceClass("fa-heart-broken", "fa-heart");
     $(".keycap").replaceClass("cursor-not-allowed", "cursor-pointer");
     $("#reveal-first-letter, #reveal-random-letter, #elim-unused-letter").replaceClass(
       "cursor-not-allowed opacity-20",
@@ -210,11 +219,11 @@ Lobby = new (function () {
     } else {
       wrongSound.play();
       this.hearts = this.hearts - 1;
-      if (this.hearts == 4) $("#hearts").replaceClass("text-white", "text-red-100")
-      else if (this.hearts == 3) $("#hearts").replaceClass("text-red-100", "text-red-200")
-      else if (this.hearts == 2) $("#hearts").replaceClass("text-red-200", "text-red-300")
-      else if (this.hearts == 1) $("#hearts").replaceClass("text-red-300", "text-red-400")
-      else if (this.hearts == 0) $("#hearts").replaceClass("text-red-400", "text-red-500")
+      if (this.hearts == 4) $("#hearts").replaceClass("text-white", "text-red-100");
+      else if (this.hearts == 3) $("#hearts").replaceClass("text-red-100", "text-red-200");
+      else if (this.hearts == 2) $("#hearts").replaceClass("text-red-200", "text-red-300");
+      else if (this.hearts == 1) $("#hearts").replaceClass("text-red-300", "text-red-400");
+      else if (this.hearts == 0) $("#hearts").replaceClass("text-red-400", "text-red-500");
       $("#life").text(this.hearts);
       $("#" + char).addClass("animate__animated animate__headShake");
       this.renderBrokenHeart();
@@ -277,7 +286,7 @@ Lobby = new (function () {
         [winner]: (leaderboard[winner] || 0) + this.game.winners[winner],
       };
     yai.eventVars.leaderboard = leaderboard;
-    console.log(yai.eventVars.leaderboard);
+    // console.log(yai.eventVars.leaderboard);
   };
 
   this.validateWord = (word, category) => {
@@ -310,7 +319,7 @@ Lobby = new (function () {
 
   this.stopTimer = () => {
     clearInterval(this.timerInterval);
-    this.endGame();
+    if (isHost) this.endGame();
   };
 
   /* HINTS */
@@ -320,7 +329,7 @@ Lobby = new (function () {
     const firstLetter = this.findFirstLetter();
     this.keypressHandler(firstLetter);
 
-    console.log("first letter is: " + firstLetter);
+    // console.log("first letter is: " + firstLetter);
     yai.broadcast({ hint: { hint1: firstLetter } });
   };
 
@@ -329,7 +338,7 @@ Lobby = new (function () {
     const randomLetter = this.findRandomLetter();
     this.keypressHandler(randomLetter);
 
-    console.log("random letter is: " + randomLetter);
+    // console.log("random letter is: " + randomLetter);
     yai.broadcast({ hint: { hint2: randomLetter } });
   };
 
@@ -342,7 +351,7 @@ Lobby = new (function () {
       .join("");
     unusedLetters = shuffle(unusedLetters).split("").slice(0, 13);
 
-    console.log(unusedLetters);
+    // console.log(unusedLetters);
     yai.broadcast({ hint: { hint3: unusedLetters } });
   };
 
@@ -376,7 +385,6 @@ Lobby = new (function () {
     {
       id: "select-winner-limit",
       options: [
-        { val: "0", txt: "All players" },
         { val: "1", txt: "Top 1" },
         { val: "3", txt: "Top 3" },
         { val: "5", txt: "Top 5" },
@@ -430,7 +438,7 @@ Lobby = new (function () {
 
     for (char in word)
       for (idx of word[char]) {
-        console.log(char, idx);
+        // console.log(char, idx);
         $(`.char:eq(${parseInt(idx) + 2})`).replaceWith(CharBlock(char.toString()));
       }
   };
