@@ -101,7 +101,6 @@ const HostLobby = new (function () {
   };
 
   this.renderQuestion = (question) => {
-    console.log("rendering new question");
     sceneSwitcher("#question-display", true);
     const componentsToDisplay = ["#display-question-q", "#display-question-img"];
 
