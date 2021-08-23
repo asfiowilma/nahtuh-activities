@@ -2,274 +2,307 @@
 // Components
 // ============================================================
 
-Button = (type, text, onclick, style) => {
-  let color, tColor, hover;
-  switch (type) {
-    case "primary":
-      color = "bg-green-500";
-      tColor = "white";
-      hover = "bg-green-400";
-      break;
-    case "primary-outline":
-      color = "border border-green-500";
-      tColor = "green-500";
-      hover = "bg-green-400 hover:text-white";
-      break;
-    case "secondary":
-      color = "bg-gray-500";
-      tColor = "white";
-      hover = "bg-gray-300";
-      break;
-    case "secondary-outline":
-      color = "border border-gray-500";
-      tColor = "gray-500";
-      hover = "bg-gray-300";
-      break;
-    case "light":
-      color = "bg-white";
-      tColor = "black";
-      hover = "bg-gray-100";
-      break;
-    case "light-outline":
-      color = "border border-white";
-      tColor = "white";
-      hover = "bg-gray-100 hover:text-black";
-      break;
-    case "danger":
-      color = "bg-red-500";
-      tColor = "white";
-      hover = "bg-red-600";
-      break;
-  }
-  return `
-   <div
-     class="px-2 py-1 text-center ${color} hover:${hover} cursor-pointer rounded text-${tColor} ${style}" onclick="${onclick}" 
-   >
-     ${text}
-   </div>
- `;
-};
+function styleButtons() {
+  $(".input-form").replaceClass(
+    "input-form",
+    "shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+  );
+  $(".btn").replaceClass("btn", "px-2 py-1 text-center cursor-pointer rounded transition ease-in-out");
+  $(".btn-primary").replaceClass(
+    "btn-primary",
+    "bg-gradient-to-br from-green-400 to-green-500 hover:to-green-600 text-white"
+  );
+  $(".btn-primary-outline").replaceClass(
+    "btn-primary-outline",
+    "border border-green-500 hover:bg-green-400 text-green-500 hover:text-white"
+  );
+  $(".btn-secondary").replaceClass("btn-secondary", "bg-gray-500 hover:bg-gray-300 text-white");
+  $(".btn-secondary-outline").replaceClass(
+    "btn-secondary-outline",
+    "border border-gray-500 text-gray-500 hover:bg-gray-300"
+  );
+  $(".btn-light").replaceClass("btn-light", "bg-white hover:bg-gray-100 text-black");
+  $(".btn-light-outline").replaceClass(
+    "btn-light-outline",
+    "border border-white text-white hover:bg-gray-100 hover:text-black"
+  );
+  $(".btn-dark").replaceClass("btn-dark", "bg-gray-600 hover:bg-gray-500 text-white");
+  $(".btn-danger").replaceClass("btn-danger", "bg-red-500 hover:bg-red-600 text-white");
+  $(".btn-danger-outline").replaceClass(
+    "btn-danger-outline",
+    "border border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+  );
+}
 
-InputStyle =
-  "w-full shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline";
+function setButtonsOnClick() {
+  /* HOST PANEL */
+  $("#menu-toggle").click(() => hp.toggleSidebar());
+  $("#hp-start-quiz-btn").click(() => hp.startQuiz());
+  $("#hp-add-question-btn").click(() => hp.addQuestion());
+  $("#hp-save-question-btn").click(() => hp.saveQuestion());
+  $("#hp-import-btn").click(() => hp.importJson());
+  $("#hp-export-json").click(() => hp.exportAsJson());
+  $("#hp-export-set").click(() => toggleModal());
+  $("#hp-export-set-btn").click(() => hp.exportAsActivitySet());
+  $("#save-music-video-btn").click(() => hp.saveMusicVideo());
+  $("#tts-play-preview-btn").click(() => hp.togglePlay());
+  $("#manual-reveal-btn").click(() => hl.manualReveal());
 
-OptionInput = (qid, idx, option) => {
-  /* qid = question id, idx = option index, b = boolean correctness, v = option value */
-  return `<div class="options flex items-center">
-    <input
-      type="radio"
-      id="q-${qid}-o-${idx}-b"
-      ${option.b && "checked"}
-      name="isCorrect"
-      class="form-radio h-6 w-6 mr-2 text-green-600"
-    /><input
-      type="text"
-      id="q-${qid}-o-${idx}-v"
-      placeholder="Option ${idx + 1}"
-      value="${option.v}"
-      class="${InputStyle}"
-    />
-  </div>`;
-};
+  $(".modal-overlay").click(() => toggleModal());
+  $(".modal-close, .modal-close").click(() => toggleModal());
+
+  document.onkeydown = function (e) {
+    e = e || window.event;
+    var isEscape = false;
+    if ("key" in e) {
+      isEscape = e.key === "Escape" || e.key === "Esc";
+    } else {
+      isEscape = e.code === "Escape";
+    }
+    if (isEscape && $("body").hasClass("modal-active")) {
+      toggleModal();
+    }
+  };
+
+  /* LOBBY */
+  $("#pl-submit-answer-btn").click(() => pl.answerHandler());
+  $(".pl-quit-btn").click(() => pl.onLeave());
+  $(".final-score-btn").click(() => sceneSwitcher("#display-final-rank", true));
+  $(".leaderboard-btn").click(() => sceneSwitcher("#leaderboard", true));
+}
+
+function sceneSwitcher(scene, isInLobby = false) {
+  (isInLobby ? lobbyScenes : scenes).forEach((s) => $(s).addClass("hidden"));
+  console.log(`switching scene into ${scene}`);
+  $(scene).removeClass("hidden");
+}
+
+function toggleHideQuestionDisplay(componentsToUnhide) {
+  const componentsToHide = [
+    "#display-question-q",
+    "#display-options",
+    "#display-tts-answer",
+    "#display-question-vid",
+    "#display-cover-vid",
+    "#display-correct-answer",
+    "#display-wrong-answer",
+    "#play-btn",
+    "#replay-btn",
+    "#manual-reveal-btn",
+    "#pl-short-answer",
+    "#pl-reveal-score",
+    "#pl-reveal-remark",
+    "#hl-wrong-answers",
+  ];
+  componentsToHide.forEach((hide) => $(hide).addClass("hidden"));
+  componentsToUnhide.forEach((show) => $(show).removeClass("hidden"));
+}
+
+function toggleModal() {
+  $(".modal").toggleClass("opacity-0 pointer-events-none");
+  $("body").toggleClass("modal-active");
+}
+
+var activitySetThumbnail = "";
+function imageViewer(img) {
+  return {
+    imageUrl: img || "",
+
+    clearPreview() {
+      document.getElementById("activity-set-thumbnail").value = null;
+      this.imageUrl = "";
+      activitySetThumbnail = "";
+      styleButtons();
+    },
+
+    fileChosen(event) {
+      this.fileToDataUrl(event, (src) => (this.imageUrl = src));
+    },
+
+    fileToDataUrl(event, callback) {
+      if (!event.target.files.length) return;
+      const files = [...event.target.files];
+
+      if (files[0].size > 1024 * 1024) {
+        Compress.compress(files, {
+          size: 1, // the max size in MB, defaults to 2MB
+          quality: 0.6, // the quality of the image, max is 1
+        }).then((result) => {
+          // returns an array of compressed images
+          const img = result[0];
+          const base64str = "data:image/jpeg;charset=utf-8;base64, " + img.data;
+          console.log(img.endSizeInMb + "MiB");
+          activitySetThumbnail = img;
+          callback(base64str);
+        });
+      } else {
+        let file = event.target.files[0];
+        let reader = new FileReader();
+        activitySetThumbnail = file;
+
+        reader.readAsDataURL(file);
+        reader.onload = (e) => {
+          callback(e.target.result);
+          console.log(files[0].size / 1024 / 1024 + "MiB");
+        };
+      }
+    },
+  };
+}
 
 AnswerInput = (value, idx, isLast) => {
-  return `
-  <div class="flex items-center">
-  <input id="answer-${
-    HostPanel.qid
-  }-${idx}" type="text" placeholder="Enter correct answer" class="options ${InputStyle}" onchange="HostPanel.changeAnswer(${idx})" value="${value}">
-  ${Button(
-    "danger",
-    '<i class="fa fa-trash"></i>',
-    `HostPanel.deleteAnswer(${idx})`,
-    `ml-2 ${idx === 0 ? "hidden" : "visible"}`
-  )}
-  ${Button(
-    "secondary",
-    '<i class="fa fa-plus"></i>',
-    "HostPanel.addAnswer()",
-    `ml-2 ${isLast ? "visible" : "invisible"}`
-  )}
-  </div>
-  `;
-};
+  const answerInput = $(".answer-input").first().clone();
+  answerInput.removeClass("hidden");
+  answerInput.find("input").val(value);
+  answerInput.find("input").change((e) => hp.changeAnswer(idx, e.target.value));
 
-OptionGrid = (type) => {
-  return `<div id="option-grid" class="grid ${
-    ["SA", "MV", "TTS"].includes(type)
-      ? "grid-cols-1"
-      : "grid-rows-4 md:grid-rows-none md:grid-cols-2"
-  } gap-4"></div>`;
+  answerInput.find(".delete-answer-btn").click(() => hp.deleteAnswer(idx));
+  answerInput.find(".delete-answer-btn").addClass(idx === 0 ? "hidden" : "visible");
+  answerInput.find(".add-answer-btn").click(() => hp.addAnswer());
+  answerInput.find(".add-answer-btn").addClass(isLast ? "visible" : "invisible");
+
+  return answerInput;
 };
 
 MediaInput = (type, question) => {
-  voices = speechSynthesis.getVoices();
   switch (type) {
     case "MV":
       src = question.media.video ? `https://www.youtube.com/embed/${question.media.video}` : "";
-      return `
-      <div class="my-4 w-full lg:w-3/4 mx-auto">
-        <div class="flex">
-          <input type="text" id="videoId" placeholder="Paste youtube video URL here" class="w-100 shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-          ${Button(
-            "secondary",
-            "Submit",
-            "HostPanel.saveMusicVideo()",
-            "ml-2 flex items-center justify-center"
-          )}
-        </div>
-        <iframe id="embedVideo" class="w-full h-80 mt-4 rounded-lg bg-gray-100"
-          src="${src}">
-        </iframe>
-        <div id="mvSettings" class="grid grid-cols-2 md:grid-cols-3 mt-2 gap-2"></div>
-      </div>
-      `;
+      $("#video-id").val(src || "");
+      $("#embed-video").attr("src", src);
+      $("#mv-start").attr("value", question.media.startAt || 0);
+      $("#mv-play-duration").attr("value", question.media.duration || "");
     case "TTS":
-      var voices = speechSynthesis.getVoices();
-      return `
-      <div class="my-4 w-full grid gap-2 grid-cols-1 md:grid-cols-2">
-        <div class="flex flex-col">
-          <div class="text-gray-700">Turn lyrics into an auto-generated audio.</div>
-          <textarea id="lyrics" placeholder="Paste song lyrics here" class="w-full my-2 px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:shadow-outline" rows="4">${
-            question.media.audio ? question.media.audio : ""
-          }</textarea>
-          <div class="flex items-center">
-            ${Button(
-              "secondary-outline",
-              `<i class="fas fa-play mr-2"></i><span class="small">Play</span>`,
-              "HostPanel.togglePlay()",
-              'rounded-full flex items-center justify-center w-full" id="playButton"'
-            )}
-          </div>
-          </div>
-        <div class="flex flex-col bg-gray-50 px-4 py-2 rounded-lg">
-          <div class="text-sm">This is only a preview, as your participants will choose their preferred voice before the quiz starts.</div>
-          <div class="flex items-center mb-4">
-            <div class="voices flex flex-col align-stretch w-full rounded">
-              <label for="voices">Voice:</label>
-              <div class="inline-block relative">
-                <select
-                  name="voices"
-                  id="voices"
-                  class="appearance-none w-full bg-white border border-gray-400 hover:border-gray-500 px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none focus:shadow-outline"
-                >
-                ${voices
-                  .map(
-                    (option, idx) => `
-                <option ${
-                  idx == question.media.voice && `selected="selected"`
-                } value="${idx}" >${option.name}</option>
-                `
-                  )
-                  .join("")}
-                </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                  <i class="fas fa-chevron-down text-gray-500"></i>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="flex items-between flex-wrap mb-3">
-            <label for="rate" class="flex-1">Speech Rate:</label><span id="rateLabel">1</span>
-            <input id="rate" class="rounded-lg overflow-hidden appearance-none bg-gray-200 h-3 w-full" type="range" min="0.5" max="2" step="0.1" value="1" />
-          </div>
-          <div class="flex items-between flex-wrap">
-            <label for="pitch" class="flex-1">Pitch:</label><span id="pitchLabel">1</span>
-            <input id="pitch" class="rounded-lg overflow-hidden appearance-none bg-gray-200 h-3 w-full" type="range" min="0" max="2" step="0.1" value="1" />
-          </div>   
-                 
-        </div>
-      </div>
-      `;
+      voices = speechSynthesis.getVoices();
+      $("#lyrics").val(question.media.audio || "");
+      $("#pitch").val(question.media.pitch || 1);
+      $("#rate").val(question.media.rate || 1);
+      $("#voices").val(question.media.voice || 0);
+      for (i = 0; i < voices.length; i++) {
+        $("#voices").append(
+          `<option ${i == question.media.voice && `selected="selected"`} value="${i}" >${voices[i].name}</option>`
+        );
+      }
   }
 };
 
-MVSettings = (question) => {
-  return `
-  <div class="flex items-center relative">
-    <span class="whitespace-nowrap">Start at</span>
-    <span class="mx-2 relative">${Tooltip(
-      '<i class="fas fa-question-circle text-gray-300"></i>',
-      "Where the video should start playing from. Fill with number of seconds from the beginning of the video.",
-      "w-60 -top-14 -right-2"
-    )}</span>
-    <input id="mv-start" type="number" placeholder="0" min="0" max="${length}" value="${
-    question.media.startAt || ""
-  }" class="${InputStyle}">
-  </div>
-  <div class="flex items-center">
-    <span>Duration</span>
-    <span class="relative mx-2">${Tooltip(
-      '<i class="fas fa-question-circle text-gray-300"></i>',
-      "How long the video hint should play",
-      "-top-6 -right-2"
-    )}</span>
-    <input id="mv-playDuration" type="number" placeholder="10" min="1" max="30" value="${
-      question.media.duration || ""
-    }" class="${InputStyle}">
-  </div>
-`;
+ProgressBar = (duration, freeze = false) => {
+  $("#progress-bar").removeClass("hidden");
+  const progress = $(".progress-animate").clone();
+  progress.css("animation-duration", (freeze ? 9999 : duration) + "s");
+  $(".progress-animate").replaceWith(progress);
 };
 
-ProgressBar = (duration) => {
-  return `
-  <div id="progressBar" class="absolute top-4 w-full px-4 md:px-8 lg:px-16">
-    <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-white container mx-auto">
-      <div class="shadow-none flex flex-col text-center whitespace-nowrap text-green-900 justify-center bg-green-500" style="animation: progressbar-countdown; animation-duration: ${duration}s;"></div>
-    </div>
-  </div>
-  `;
+const HostLobbyHeader = (reveal = false, leaderboard = false, timer = false) => {
+  $("#lobby-header").removeClass("hidden");
+  $("#question-count").text(`Question ${hl.currentQid + 1}/${questions.length}`);
+
+  $("#next-or-skip-btn").unbind("click");
+  if (reveal && leaderboard) {
+    $("#next-or-skip-btn").click(() => hl.showLeaderboard());
+  } else if (!reveal) {
+    $("#next-or-skip-btn").click(() => hl.stopTimer());
+  } else {
+    $("#next-or-skip-btn").click(() => hl.nextQuestion());
+  }
+
+  const time = timer ? timer : questions[hl.currentQid].time;
+  const outlineBtn = "border border-white text-white hover:text-black";
+  const solidBtn = "bg-white text-black";
+
+  if (!reveal) {
+    $("#timer").text(time + "s");
+    $("#timer").removeClass("hidden");
+    $("#answered").removeClass("hidden");
+    $("#next-or-skip-btn").text("Skip");
+    $("#next-or-skip-btn").replaceClass(solidBtn, outlineBtn);
+    ProgressBar(time, !yai.eventVars.autoplay);
+  } else {
+    $("#next-or-skip-btn").text("Next");
+    $("#next-or-skip-btn").replaceClass(outlineBtn, solidBtn);
+    $("progress-bar").addClass("hidden");
+    $("#timer").addClass("hidden");
+    $("#answered").addClass("hidden");
+  }
 };
 
-OptionButton = (option, reveal = false, isHost = false, answer = null) => {
-  var optionBtn = $(`
-    <div class="w-full text-black bg-white ${reveal && option.b ? "bg-green-400 text-white" : ""} ${
-    reveal && !option.b ? "scale-90" : ""
-  } ${
-    reveal && answer && !answer.b && option.v === answer.v ? "bg-green-900 text-white" : ""
-  } rounded-lg shadow px-4 py-6 cursor-pointer hover:bg-green-50 transform transition ${
-    !reveal && !isHost ? "hover:scale-105" : ""
-  } ease-in-out text-center">
-      ${option.v}
-    </div>
-  `);
-  if (!isHost)
-    optionBtn.one("click", function () {
-      MainScene.answerHandler(option);
-    });
-  return optionBtn;
+const PlayerLobbyHeader = (time) => {
+  $("#lobby-header").removeClass("hidden");
+  $("#next-or-skip-btn").addClass("hidden");
+  $("#question-count").text(`Question ${pl.currentQid + 1}/${pl.totalQuestions}`);
+  $("#timer").text(time + "s");
+  ProgressBar(time, !yai.eventVars.autoplay);
 };
 
-Tooltip = (icon, text, style = "") => {
-  return `
-    <span class="has-tooltip">${icon}
-      <div class="tooltip w-56 relative ${style}">
-        <div class="bg-black text-white text-xs rounded py-1 px-4 right-0 bottom-full">${text}
-          <svg class="absolute text-black h-2 right-0 mr-3 top-full" x="0px" y="0px" viewBox="0 0 255 255" xml:space="preserve"><polygon class="fill-current" points="0,0 127.5,127.5 255,0"/></svg>    
-        </div>
-      </div>
-    </span>
-  `;
-};
+Toggle = (setting) => {
+  toggle = $(".toggle-container").first().clone();
+  toggle.removeClass("hidden");
+  toggle.find(".toggle div").attr("id", setting.id);
+  toggle.find(".toggle span").text(setting.label);
+  toggle.find("i").attr("title", setting.tooltip);
+  toggle.click(() => toggleActive(setting.id, setting.toggleFunct));
 
-Toggle = (id, toggleFunct, label) => {
-  toggle = $(`
-  <div class="flex items-center mx-2 cursor-pointer">
-    <div id="${id}" class="w-9 h-6 flex items-center p-1 rounded-full transform duration-300 ease-in-out bg-gray-300">
-      <div class="bg-white w-4 h-4 rounded-full shadow-md duration-300 ease-in-out transform"></div>
-    </div>
-    <span class="ml-2">${label}</span>
-  </div>
-  `);
-  toggle.click(() => toggleActive(id, toggleFunct));
   return toggle;
 };
 
-toggleActive = (id, toggle) => {
+toggleActive = (id, toggleFunct) => {
   $("#" + id).toggleClass("bg-green-400");
-  $("#" + id)
-    .children()
-    .first()
-    .toggleClass("translate-x-3");
-  toggle();
+  $("#" + id + " div").toggleClass("translate-x-3");
+  toggleFunct();
+};
+
+const QuestionCard = (idx, quiz) => {
+  isFilled = quiz.type === "MV" ? quiz.media?.video?.length > 0 : quiz.media?.audio?.length > 0;
+
+  const qCard = $(".q-card").first().clone();
+  qCard.removeClass("hidden");
+  qCard.find(".q-type").text(quiz.type);
+  qCard.find(".q-header").text(`Q${idx + 1}. ${quiz.q}`);
+  qCard.find(".q-type").text(quiz.type);
+  qCard.click(() => hp.changeQuestion(idx));
+  qCard
+    .find("div i")
+    .replaceClass(isFilled ? "text-white" : "text-green-600", isFilled ? "text-green-600" : "text-white");
+  if (quiz.type === "MV") qCard.find(".q-type-icon").replaceClass("fas fa-volume-up", "fab fa-youtube");
+  else qCard.find(".q-type-icon").replaceClass("fab fa-youtube", "fas fa-volume-up");
+
+  const correctAnswer = qCard.find(".correct-answer");
+  correctAnswer.removeClass("hidden");
+  correctAnswer.find("div").text(quiz.options[0]);
+
+  return qCard;
+};
+
+const LeaderboardScoreBar = (uname, score, winner) => {
+  const scoreBar = $(".score-bar").first().clone();
+  scoreBar.find(".score-bar-name").text(uname);
+  scoreBar.find(".score-bar-score").text(score);
+  scoreBar.find(".score-bar-score").css("width", (score / winner) * 100 + 2 + "%");
+
+  if (!isHost && uname != username) {
+    scoreBar.find(".score-bar-score").addClass("bg-opacity-40");
+  }
+
+  return scoreBar;
+};
+
+const WrongAnswerBlock = (answer, count) => {
+  const wrongBlock = $(".wrong-answer-block").first().clone();
+  wrongBlock.removeClass("hidden");
+  wrongBlock.find(".wab-answer").text(answer);
+  wrongBlock.find(".wab-count").prepend(count);
+
+  const regradeBtn = wrongBlock.find(".wab-regrade-btn");
+  regradeBtn.hover(
+    () => regradeBtn.find("span").removeClass("hidden"),
+    () => regradeBtn.find("span").addClass("hidden")
+  );
+  regradeBtn.one("click", function () {
+    yai.broadcast({ regrade: answer });
+    wrongBlock.replaceClass("bg-opacity-50", "bg-opacity-10");
+    regradeBtn.unbind("mouseenter mouseleave");
+    regradeBtn.find("span").text("Marked as correct");
+  });
+
+  return wrongBlock;
 };
