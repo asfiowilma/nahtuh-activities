@@ -1,0 +1,27 @@
+{
+  "name": "quickpoll",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "postcss styles/styles.css -o styles.css",
+    "prod": "SET NODE_ENV=production&& postcss styles/styles.css -o styles.css"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "autoprefixer": "^10.3.1",
+    "chart.js": "^3.5.1",
+    "chartjs-chart-wordcloud": "^3.5.0",
+    "compress-js": "^2.0.2",
+    "minimasonry": "^1.2.0",
+    "postcss-cli": "^8.3.1",
+    "sweetalert": "^2.1.2",
+    "tailwindcss": "^2.2.7",
+    "watch": "^1.0.2"
+  },
+  "devDependencies": {
+    "ps-scrollbar-tailwind": "0.0.1"
+  }
+}

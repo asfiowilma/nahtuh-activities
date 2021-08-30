@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.3/css/all.css" integrity="sha384-SZXxX4whJ79/gErwcOYf+zWLeJdY/qpuqC4cAa9rOGUstPomtqpuNWT9wdPEn2fk" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./bundle.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.slim.min.js" integrity="sha256-u7e5khyithlIdTpu22PHhENmPcRdFiHRjhAuHcs05RI=" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.7/signalr.min.js"></script>
+    <script src="https://unpkg.com/chartjs-chart-wordcloud@3.5.0/build/index.umd.min.js"></script>
+    <!-- PRODUCTION -->
+    <script src="https://yaidevstraccwebapp.blob.core.windows.net/components/index.js" type="module"></script>
+    <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/observable-slim.js"></script>
+    <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/yai-settings.js"></script>
+    <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/identitymanager.js"></script>
+    <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/yai.js"></script>
+    <title>Quick Poll</title>
+  </head>
+  <body>
+    <div id="canvas" class="canvas font-poppins w-full h-fit-content min-h-screen flex flex-col justify-center bg-gray-light">
+      <!-- LOGIN PANEL -->
+      <div id="login-panel" class="flex-1 flex flex-col w-full md:w-96 px-4 mx-auto items-center justify-center">
+        <create-event-component id="create-event" colorLink="#6366F1" colorprimary="#6366F1" colorsecondary="#4338CA"></create-event-component>
+      </div>
+
+      <!-- HOST PANEL -->
+      <div id="host-panel" class="hidden container mx-auto py-8 px-4 lg:px-0 flex-1 flex items-start">
+        <div id="menu-toggle" class="rounded-full bg-indigo-500 h-10 w-10 flex items-center justify-center z-20 shadow-lg fixed top-2 left-2 block md:hidden"><i class="fas fa-bars text-white"></i></div>
+
+        <!-- SIDEBAR -->
+        <div id="sidebar" class="w-60 lg:w-72 fixed top-8 left-0 z-10 md:translate-x-0 md:relative md:top-0 md:left-0 flex flex-col align-stretch transition ease-in-out transform -translate-x-full h-screen md:h-full pb-12 md:pb-4">
+          <!-- GAME INFO -->
+          <div id="game-info" class="bg-white rounded-card shadow-card p-4 lg:p-6">
+            <div class="flex flex-col mb-2 gap-1">
+              <div class="text-sm">Your username:</div>
+              <span id="hp-username" class="font-bold text-sm">Litha</span>
+            </div>
+            <div class="flex flex-col gap-1">
+              <div class="text-sm">Game ID:</div>
+              <span id="hp-event-id" class="font-bold text-sm">LOL-LOL-LOL</span>
+            </div>
+
+            <!-- PRESET ACTIVITY -->
+            <div class="w-full mt-4">
+              <input id="import-json" value="" type="file" accept="application/json" style="display: none" />
+              <div id="hp-import-btn" class="btn btn-primary-outline w-full mb-2">Import Survey</div>
+              <div id="hp-export-set" class="btn btn-primary w-full">Save Survey</div>
+            </div>
+          </div>
+
+          <!-- QUESTION LIST -->
+          <div class="bg-white rounded-card shadow-card p-4 lg:p-6 lg:pb-4 mt-4">
+            <!-- QUESTION CARD TEMPLATE -->
+            <div class="q-card hidden bg-lollipop scale-105 rounded-10 cursor-pointer transform hover:scale-105 transistion duration-300 ease-in-out relative overflow-hidden text-white">
+              <div class="absolute left-16 bottom-1/3 w-64 h-32 rounded-circle bg-white bg-opacity-10"></div>
+              <div class="absolute right-1/3 top-1/2 w-52 h-32 rounded-circle bg-white bg-opacity-10"></div>
+              <div class="mt-2 mb-1 mx-3 flex flex-nowrap items-center justify-between">
+                <span class="q-type flex-none border border-white rounded-full py-0.5 px-2 text-xs font-bold"></span>
+                <i class="q-type-icon fas fa-chart-bar fa-2x"></i>
+              </div>
+              <div class="q-question truncate pb-2 px-3 text-sm"></div>
+            </div>
+            <div id="question-cards" class="flex flex-col gap-3"></div>
+            <div id="hp-add-question-btn" title="Add question" class="btn btn-secondary w-10 h-10 mx-auto flex items-center justify-center mt-4"><i class="fas fa-plus"></i></div>
+          </div>
+        </div>
+
+        <!-- MAIN PANEL -->
+        <div id="panel" class="flex-1 flex-col md:ml-4">
+          <!-- START PANEL -->
+          <div id="type-panel" class="bg-white rounded-card shadow-card p-4 md:p-6 mb-4 w-full">
+            <div class="text-sm mb-2">Question Type:</div>
+            <div class="w-full grid grid-cols-5 gap-2 text-gray-500">
+              <input id="poll" checked type="radio" name="type" value="poll" class="hidden" />
+              <input id="wordcloud" type="radio" name="type" value="wordcloud" class="hidden" />
+              <input id="open" type="radio" name="type" value="open" class="hidden" />
+              <input id="scales" type="radio" name="type" value="scales" class="hidden" />
+              <input id="ranking" type="radio" name="type" value="ranking" class="hidden" />
+              <label for="poll" class="select-active">
+                <i class="fas fa-chart-bar fa-2x"></i>
+                <div class="flex-1 flex items-center">Poll</div>
+              </label>
+              <label for="wordcloud" class="select-type">
+                <i class="fas fa-cloud fa-2x"></i>
+                <div class="flex-1 flex items-center">Word Cloud</div>
+              </label>
+              <label for="open" class="select-type">
+                <i class="fas fa-comments fa-2x"></i>
+                <div class="flex-1 flex items-center">Open Ended</div>
+              </label>
+              <label for="scales" class="select-type">
+                <i class="fas fa-sliders-h fa-2x"></i>
+                <div class="flex-1 flex items-center">Scales</div>
+              </label>
+              <label for="ranking" class="select-type">
+                <i class="fas fa-list-ol fa-2x"></i>
+                <div class="flex-1 flex items-center">Ranking</div>
+              </label>
+            </div>
+          </div>
+          <div id="main-panel" class="bg-white rounded-card shadow-card p-4 md:p-6 relative w-full">
+            <div class="flex w-full justify-between items-start">
+              <div id="type-info" class="flex-1 mr-4"></div>
+              <div id="util-buttons" class="btn-wrapper flex relative">
+                <div id="hp-delete-question-btn" title="Delete question" class="btn btn-danger h-10 w-10 mr-2 text-base flex items-center justify-center"><i class="far fa-trash-alt"></i></div>
+                <div id="hp-clone-question-btn" title="Duplicate question" class="btn btn-secondary h-10 w-10 text-base flex items-center justify-center"><i class="far fa-clone"></i></div>
+              </div>
+            </div>
+
+            <!-- EDIT QUESTION PANEL -->
+            <div id="edit-question">
+              <!-- ANSWER INPUT TEMPLATE -->
+              <div class="hidden answer-input flex items-center overflow-x-auto scrollbar scrollbar-hidden">
+                <input type="text" placeholder="Enter correct answer" class="input-form flex-1" />
+                <div class="btn btn-danger-outline delete-answer-btn ml-2 flex-none w-10 h-10" title="Delete option"><i class="fa fa-trash"></i></div>
+                <div class="btn btn-secondary-outline add-answer-btn ml-2 flex-none w-10 h-10" title="Add option"><i class="fa fa-plus"></i></div>
+              </div>
+
+              <!-- QUESTION INPUT -->
+              <div class="text-sm ml-6 mb-1">Question</div>
+              <input id="hp-question-q" class="mb-4 input-form w-full" type="text" placeholder="Type your question here" />
+              <div class="options-text text-sm ml-6 mb-1">Options</div>
+              <div id="hp-option-grid" class="grid gap-4 grid-cols-1"></div>
+            </div>
+            <div class="flex justify-end mt-4">
+              <div id="hp-add-question-2-btn" title="Add question" class="btn btn-primary-outline mr-2 w-10 h-10 flex-none"><i class="fa fa-plus"></i></div>
+              <div id="hp-save-question-btn" title="Save question" class="btn btn-primary flex-1 md:flex-none md:w-40">Save</div>
+            </div>
+          </div>
+
+          <!-- START PANEL -->
+          <div id="start-panel" class="bg-white rounded-card shadow-card p-4 md:p-6 mt-4 text-center w-full">
+            When you're ready to start the quiz, press start.
+            <div class="flex mt-2 justify-center">
+              <div id="hp-start-quiz-btn" class="btn btn-primary w-40 px-4 ml-4">Start</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOBBY -->
+      <div id="lobby" class="hidden flex-1 flex flex-col">
+        <!-- WAITING SCREEN -->
+        <div id="waiting-for-players" class="hidden"></div>
+
+        <!-- HEADER -->
+        <div id="lobby-header" class="hidden sticky top-0 z-40 w-full flex flex-col items-start p-4 lg:p-8 lg:pb-0">
+          <div class="bg-indigo-100 bg-opacity-20 backdrop-filter backdrop-blur-xl p-4 md:p-6 w-full rounded-xl flex items-center justify-between flex-wrap">
+            <div id="question-count" class="font-bold text-white"></div>
+            <div id="next-btn" class="btn btn-light-outline w-full mt-2 md:mt-0 md:w-40">Next</div>
+          </div>
+
+          <div id="answered" class="hidden font-bold text-white text-right mr-8 mt-2 md:mt-4">Answered <span id="answer-count">0</span></div>
+        </div>
+
+        <!-- QUESTION DISPLAY -->
+        <div id="question-display" class="flex-1 flex flex-col items-center justify-center mx-auto container md:max-w-lg lg:max-w-3xl px-4 md:px-0">
+          <div id="pl-reveal-remark" class="hidden text-2xl font-bold text-white"></div>
+          <div id="display-question-q" class="text-xl font-bold text-white text-center mb-6">${question.q}</div>
+
+          <!-- CHART TEMPLATES -->
+          <div class="hidden chart chart-poll max-w-screen-md w-full">
+            <canvas width="768" height="432"></canvas>
+          </div>
+          <div class="hidden chart chart-ranking max-w-screen-md w-full">
+            <canvas width="768" height="432"></canvas>
+          </div>
+          <div class="hidden chart chart-wordcloud max-w-screen-md w-full">
+            <canvas width="768" height="432"></canvas>
+          </div>
+          <div id="chart-container" class="hidden w-full"></div>
+
+          <!-- INPUT TEMPLATES -->
+          <div class="hidden poll-input-wrapper flex">
+            <input id="q-99-99" type="radio" name="poll-1" value="option" class="hidden" />
+            <label class="flex-1 input-option">Option</label>
+          </div>
+          <div class="hidden wordcloud-input-wrapper flex flex-col gap-4">
+            <input id="wordcloud-99-0" maxlength="25" type="text" name="wordcloud-1"  placeholder="Enter a word" class="input-form flex-1" autofocus/>
+            <input id="wordcloud-99-1" maxlength="25" type="text" name="wordcloud-1" placeholder="Enter another word" class="input-form flex-1" />
+            <input id="wordcloud-99-2" maxlength="25" type="text" name="wordcloud-1" placeholder="Enter another word" class="input-form flex-1" />
+          </div>
+
+          <div id="input-container" class="hidden w-full rounded-card shadow-lg bg-white m-4 p-4 flex flex-col gap-4">
+            <div id="display-options" class="w-full grid grid-cols-1 gap-4"></div>
+            <div id="pl-submit-vote" class="btn btn-primary">Submit</div>
+          </div>
+        </div>
+
+        <!-- PLAYER ANSWERED / TIME UP SCREEN -->
+        <div id="waiting-for-reveal" class="hidden flex-1 flex flex-col items-center justify-center mx-auto container md:max-w-lg lg:max-w-xl xl:max-w-3xl px-4 md:px-0 mb-4">
+          <div class="text-2xl font-bold text-white text-center flex flex-col items-center">
+            <span>Thank you for answering!</span>
+            <span id="pl-waiting-message"> Waiting for next question ...</span>
+          </div>
+        </div>
+
+        <!-- REVIEW SCREEN -->
+        <div id="review-survey" class="hidden flex-1 flex gap-4 mb-4 p-4 lg:px-8">
+          <div id="review-navigation" class="bg-white w-80 gap-4 p-4 md:p-6 flex flex-col rounded-card shadow-lg overflow-y-auto"></div>
+          <div id="review-charts" class="flex-1 flex justify-center items-center"></div>
+        </div>
+
+        <!-- FOOTER -->
+        <div id="lobby-footer" class="hidden p-4 md:p-6 lg:px-8 relative w-full">
+          <div class="bg-indigo-100 bg-opacity-20 backdrop-filter backdrop-blur-xl rounded-xl w-full flex items-center justify-between p-4 md:pl-6">
+            <div class="pl-username text-2xl font-bold text-white truncate mr-4"></div>
+            <div class="pl-quit-btn btn btn-light-outline whitespace-nowrap w-10 h-10 flex items-center justify-center pl-3"><i class="fas fa-sign-out-alt text-base"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CREDITS -->
+      <!-- <a id="credits" href="https://www.vecteezy.com/free-vector/vector" class="text-gray-400 text-sm m-2 absolute bottom-0 left-0">Vector Vectors by Vecteezy</a> -->
+      <!-- <div id="credits" class="text-gray-200 text-sm m-2 absolute bottom-0 left-0">
+      <div>Music by Zen_Man from <a href="https://pixabay.com/?utm_source=link-attribution&amp;utm_medium=referral&amp;utm_campaign=music&amp;utm_content=2699">Pixabay</a></div>
+    </div> -->
+    </div>
+  </body>
+  <footer>
+    <script src="./components.js"></script>
+    <script src="./hostPanel.js"></script>
+    <script src="./lobby.js"></script>
+    <script src="./index.js"></script>
+  </footer>
+</html>
