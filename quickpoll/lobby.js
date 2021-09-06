@@ -40,6 +40,16 @@ const Lobby = new (function () {
     }
   };
 
+  this.onLeave = () => {
+    swal({ icon: "warning", text: "Are you sure you want to leave?", buttons: true }).then((value) => {
+      if (value) yai.leaveEvent().then(() => history.back());
+    });
+  };
+
+  // ----------------------------------------------------------------
+  /* LOBBY UTILS */
+  // ----------------------------------------------------------------
+
   this.startQuiz = () => {
     isStarted = true;
     yai.broadcast({
@@ -66,6 +76,100 @@ const Lobby = new (function () {
       this.renderReviewSurvey();
     }
   };
+
+  this.changeQuestionToReview = (idx) => {
+    let old = this.currentQid;
+    this.currentQid = idx;
+    console.log(`changing from ${old} to ${idx}`);
+
+    let oldCard = $(`.q-card:eq(${old + 1})`);
+    let newCard = $(`.q-card:eq(${idx + 1})`);
+
+    oldCard.replaceClass("bg-lollipop scale-105", "bg-indigo-300");
+    newCard.replaceClass("bg-indigo-300", "bg-lollipop scale-105");
+
+    $(`#chart-${old}`).addClass("hidden");
+    $(`#chart-${idx}`).removeClass("hidden");
+    $("#review-question-q").text(questions[idx].q);
+    console.log(`${idx} should be unhidden`);
+  };
+
+  this.updateChart = (response) => {
+    chart = charts[this.currentQid];
+    q = questions[this.currentQid];
+    type = q.type;
+
+    switch (type) {
+      case "poll":
+        vote = parseInt(response);
+        questions[this.currentQid].data[vote] += 1;
+        chart.data.datasets[0].data[vote] += 1;
+        chart.update();
+        break;
+
+      case "wordcloud":
+        for (res of response) {
+          lowerCaseRes = res.toLowerCase();
+          questions[this.currentQid].data[lowerCaseRes] = (q.data[lowerCaseRes] || 0) + 1;
+        }
+        words = Object.entries(q.data);
+        wordsSorted = words.sort((a, b) => a[1] - b[1]);
+        chart.data.labels = wordsSorted.map((w) => w[0]);
+        chart.data.datasets[0].unscaled = wordsSorted.map((w) => w[1]);
+        chart.data.datasets[0].data = wordCloudScaler(wordsSorted.map((w) => w[1]));
+        chart.update();
+        break;
+
+      case "open":
+        chartContainer = $(`#chart-${this.currentQid}`);
+        chartContainer.append(OpenEndedResponse(response));
+        chart.layout();
+        break;
+
+      case "scales":
+        for (i in response) {
+          const res = parseInt(response[i]);
+          if (res != 0) {
+            sum = q.data[i].sum + res;
+            count = q.data[i].count + 1;
+            questions[this.currentQid].data[i] = { sum: sum, count: count };
+            chart.data.datasets[0].data[i] = sum / count || 0;
+          }
+        }
+        chart.update();
+
+      case "ranking":
+        for (i in response) {
+          const res = parseInt(response[i]);
+          const origin = q.data.findIndex((d) => d.id == i);
+          questions[this.currentQid].data[origin].data += res;
+        }
+        questions[this.currentQid].data.sort((a, b) => b.data - a.data);
+        chart.data.labels = q.data.map((d) => d.opt);
+        chart.data.datasets[0].data = q.data.map((d) => d.data);
+        chart.update();
+    }
+  };
+
+  this.rankUp = (i) => {
+    var temp = this.currentQuestion.options[i];
+    this.currentQuestion.options[i] = this.currentQuestion.options[i - 1];
+    this.currentQuestion.options[i - 1] = temp;
+    console.log("ranking up");
+    this.renderRankingInput();
+  };
+
+  this.rankDown = (i) => {
+    var temp = this.currentQuestion.options[i];
+    this.currentQuestion.options[i] = this.currentQuestion.options[i + 1];
+    this.currentQuestion.options[i + 1] = temp;
+    console.log("ranking down");
+    this.renderRankingInput();
+  };
+
+  // ----------------------------------------------------------------
+  /* LOBBY RENDERS */
+  // ----------------------------------------------------------------
 
   this.renderWaitingRoom = () => {
     sceneSwitcher("#waiting-for-players");
@@ -95,13 +199,36 @@ const Lobby = new (function () {
   this.renderChart = (question) => {
     $("#chart-container").removeClass("hidden");
     type = question.type;
-    if (type == "poll") {
-      $("#chart-container").append(PollChart(question));
-      questions[this.currentQid].data = new Array(questions[this.currentQid].options.length).fill(0);
-      console.log(questions[this.currentQid].data);
-    } else if (type == "wordcloud") {
-      $("#chart-container").append(WordCloudChart());
-      questions[this.currentQid].data = {};
+    switch (type) {
+      case "poll":
+        $("#chart-container").append(PollChart(question));
+        questions[this.currentQid].data = new Array(question.options.length).fill(0);
+        break;
+      case "wordcloud":
+        $("#chart-container").append(WordCloudChart());
+        questions[this.currentQid].data = {};
+        break;
+      case "open":
+        $("#chart-container").append(OpenEndedChart());
+        container = `#chart-${this.currentQid}`;
+        var masonry = new MiniMasonry({ container: container, ultimateGutter: 10 });
+        charts[this.currentQid] = masonry;
+        break;
+      case "scales":
+        $("#chart-container").append(ScalesChart(question));
+        questions[this.currentQid].data = Array.from({ length: question.options.length }, () => ({
+          sum: 0,
+          count: 0,
+        }));
+        break;
+      case "ranking":
+        $("#chart-container").append(RankingChart(question));
+        questions[this.currentQid].data = Array.from({ length: question.options.length }, (_, i) => ({
+          id: i,
+          data: 0,
+          opt: question.options[i],
+        }));
+        break;
     }
   };
 
@@ -110,26 +237,53 @@ const Lobby = new (function () {
     options = question.options;
     $("#input-container").removeClass("hidden");
     $("#display-options").empty();
-    if (type == "poll") {
-      if (options.length > 6) $("#display-options").replaceClass("grid-cols-1", "grid-cols-2");
-      else $("#display-options").replaceClass("grid-cols-2", "grid-cols-1");
+    $(".rank-prompt").remove();
+    switch (type) {
+      case "poll":
+        if (options.length > 6) $("#display-options").replaceClass("grid-cols-1", "grid-cols-2");
+        else $("#display-options").replaceClass("grid-cols-2", "grid-cols-1");
+        for (let i = 0; i < options.length; i++) {
+          $("#display-options").append(PollInput(options[i], i));
+        }
+        $(`input[name=q-${this.currentQid}]`).change(function () {
+          console.log(`changing value to ${this.value}`);
+          $(`input[name=q-${this.currentQid}]:checked`).prop("checked", false);
+          $(`#q-${this.currentQid}-${this.value}`).prop("checked", true);
+          $("#display-options label").removeClass().addClass("flex-1 input-option");
+          $(`#display-options label[for=q-${lobby.currentQid}-${this.value}]`).removeClass().addClass("input-active");
+          styleComponents();
+        });
+        $("#pl-submit-vote").one("click", () => this.pollHandler());
+        break;
 
-      for (let i = 0; i < options.length; i++) {
-        $("#display-options").append(PollInput(options[i], i));
-      }
-      $(`input[name=q-${this.currentQid}]`).change(function () {
-        console.log(`changing value to ${this.value}`);
-        $(`input[name=q-${this.currentQid}]:checked`).prop("checked", false);
-        $(`#q-${this.currentQid}-${this.value}`).prop("checked", true);
-        $("#display-options label").removeClass().addClass("flex-1 input-option");
-        $(`#display-options label[for=q-${lobby.currentQid}-${this.value}]`).removeClass().addClass("input-active");
-        styleComponents();
-      });
-      $("#pl-submit-vote").one("click", () => this.voteHandler());
-    } else if (type == "wordcloud") {
-      $("#display-options").replaceClass("grid-cols-2", "grid-cols-1");
-      $("#display-options").append(WordCloudInput());
-      $("#pl-submit-vote").one("click", () => this.wordCloudResponseHandler());
+      case "wordcloud":
+        $("#display-options").replaceClass("grid-cols-2", "grid-cols-1");
+        $("#display-options").append(WordCloudInput());
+        $("#pl-submit-vote").one("click", () => this.wordCloudResponseHandler());
+        break;
+
+      case "open":
+        $("#display-options").replaceClass("grid-cols-2", "grid-cols-1");
+        $("#display-options").append(OpenEndedInput());
+        $("#pl-submit-vote").one("click", () => this.openEndedResponseHandler());
+        break;
+
+      case "scales":
+        for (let i = 0; i < options.length; i++) {
+          $("#display-options").append(ScalesInput(options[i], i, question.label));
+        }
+        if (question.skippable) $(".scale-skip").not(":eq(0)").removeClass("hidden");
+        $("#pl-submit-vote").one("click", () => this.scalesHandler());
+        break;
+
+      case "ranking":
+        $("#input-container").prepend("<div class='rank-prompt'>Rank these items in the order you prefer.</div>");
+        this.currentQuestion.options = Array.from({ length: options.length }, (_, i) => ({
+          id: i,
+          opt: this.currentQuestion.options[i],
+        }));
+        this.renderRankingInput();
+        $("#pl-submit-vote").one("click", () => this.rankingHandler());
     }
   };
 
@@ -154,40 +308,23 @@ const Lobby = new (function () {
       qCard = QuestionCard(i, questions[i]);
       qCard.unbind("click").click(() => this.changeQuestionToReview(i));
       $("#review-navigation").append(qCard);
-
-      chart = charts[i];
-      type = questions[i];
-      if (type == "poll") chart.data.datasets[0].data = questions[i].data;
-      else if (type == "wordcloud") {
-        words = Object.entries(q.data);
-        chart.data.labels = words.map((w) => w[0]);
-        chart.data.datasets[0].data = words.map((w) => 10 + w[1] * 5);
-      }
-      chart.update();
-      console.log(`updated chart ${i}`);
-
       this.changeQuestionToReview(i);
     }
   };
 
-  this.changeQuestionToReview = (idx) => {
-    let old = this.currentQid;
-    this.currentQid = idx;
-    console.log(`changing from ${old} to ${idx}`);
-
-    let oldCard = $(`.q-card:eq(${old + 1})`);
-    let newCard = $(`.q-card:eq(${idx + 1})`);
-
-    oldCard.replaceClass("bg-lollipop scale-105", "bg-indigo-300");
-    newCard.replaceClass("bg-indigo-300", "bg-lollipop scale-105");
-
-    $(`#chart-${old}`).addClass("hidden");
-    $(`#chart-${idx}`).removeClass("hidden");
-    $("#review-question-q").text(questions[idx].q);
-    console.log(`${idx} should be unhidden`);
+  this.renderRankingInput = () => {
+    var options = this.currentQuestion.options;
+    $("#display-options").empty();
+    for (i in options) {
+      $("#display-options").append(RankingInput(options[i].opt, options[i].id, parseInt(i), i == options.length - 1));
+    }
   };
 
-  this.voteHandler = () => {
+  // ----------------------------------------------------------------
+  /* LOBBY HANDLERS */
+  // ----------------------------------------------------------------
+
+  this.pollHandler = () => {
     const vote = $(`input[name=q-${this.currentQid}]:checked`).val();
     yai.sendToUser(this.hostId, { iAnswered: vote });
     this.renderWaitingNextQuestion();
@@ -202,26 +339,36 @@ const Lobby = new (function () {
     this.renderWaitingNextQuestion();
   };
 
-  this.updateChart = (response) => {
-    chart = charts[this.currentQid];
-    q = questions[this.currentQid];
-    type = q.type;
+  this.openEndedResponseHandler = () => {
+    response = $(`textarea[name=q-${this.currentQid}]`).val();
+    console.log(response);
+    if (/\S/.test(response)) yai.sendToUser(this.hostId, { iAnswered: response });
+    this.renderWaitingNextQuestion();
+  };
 
-    if (type == "poll") {
-      vote = parseInt(response);
-      questions[this.currentQid].data[vote] += 1;
-      chart.data.datasets[0].data[vote] += 1;
-    } else if (type == "wordcloud") {
-      for (res of response) {
-        lowerCaseRes = res.toLowerCase();
-        questions[this.currentQid].data[lowerCaseRes] = (q.data[lowerCaseRes] || 0) + 1;
-      }
-      words = Object.entries(q.data);
-      wordsSorted = words.sort((a, b) => a[1] - b[1]);
-      chart.data.labels = wordsSorted.map((w) => w[0]);
-      chart.data.datasets[0].data = wordCloudScaler(wordsSorted.map((w) => w[1]));
+  this.scalesHandler = () => {
+    let responses = [];
+    $(`input[name=q-${lobby.currentQid}]`).each(function () {
+      let e = $(this);
+      if (e.attr("skip") == "true") responses.push(0);
+      else responses.push(e.val());
+    });
+    console.log(responses);
+    yai.sendToUser(this.hostId, { iAnswered: responses });
+    this.renderWaitingNextQuestion();
+  };
+
+  this.rankingHandler = () => {
+    var rawResult = this.currentQuestion.options;
+    var cleanResult = new Array(rawResult.length).fill(0);
+
+    for (i in rawResult) {
+      raw = rawResult[i];
+      cleanResult[raw.id] = rawResult.length - i;
     }
-    chart.update();
+
+    yai.sendToUser(this.hostId, { iAnswered: cleanResult });
+    this.renderWaitingNextQuestion();
   };
 })();
 

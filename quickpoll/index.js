@@ -5,6 +5,8 @@ var questions = [];
 var charts = {};
 var playerList = [];
 var isHost = false;
+var devHost = "https://yaidevstraccwebapp.blob.core.windows.net/presetactivity/";
+var prodHost = "https://nahtuhprodstasset.blob.core.windows.net/presetactivity/";
 
 yai.onIncomingMessage = onIncomingMessage;
 yai.onEventVariableChanged = onEventVariableChanged;
@@ -20,8 +22,34 @@ function onConnected(data) {
   eventId = data.eventInfo.eventId;
   console.log("in onConnected");
 
-  if (isHost) hp.start();
-  else lobby.start();
+  if (isHost) {
+    if (yai.isLoadingActivitySet) {
+      if (yai.isActivitySetOwner) {
+        $("#hp-export-set-btn")
+          .unbind("click")
+          .click(() =>
+            swal({
+              title: "Update Activity Set",
+              text: "Your previous activity set will be overwritten.\nAre you sure?",
+              buttons: {
+                cancel: "Nevermind",
+                saveAs: {
+                  text: "Save As",
+                  value: "saveAs",
+                },
+                save: true,
+              },
+            }).then((value) => {
+              if (value == "save") hp.updateActivitySet();
+              else if (value == "saveAs") hp.exportAsActivitySet();
+            })
+          );
+      }
+      console.log("loading activity set...");
+      loadActivitySet();
+    }
+    hp.start();
+  } else lobby.start();
 }
 
 function onAlert(message) {
@@ -114,6 +142,36 @@ async function findHost() {
   var host = participants.find((player) => player.isHost);
   return host;
 }
+
+async function loadActivitySet() {
+  let preset = await yai.getPresetActivityData();
+  console.log(preset);
+  $("#activity-set-title").val(preset.title);
+  $("#activity-set-desc").val(preset.description);
+  $("#load-thumbnail").attr("src", prodHost + preset.imageUrl);
+  if (preset.isPrivate) $("#set-private").prop("checked", true);
+
+  questions = [];
+  $("#question-cards").empty();
+  for (question of preset.config.questions) {
+    hp.addQuestion(question);
+  }
+  if (questions.length > 0) hp.changeQuestion(0);
+}
+
+const loadPresetThumbnail = async (url) => {
+  const data = await fetch(url);
+  const blob = await data.blob();
+  activitySetThumbnail = blob;
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(blob);
+    reader.onloadend = () => {
+      const base64data = reader.result;
+      resolve(base64data);
+    };
+  });
+};
 
 $(document).ready(function () {
   styleComponents();

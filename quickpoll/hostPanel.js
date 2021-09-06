@@ -37,6 +37,7 @@ const HostPanel = new (function () {
     questions = [...questions, questionToAdd];
     const idx = questions.length - 1;
 
+    $(`label[for=poll]`).click();
     $("#question-cards").append(QuestionCard(idx, questions[idx]));
     this.changeQuestion(idx);
   };
@@ -64,6 +65,7 @@ const HostPanel = new (function () {
     }
     styleComponents();
   };
+
   this.importJson = () => {
     $("#import-json").click();
     uploadJson("import-json", function (json) {
@@ -82,19 +84,74 @@ const HostPanel = new (function () {
     });
   };
 
+  this.exportAsActivitySet = () => {
+    const title = $("#activity-set-title").val();
+    const desc = $("#activity-set-desc").val();
+    const isPrivate = $("#set-private").prop("checked");
+    const thumbnail = activitySetThumbnail;
+    const config = { questions: questions };
+
+    if (this.validate())
+      yai
+        .createPresetActivity(desc, title, username, isPrivate, config, thumbnail)
+        .then(() => {
+          console.log(desc, title, username, isPrivate, config, thumbnail);
+          toggleModal();
+          swal({
+            icon: "success",
+            text: "Question set successfully made into an activity set!",
+            button: false,
+          });
+        })
+        .catch((err) => swal({ icon: "error", text: err, button: false }));
+  };
+
+  this.updateActivitySet = () => {
+    const title = $("#activity-set-title").val();
+    const desc = $("#activity-set-desc").val();
+    const isPrivate = $("#set-private").prop("checked");
+    const thumbnail = activitySetThumbnail;
+    const config = { questions: questions };
+
+    if (this.validate())
+      yai
+        .updatePresetActivity(desc, title, username, isPrivate, config, thumbnail)
+        .then(() => {
+          toggleModal();
+          swal({
+            icon: "success",
+            text: "Activity set successfully updated!",
+            button: false,
+          });
+        })
+        .catch((err) => swal({ icon: "error", text: err, button: false }));
+  };
+
   this.saveQuestion = () => {
     const type = $("input[name=type]:checked").val();
-    let options = [""];
+    let scales,
+      options = [""];
     if (["poll", "scales", "ranking"].includes(type)) {
       options = $(`#hp-option-grid`).find(".answer-input");
       options = Array.from(options);
       options = options.length > 0 ? options.map((option) => option.children[0].value) : [""];
+
+      if (type == "scales") {
+        scales = {
+          skippable: $("input[name=skippable]").prop("checked"),
+          label: {
+            hi: $("#hp-label-value-hi").val() || "Strongly agree",
+            lo: $("#hp-label-value-lo").val() || "Strongly disagree",
+          },
+        };
+      }
     }
 
     const savedQuestion = {
       type: type,
       q: $("#hp-question-q").val(),
       options: options,
+      ...(scales || {}),
     };
 
     questions[this.qid] = savedQuestion;
@@ -113,9 +170,7 @@ const HostPanel = new (function () {
     oldCard.replaceClass("bg-lollipop scale-105", "bg-indigo-300");
     newCard.replaceClass("bg-indigo-300", "bg-lollipop scale-105");
 
-    $("#type").val(questions[this.qid].type);
-    $("#time").val(questions[this.qid].time);
-    $("#points").val(questions[this.qid].points);
+    $(`label[for=${questions[this.qid].type}]`).click();
     this.questionInput();
   };
 
@@ -166,7 +221,7 @@ const HostPanel = new (function () {
 
     if (this.validate())
       yai
-        .createActivitySet(desc, title, username, config, thumbnail)
+        .createPresetActivity(desc, title, username, false, config, thumbnail)
         .then(() => {
           toggleModal();
           swal({
@@ -179,11 +234,14 @@ const HostPanel = new (function () {
   };
 
   this.updateActivitySet = () => {
+    const title = $("#activity-set-title").val();
+    const desc = $("#activity-set-desc").val();
+    const thumbnail = activitySetThumbnail;
     const config = { questions: questions };
 
     if (this.validate())
       yai
-        .updateActivitySetConfig(config)
+        .updatePresetActivity(desc, title, username, false, config, thumbnail)
         .then(() => {
           swal({
             icon: "success",
@@ -251,11 +309,19 @@ const HostPanel = new (function () {
   this.questionInput = () => {
     const type = $("input[name=type]:checked").val();
     $("#hp-question-q").val(questions[this.qid].q);
+    $(".hp-scales-settings").addClass("hidden");
     if (["wordcloud", "open"].includes(type)) {
       $(".options-text").addClass("hidden");
       $("#hp-option-grid").empty();
     } else {
+      if (type == "scales") {
+        $(".hp-scales-settings").removeClass("hidden");
+        $("#hp-label-value-hi").val(questions[this.qid]?.label?.hi || "");
+        $("#hp-label-value-lo").val(questions[this.qid]?.label?.lo || "");
+        $("input[name=skippable]").prop("checked", questions[this.qid].skippable || false);
+      }
       $(".options-text").removeClass("hidden");
+
       this.rerenderAnswerOptions();
     }
   };

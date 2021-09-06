@@ -9,10 +9,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./styles.css" />
     <script src="./bundle.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.slim.min.js" integrity="sha256-u7e5khyithlIdTpu22PHhENmPcRdFiHRjhAuHcs05RI=" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.7/signalr.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.slim.min.js" integrity="sha256-u7e5khyithlIdTpu22PHhENmPcRdFiHRjhAuHcs05RI=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js"></script>
     <script src="https://unpkg.com/chartjs-chart-wordcloud@3.5.0/build/index.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.7/signalr.min.js"></script>
     <!-- PRODUCTION -->
     <script src="https://yaidevstraccwebapp.blob.core.windows.net/components/index.js" type="module"></script>
     <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/observable-slim.js"></script>
@@ -20,6 +21,31 @@
     <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/identitymanager.js"></script>
     <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/yai.js"></script>
     <title>Quick Poll</title>
+    <style>
+      .modal {
+        transition: opacity 0.25s ease;
+      }
+      body.modal-active {
+        overflow-x: hidden;
+        overflow-y: visible !important;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        width: 20px;
+        height: 20px;
+        -webkit-appearance: none;
+        appearance: none;
+        cursor: pointer;
+        background: #fff;
+        box-shadow: -408px 0 0 400px #4e48d7;
+        border-radius: 50%;
+      }
+      input[name="skippable"]:checked ~ .dot {
+        transform: translateX(100%);
+      }
+      input[name="skippable"]:checked ~ .dot-cont {
+        background-color: #4e48d7;
+      }
+    </style>
   </head>
   <body>
     <div id="canvas" class="canvas font-poppins w-full h-fit-content min-h-screen flex flex-col justify-center bg-gray-light">
@@ -124,6 +150,26 @@
               <!-- QUESTION INPUT -->
               <div class="text-sm ml-6 mb-1">Question</div>
               <input id="hp-question-q" class="mb-4 input-form w-full" type="text" placeholder="Type your question here" />
+              <div id="hp-scales-label" class="hp-scales-settings hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label for="hp-label-value-lo" class="text-sm ml-6 mb-1">Low value</label>
+                  <input id="hp-label-value-lo" class="mb-4 input-form w-full" type="text" maxlength="20" placeholder="Strongly disagree" />
+                </div>
+                <div>
+                  <label for="hp-label-value-hi" class="text-sm ml-6 mb-1">High value</label>
+                  <input id="hp-label-value-hi" class="mb-4 input-form w-full" type="text" maxlength="20" placeholder="Strongly agree" />
+                </div>
+              </div>
+              <div class="hp-scales-settings hidden flex items-center justify-start w-full ml-6 mb-4">
+                <label for="hp-scales-skippable" class="flex items-center cursor-pointer">
+                  <div class="relative">
+                    <input type="checkbox" id="hp-scales-skippable" class="sr-only" name="skippable" />
+                    <div class="dot-cont block bg-gray-300 w-10 h-6 rounded-full"></div>
+                    <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition"></div>
+                  </div>
+                  <div class="ml-2 leading-tight text-gray-600">Let participant skip individual statements <i class="fas fa-question-circle mx-1 text-gray-300" title="Skipped statements will not be counted towards the result."></i></div>
+                </label>
+              </div>
               <div class="options-text text-sm ml-6 mb-1">Options</div>
               <div id="hp-option-grid" class="grid gap-4 grid-cols-1"></div>
             </div>
@@ -155,24 +201,30 @@
             <div id="next-btn" class="btn btn-light-outline w-full mt-2 md:mt-0 md:w-40">Next</div>
           </div>
 
-          <div id="answered" class="hidden font-bold text-white text-right mr-8 mt-2 md:mt-4">Answered <span id="answer-count">0</span></div>
+          <div id="answered" class="font-bold text-white text-right mr-8 mt-2 md:mt-4">Answered <span id="answer-count">0</span></div>
         </div>
 
         <!-- QUESTION DISPLAY -->
-        <div id="question-display" class="flex-1 flex flex-col items-center justify-center mx-auto container md:max-w-lg lg:max-w-3xl px-4 md:px-0">
+        <div id="question-display" class="flex-1 flex flex-col items-center justify-center mx-auto container md:max-w-screen-sm lg:max-w-screen-md xl:max-w-screen-lg px-4 md:px-0">
           <div id="pl-reveal-remark" class="hidden text-2xl font-bold text-white"></div>
           <div id="display-question-q" class="text-xl font-bold text-white text-center mb-6">${question.q}</div>
 
           <!-- CHART TEMPLATES -->
-          <div class="hidden chart chart-poll max-w-screen-md w-full">
+          <div class="hidden chart chart-poll max-w-screen-md w-full mx-auto">
             <canvas width="768" height="432"></canvas>
           </div>
-          <div class="hidden chart chart-ranking max-w-screen-md w-full">
+          <div class="hidden chart chart-ranking max-w-screen-md w-full mx-auto">
             <canvas width="768" height="432"></canvas>
           </div>
-          <div class="hidden chart chart-wordcloud max-w-screen-md w-full">
+          <div class="hidden chart chart-wordcloud max-w-screen-md w-full mx-auto">
             <canvas width="768" height="432"></canvas>
           </div>
+          <div class="hidden chart chart-scales max-w-screen-md w-full mx-auto">
+            <canvas width="768" height="432"></canvas>
+          </div>
+          <div class="hidden chart chart-open w-full relative mb-8"></div>
+          <div class="hidden open-ended-response shadow-lg absolute rounded-card w-full p-6"></div>
+
           <div id="chart-container" class="hidden w-full"></div>
 
           <!-- INPUT TEMPLATES -->
@@ -181,13 +233,30 @@
             <label class="flex-1 input-option">Option</label>
           </div>
           <div class="hidden wordcloud-input-wrapper flex flex-col gap-4">
-            <input id="wordcloud-99-0" maxlength="25" type="text" name="wordcloud-1"  placeholder="Enter a word" class="input-form flex-1" autofocus/>
+            <input id="wordcloud-99-0" maxlength="25" type="text" name="wordcloud-1" placeholder="Enter a word" class="input-form flex-1" autofocus />
             <input id="wordcloud-99-1" maxlength="25" type="text" name="wordcloud-1" placeholder="Enter another word" class="input-form flex-1" />
             <input id="wordcloud-99-2" maxlength="25" type="text" name="wordcloud-1" placeholder="Enter another word" class="input-form flex-1" />
           </div>
+          <div class="hidden ranking-input-wrapper flex gap-2">
+            <div class="rank-nth w-10 h-10 flex items-center justify-center border border-indigo-500 text-indigo-500 rounded-full text-sm font-bold">1st</div>
+            <div class="rank-q input-form flex-1"></div>
+            <div class="rank-down btn btn-secondary-outline w-10 h-10 flex-none"><i class="fas fa-chevron-down"></i></div>
+            <div class="rank-up btn btn-secondary-outline w-10 h-10 flex-none"><i class="fas fa-chevron-up"></i></div>
+          </div>
+          <div class="hidden scales-input-wrapper flex flex-col gap-2 items-stretch border border-gray-300 p-4 rounded-xl">
+            <label class="flex justify-between items-center">
+              <div class="scale-option whitespace-nowrap flex-1 text-lg">Option 1</div>
+              <div>Scale: <span class="scale">3</span></div>
+              <div class="scale-skip hidden btn btn-secondary-outline ml-2">Skip</div>
+            </label>
+            <input class="rounded-full overflow-hidden appearance-none bg-gray-200 h-5 w-full" type="range" min="1" max="5" step="1" />
+            <div class="flex justify-between text-sm"><span class="scale-lo">Strongly disagree</span> <span class="scale-hi">Strongly agree</span></div>
+          </div>
+          <textarea rows="4" maxlength="250" class="hidden open-ended-input input-form rounded-card resize-none" placeholder="Type your response in 250 characters"></textarea>
 
-          <div id="input-container" class="hidden w-full rounded-card shadow-lg bg-white m-4 p-4 flex flex-col gap-4">
+          <div id="input-container" class="hidden w-full rounded-card shadow-lg bg-white m-4 p-4 flex flex-col gap-4 max-w-screen-md">
             <div id="display-options" class="w-full grid grid-cols-1 gap-4"></div>
+
             <div id="pl-submit-vote" class="btn btn-primary">Submit</div>
           </div>
         </div>
@@ -220,6 +289,76 @@
       <!-- <div id="credits" class="text-gray-200 text-sm m-2 absolute bottom-0 left-0">
       <div>Music by Zen_Man from <a href="https://pixabay.com/?utm_source=link-attribution&amp;utm_medium=referral&amp;utm_campaign=music&amp;utm_content=2699">Pixabay</a></div>
     </div> -->
+
+      <!-- MODAL -->
+      <div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 bottom-0 flex items-center justify-center z-30">
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+
+        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-card shadow-lg z-50 overflow-y-auto">
+          <div class="modal-close absolute top-0 right-0 cursor-pointer flex flex-col items-center mt-4 mr-4 text-white text-sm z-50">
+            <i class="fas fa-times text-white"></i>
+            <span class="text-sm">(Esc)</span>
+          </div>
+
+          <!-- Add margin if you want to see some of the overlay behind the modal-->
+          <div class="modal-content p-8 text-left">
+            <!--Title-->
+            <div class="flex justify-between items-center pb-4">
+              <p class="text-xl font-bold">Save as Preset Activity</p>
+              <div class="modal-close cursor-pointer z-50">
+                <i class="fas fa-times text-black"></i>
+              </div>
+            </div>
+
+            <!--Body-->
+            <form id="save-as-activity-set" class="flex flex-col">
+              <label for="title" class="text-sm ml-6 mb-1">Title</label>
+              <input id="activity-set-title" name="title" type="text" placeholder="Preset activity title" class="input-form mb-4" />
+              <div class="flex gap-8 mb-4">
+                <label for="set-public"> <input id="set-public" type="radio" name="is-private" value="false" checked/> Public </label>
+                <label for="set-private"> <input id="set-private" type="radio" name="is-private" value="true" /> Private </label>
+              </div>
+              <label for="desc" class="text-sm ml-6 mb-1">Description</label>
+              <textarea id="activity-set-desc" name="title" placeholder="Type preset activity description" class="input-form mb-4 rounded-card resize-none" rows="3"></textarea>
+              <label for="thumbnail" class="text-sm ml-6">Thumbnail</label>
+              <div class="rounded-card overflow-hidden w-full my-2">
+                <div class="w-full">
+                  <div class="relative border-dashed h-40 rounded-card border-dashed border border-gray-300 p-2">
+                    <div x-data="imageViewer()" class="relative w-full h-full flex justify-center items-center">
+                      <!-- Show the image -->
+                      <template x-if="imageUrl">
+                        <div class="relative rounded-lg h-full w-full">
+                          <img :src="imageUrl" class="object-contain w-full h-full" />
+                          <div id="delete-thumbnail" @click="clearPreview()" class="px-2 py-1 text-center cursor-pointer rounded transition ease-in-out bg-red-500 hover:bg-red-600 text-white absolute bottom-0 right-0 z-20"><i class="fa fa-trash"></i></div>
+                        </div>
+                      </template>
+
+                      <!-- Show the gray box when image is not available -->
+                      <template x-if="!imageUrl">
+                        <div class="flex flex-col items-center">
+                          <i class="far fa-image fa-3x text-indigo-400"></i>
+                          <span class="block text-gray-400 text-xs font-normal">Drag and drop image or</span>
+                          <div class="px-16 py-2 mt-2 text-center cursor-pointer rounded-full transition ease-in-out text-xs font-semibold bg-gradient-to-br from-indigo-500 to-indigo-700 filter hover:brightness-90 text-white">Browse</div>
+                        </div>
+                      </template>
+                      <!-- Image file selector -->
+                      <!-- <input class="mt-2" type="file" accept="image/*" @change="fileChosen" /> -->
+                      <img id="load-thumbnail" src="" alt="" @load="loadThumbnail" class="hidden">
+                      <input id="activity-set-thumbnail" imgSrc="" type="file" class="h-full w-full opacity-0 absolute top-0 z-10 cursor-pointer" accept="image/*" @change="fileChosen" name="thumbnail" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </form>
+
+            <!--Footer-->
+            <div class="flex pt-2 gap-2">
+              <button class="modal-close btn btn-secondary-outline mr-2 flex-1">Cancel</button>
+              <button id="hp-export-set-btn" class="btn btn-primary flex-1">Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </body>
   <footer>

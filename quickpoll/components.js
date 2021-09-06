@@ -1,4 +1,6 @@
+// ----------------------------------------------------------------
 /* UTIL COMPONENT FUNCTIONS */
+// ----------------------------------------------------------------
 
 function styleComponents() {
   $(".btn").replaceClass(
@@ -88,6 +90,7 @@ function setButtonsOnClick() {
   };
 
   /* LOBBY */
+  $(".pl-quit-btn").click(() => lobby.onLeave());
   $("#next-btn").click(() => lobby.nextQuestion());
 }
 
@@ -97,7 +100,72 @@ function sceneSwitcher(scene, isInLobby = true) {
   console.log(`in ${scene}`);
 }
 
+function toggleModal() {
+  $(".modal").toggleClass("opacity-0 pointer-events-none");
+  $("body").toggleClass("modal-active");
+}
+
+var activitySetThumbnail = "";
+function imageViewer(img) {
+  return {
+    imageUrl: img || "",
+
+    loadThumbnail() {
+      var el = $("#load-thumbnail");
+      loadPresetThumbnail(el.attr("src")).then((res) => (this.imageUrl = res));
+    },
+
+    clearPreview() {
+      document.getElementById("activity-set-thumbnail").value = null;
+      this.imageUrl = "";
+      activitySetThumbnail = "";
+      styleButtons();
+    },
+
+    fileChosen(event) {
+      this.fileToDataUrl(event, (src) => (this.imageUrl = src));
+    },
+
+    fileToDataUrl(event, callback) {
+      if (!event.target.files.length) return;
+      const files = [...event.target.files];
+
+      if (files[0].size > 1024 * 1024) {
+        Compress.compress(files, {
+          size: 1, // the max size in MB, defaults to 2MB
+          quality: 0.6, // the quality of the image, max is 1
+        }).then((result) => {
+          // returns an array of compressed images
+          const img1 = result[0];
+          const base64strPreview = "data:image/jpeg;charset=utf-8;base64, " + img1.data;
+          const base64str = img1.data;
+          const imgExt = img1.ext;
+          const file = Compress.convertBase64ToFile(base64str, imgExt);
+          console.log(img1.endSizeInMb + "MiB");
+
+          activitySetThumbnail = file;
+          callback(base64strPreview);
+        });
+      } else {
+        let file = event.target.files[0];
+        let reader = new FileReader();
+        activitySetThumbnail = file;
+
+        reader.readAsDataURL(file);
+        reader.onload = (e) => {
+          callback(e.target.result);
+          console.log(files[0].size / 1024 / 1024 + "MiB");
+        };
+      }
+    },
+  };
+}
+
+// ----------------------------------------------------------------
 /* COMPONENTS */
+// ----------------------------------------------------------------
+
+// HOST PANEL
 
 const QuestionCard = (idx, quiz) => {
   const qCard = $(".q-card").first().clone();
@@ -145,6 +213,8 @@ const AnswerInput = (value, idx, isLast) => {
   return answerInput;
 };
 
+// POLL
+
 const PollChart = (question) => {
   $(".chart").addClass("hidden");
   chart = $(".chart-poll").first().clone();
@@ -185,6 +255,8 @@ const PollInput = (option, i) => {
   return pollInput;
 };
 
+// WORD CLOUD
+
 const WordCloudChart = () => {
   $(".chart").addClass("hidden");
   chart = $(".chart-wordcloud").first().clone();
@@ -200,6 +272,7 @@ const WordCloudChart = () => {
       datasets: [
         {
           label: "Response(s)",
+          unscaled: [0],
           // size in pixel
           data: [0],
           color: colors,
@@ -215,9 +288,9 @@ const WordCloudChart = () => {
           callbacks: {
             label: function (context) {
               var label = context.dataset.label || "";
-              if (label) label += ": ";
-              if (context.parsed.y !== null) {
-                label += (context.parsed.y - 10) / 5;
+              label += ": ";
+              if (context.dataset.unscaled !== null) {
+                label += context.dataset.unscaled[context.dataIndex];
               }
               return label;
             },
@@ -276,3 +349,135 @@ function wordCloudScaler(wordValues) {
   }
   return scaledValues;
 }
+
+// OPEN ENDED
+
+const OpenEndedChart = () => {
+  $(".chart").addClass("hidden");
+  chart = $(".chart-open").first().clone();
+  chart.attr("id", `chart-${lobby.currentQid}`);
+  chart.removeClass("hidden");
+  return chart;
+};
+
+const OpenEndedResponse = (response) => {
+  bgColors = ["bg-indigo-100", "bg-indigo-50", "bg-white", "bg-indigo-200"];
+  card = $(".open-ended-response").first().clone();
+  card.removeClass("hidden");
+  card.addClass(bgColors[Math.floor(Math.random() * bgColors.length)]);
+  card.text(response);
+  return card;
+};
+
+const OpenEndedInput = () => {
+  input = $(".open-ended-input").first().clone();
+  input.removeClass("hidden");
+  input.prop("name", `q-${lobby.currentQid}`);
+  return input;
+};
+
+// SCALES
+
+const ScalesChart = (question) => {
+  $(".chart").addClass("hidden");
+  chart = $(".chart-scales").first().clone();
+  chart.attr("id", `chart-${lobby.currentQid}`);
+  chart.removeClass("hidden");
+  ctx = chart.find("canvas");
+
+  data = new Array(question.options.length).fill(0);
+  colors = ["white", "rosybrown", "burlywood", "bisque", "PeachPuff", "Moccasin", "PapayaWhip"];
+  var scales = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: question.options,
+      datasets: [{ label: "Scale", data: data, backgroundColor: colors }],
+    },
+    options: {
+      indexAxis: "y",
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { display: false },
+        y: { ticks: { color: "white" }, grid: { display: false } },
+      },
+    },
+  });
+  charts[lobby.currentQid] = scales;
+  return chart;
+};
+
+const ScalesInput = (option, i, label) => {
+  const qid = lobby.currentQid;
+  scalesInput = $(".scales-input-wrapper").first().clone();
+  scalesInput.removeClass("hidden");
+  scalesInput.attr("name", `q-${qid}-${i}`);
+  scalesInput.find(".scale-lo").text(label.lo);
+  scalesInput.find(".scale-hi").text(label.hi);
+  input = scalesInput.find("input");
+  input.prop("id", `q-${qid}-${i}`);
+  input.prop("name", `q-${qid}`);
+  input.change(() => $(`.scales-input-wrapper[name=q-${qid}-${i}] .scale`).text($(`#q-${qid}-${i}`).val()));
+  label = scalesInput.find("label");
+  label.find(".scale-option").text(option);
+  label.find(".scale-skip ").click(() => {
+    inp = $(`#q-${qid}-${i}`);
+    inp.attr("skip", !inp.attr("skip"));
+    inp.toggleClass("opacity-50");
+    inp.prop("disabled", !inp.prop("disabled"));
+    $(`.scales-input-wrapper[name=q-${qid}-${i}]`).toggleClass("text-gray-400 bg-gray-100");
+  });
+  label.prop("for", `q-${qid}-${i}`);
+  return scalesInput;
+};
+
+// RANKING
+
+const RankingChart = (question) => {
+  $(".chart").addClass("hidden");
+  chart = $(".chart-ranking").first().clone();
+  chart.attr("id", `chart-${lobby.currentQid}`);
+  chart.removeClass("hidden");
+  ctx = chart.find("canvas");
+
+  data = new Array(question.options.length).fill(0);
+  colors = ["white", "rosybrown", "burlywood", "bisque", "PeachPuff", "Moccasin", "PapayaWhip"];
+  var scales = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: question.options,
+      datasets: [{ label: "Weight", data: data, backgroundColor: colors }],
+    },
+    options: {
+      indexAxis: "y",
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { display: false },
+        y: { ticks: { color: "white" }, grid: { display: false } },
+      },
+    },
+  });
+  charts[lobby.currentQid] = scales;
+  return chart;
+};
+
+const RankingInput = (option, id, i, isLast) => {
+  rankInput = $(".ranking-input-wrapper").first().clone();
+  rankInput.removeClass("hidden");
+  rankInput.prop("id", `q-${lobby.currentQid}-${id}`);
+  rankInput.find(".rank-nth").text(i + 1 + nth(i + 1));
+  rankInput.find(".rank-q").text(option);
+  rankInput.find(".rank-up").click(() => lobby.rankUp(i));
+  rankInput.find(".rank-down").click(() => lobby.rankDown(i));
+
+  if (i == 0)
+    rankInput
+      .find(".rank-up")
+      .unbind("click")
+      .replaceClass("text-gray-500 hover:bg-gray-500 hover:text-white", "text-white bg-gray-500 opacity-20");
+  else if (isLast)
+    rankInput
+      .find(".rank-down")
+      .unbind("click")
+      .replaceClass("text-gray-500 hover:bg-gray-500 hover:text-white", "text-white bg-gray-500 opacity-20");
+  return rankInput;
+};
