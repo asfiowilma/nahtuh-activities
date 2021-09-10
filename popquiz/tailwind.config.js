@@ -3,7 +3,7 @@ const purge = process.env.NODE_ENV === "production";
 module.exports = {
   purge: {
     enabled: purge,
-    content: ["./*.html", "./*.js"],
+    content: ["./dist/*.html", "./dist/*.js"],
     options: {
       keyframes: true,
     },
@@ -19,10 +19,23 @@ module.exports = {
       fontFamily: {
         poppins: ["Poppins", "sans-serif"],
       },
+      borderRadius: {
+        circle: "100%",
+        card: "20px",
+        10: "10px",
+      },
+      boxShadow: {
+        card: "0px 10px 20px rgba(214, 226, 241, 0.5)",
+      },
+      backgroundImage: {
+        gummy: "linear-gradient(90deg, #d8146e 0%, #f26c6c 100%)",
+      },
     },
   },
   variants: {
-    extend: {},
+    extend: {
+      brightness: ["hover"],
+    },
   },
-  plugins: [],
+  plugins: [require("ps-scrollbar-tailwind"), require("@tailwindcss/forms")],
 };
