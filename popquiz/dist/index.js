@@ -7,8 +7,9 @@ var isStarted = false;
 var playerList = [];
 var questions = [];
 var leaderboard = {};
+var loadedImage = null;
 
-const BLOB_SOURCE = "https://yaidevstraccwebapp.blob.core.windows.net";
+const BLOB_SOURCE = "https://nahtuhprodstasset.blob.core.windows.net";
 const BASE_SCORE = 200;
 const hp = HostPanel,
   hl = HostLobby,

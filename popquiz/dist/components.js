@@ -229,6 +229,7 @@ const WrongAnswerBlock = (answer, count) => {
   regradeBtn.one("click", function () {
     yai.broadcast({ regrade: answer });
     wrongBlock.replaceClass("bg-opacity-50", "bg-opacity-10");
+    regradeBtn.replaceClass("btn-primary", "btn-light-outline");
     regradeBtn.unbind("mouseenter mouseleave");
     regradeBtn.find("span").text("Marked as correct");
   });

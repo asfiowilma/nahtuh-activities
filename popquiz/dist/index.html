@@ -13,11 +13,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.7/signalr.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js"></script>
 
-    <script src="https://yaidevstraccwebapp.blob.core.windows.net/components/index.js" type="module"></script>
-    <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/observable-slim.js"></script>
-    <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/yai-settings.js"></script>
-    <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/identitymanager.js"></script>
-    <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/yai.js"></script>
+    <script src="https://nahtuhprodstasset.blob.core.windows.net/components/index.js" type="module"></script>
+    <script src="https://nahtuhprodstasset.blob.core.windows.net/%24web/js/observable-slim.js"></script>
+    <script src="https://nahtuhprodstasset.blob.core.windows.net/%24web/js/yai-settings.js"></script>
+    <script src="https://nahtuhprodstasset.blob.core.windows.net/%24web/js/identitymanager.js"></script>
+    <script src="https://nahtuhprodstasset.blob.core.windows.net/%24web/js/yai.js"></script>
     <title>Pop! Quiz</title>
     <style>
       .modal {
@@ -54,7 +54,7 @@
           <!-- GAME INFO -->
           <div class="bg-white rounded-card flex flex-col align-stretch shadow-card p-4">
             <div class="flex flex-col mb-2 ml-8 md:ml-0">
-              <div class="text-sm">Your username:</div>
+              <div class="text-sm">Your nickname:</div>
               <span id="hp-username" class="font-bold">Litha</span>
             </div>
             <div class="flex flex-col">
@@ -82,12 +82,7 @@
                 <span class="q-header ml-1 truncate whitespace-nowrap flex-1">Q1. asdjh aksjdha kdhasd hasdkask dahsdjh</span>
                 <span class="q-type flex-none bg-white text-pink-600 rounded-full py-0.5 px-2 text-xs font-bold ml-3">MC</span>
               </div>
-              <div class="correct-answer grid grid-cols-2 gap-2 mb-3 mx-3">
-                <div class="choice rounded bg-white h-4"></div>
-                <div class="choice rounded bg-white opacity-40 h-4"></div>
-                <div class="choice rounded bg-white opacity-40 h-4"></div>
-                <div class="choice rounded bg-white opacity-40 h-4"></div>
-              </div>
+              <div class="correct-answer grid grid-cols-2 gap-2 mb-3 mx-3"></div>
             </div>
 
             <div id="question-cards" class="flex flex-col gap-3"></div>
@@ -153,9 +148,9 @@
                 </div>
 
                 <!-- QUESTION INPUT -->
-                <label for="type" class="mx-6 text-sm font-semibold flex justify-between items-center mb-1">Question</label>
+                <label for="hp-question-q" class="mx-6 text-sm font-semibold flex justify-between items-center mb-1">Question</label>
                 <input id="hp-question-q" class="mb-4 input-form w-full" type="text" placeholder="Type your question here" />
-                <label for="type" class="mx-6 text-sm font-semibold flex justify-between items-center mb-1">Correct Answer(s)</label>
+                <label class="mx-6 text-sm font-semibold flex justify-between items-center mb-1">Correct Answer(s)</label>
                 <div id="hp-option-grid-sa" class="grid gap-4 grid-cols-1"></div>
                 <div id="hp-option-grid-mc" class="grid gap-4 grid-rows-4 md:grid-rows-none md:grid-cols-2"></div>
                 <div id="hp-option-grid-tf" class="grid gap-4 grid-rows-2 md:grid-rows-none md:grid-cols-2"></div>
@@ -224,7 +219,7 @@
             <!-- WRONG ANSWER BLOCK TEMPLATE -->
             <div class="wrong-answer-block hidden bg-pink-900 bg-opacity-50 text-white rounded-lg p-4 flex flex-col transform ease-in-out">
               <div class="flex items-center justify-end">
-                <div class="wab-regrade-btn btn btn-primary transform ease-in-out"><span class="hidden">Mark as correct</span><i class="fas fa-check"></i></div>
+                <div class="wab-regrade-btn btn btn-primary px-4 transform ease-in-out"><span class="hidden mr-2">Mark as correct</span><i class="fas fa-check"></i></div>
               </div>
               <div class="wab-answer flex-1 text-center my-2"></div>
               <div class="wab-count text-sm text-right"><i class="fas fa-user ml-2 text-sm"></i></div>
@@ -251,8 +246,8 @@
             <div id="leaderboard-winner-score" class="text-lg"></div>
           </div>
           <div class="hidden btn-wrapper my-4 flex gap-2">
-            <div class="final-score-btn btn btn-light-outline">Final Score</div>
-            <div class="leaderboard-btn btn btn-light">Leaderboard</div>
+            <div class="final-score-btn btn btn-light-outline flex items-center px-6">Final Score</div>
+            <div class="leaderboard-btn btn btn-light flex items-center px-6">Leaderboard</div>
           </div>
 
           <!-- BAR TEMPLATE -->
@@ -279,8 +274,8 @@
             <div id="pl-final-score" class="text-lg"></div>
           </div>
           <div class="btn-wrapper my-4 flex gap-2">
-            <div class="final-score-btn btn btn-light">Final Score</div>
-            <div class="leaderboard-btn btn btn-light-outline">Leaderboard</div>
+            <div class="final-score-btn btn btn-light flex items-center px-6">Final Score</div>
+            <div class="leaderboard-btn btn btn-light-outline flex items-center px-6">Leaderboard</div>
           </div>
         </div>
 
@@ -288,15 +283,15 @@
         <div id="lobby-footer" class="hidden p-4 md:p-6 lg:px-8 relative w-full">
           <div class="bg-pink-100 bg-opacity-20 backdrop-filter backdrop-blur-xl rounded-xl w-full flex items-center justify-between p-4 md:pl-6">
             <div class="pl-username text-2xl font-bold text-white truncate mr-4"></div>
-            <div class="pl-quit-btn btn btn-light-outline whitespace-nowrap"><i class="fas fa-sign-out-alt mr-2"></i>Leave</div>
+            <div class="pl-quit-btn btn btn-light-outline whitespace-nowrap px-6"><i class="fas fa-sign-out-alt mr-2"></i>Leave</div>
           </div>
         </div>
       </div>
 
       <!-- CREDITS -->
-      <a id="credits" href="https://www.vecteezy.com/free-vector/vector" class="text-gray-300 text-sm m-2 absolute bottom-0 left-0">Vector Vectors by Vecteezy</a>
+      <a id="credits" href="https://www.vecteezy.com/free-vector/vector" class="text-gray-200 text-sm m-2 absolute bottom-0 left-0">Vector Vectors by Vecteezy</a>
 
-      <!--Modal-->
+      <!-- MODAL -->
       <div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 bottom-0 flex items-center justify-center z-30">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
 
@@ -320,10 +315,11 @@
             <form id="save-as-activity-set" class="flex flex-col">
               <label for="title" class="text-sm ml-6 mb-1">Title</label>
               <input id="activity-set-title" name="title" type="text" placeholder="Preset activity title" class="input-form mb-4" />
-              <div class="flex gap-8 mb-4 ml-6">
-                <label for="set-public"> <input id="set-public" type="radio" name="is-private" class="text-pink-500 form-radio focus:ring-pink-300" checked /> Public </label>
-                <label for="set-private"> <input id="set-private" type="radio" name="is-private" class="text-pink-500 form-radio focus:ring-pink-300" /> Private </label>
+              <div class="flex gap-8 ml-6 mb-1">
+                <label for="set-private"> <input id="set-private" type="radio" name="is-private" class="text-pink-500 form-radio focus:ring-pink-300" checked /> Private </label>
+                <label for="set-public"> <input id="set-public" type="radio" name="is-private" class="text-pink-500 form-radio focus:ring-pink-300"/> Public </label>
               </div>
+              <div class="bg-pink-50 mb-4 rounded-full px-6 py-1 text-sm text-pink-700">Ini desc</div>
               <label for="desc" class="text-sm ml-6 mb-1">Description</label>
               <textarea id="activity-set-desc" name="title" placeholder="Type preset activity description" class="input-form mb-4 rounded-card resize-none" rows="3"></textarea>
               <label for="thumbnail" class="text-sm ml-6">Thumbnail</label>
@@ -344,7 +340,7 @@
                         <div class="flex flex-col items-center">
                           <i class="far fa-image fa-3x text-pink-400"></i>
                           <span class="block text-gray-400 text-xs font-normal">Drag and drop image or</span>
-                          <div class="px-16 py-2 mt-2 text-center cursor-pointer rounded-full transition ease-in-out text-xs font-semibold bg-gradient-to-br from-pink-500 to-pink-700 filter hover:brightness-90 text-white">Browse</div>
+                          <div class="btn btn-primary py-1 w-20 mt-2">Browse</div>
                         </div>
                       </template>
                       <!-- Image file selector -->

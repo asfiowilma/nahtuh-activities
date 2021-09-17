@@ -25,7 +25,7 @@
   @apply bg-white hover:bg-gray-100 text-black;
 }
 .btn-light-outline {
-  @apply border border-white text-white hover:bg-gray-100 ;hover:text-black;
+  @apply border border-white text-white hover:bg-gray-100 hover:text-black;
 }
 .btn-danger {
   @apply bg-red-500 hover:bg-red-600 text-white;

@@ -60,7 +60,7 @@ const HostPanel = new (function () {
 
   this.addAnswer = () => {
     questions[this.qid].options.push("");
-    $("#hp-option-grid").empty();
+    $("#hp-option-grid-sa").empty();
     this.rerenderAnswerOptions();
   };
 
