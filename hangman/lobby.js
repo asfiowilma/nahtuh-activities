@@ -219,11 +219,22 @@ Lobby = new (function () {
     } else {
       wrongSound.play();
       this.hearts = this.hearts - 1;
-      if (this.hearts == 4) $("#hearts").replaceClass("text-white", "text-red-100");
-      else if (this.hearts == 3) $("#hearts").replaceClass("text-red-100", "text-red-200");
-      else if (this.hearts == 2) $("#hearts").replaceClass("text-red-200", "text-red-300");
-      else if (this.hearts == 1) $("#hearts").replaceClass("text-red-300", "text-red-400");
-      else if (this.hearts == 0) $("#hearts").replaceClass("text-red-400", "text-red-500");
+      if (this.hearts == 4) {
+        $("#hearts").replaceClass("text-white animate__slower", "text-red-100 animate__slow");
+        $(".heart-life").replaceClass("animate__slower", "animate__slow");
+      } else if (this.hearts == 3) {
+        $("#hearts").replaceClass("text-red-100 animate__slower", "text-red-200");
+        $(".heart-life").removeClass("animate__slow");
+      } else if (this.hearts == 2) {
+        $("#hearts").replaceClass("text-red-200", "text-red-300");
+        $(".heart-life").addClass("animate__fast");
+      } else if (this.hearts == 1) {
+        $("#hearts").replaceClass("text-red-300", "text-red-400");
+        $(".heart-life").replaceClass("animate__fast", "animate__faster");
+      } else if (this.hearts == 0) {
+        $("#hearts").replaceClass("text-red-400", "text-red-500");
+        $(".heart-life").removeClass("animate__heartBeat");
+      }
       $("#life").text(this.hearts);
       $("#" + char).addClass("animate__animated animate__headShake");
       this.renderBrokenHeart();
