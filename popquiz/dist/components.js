@@ -13,25 +13,6 @@ function setButtonsOnClick() {
   });
   $("#hp-save-question-btn").click(() => hp.saveQuestion());
   $("#hp-import-btn").click(() => hp.importJson());
-  $("#hp-export-json").click(() => hp.exportAsJson());
-  $("#hp-export-set").click(() => toggleModal());
-  $("#hp-export-set-btn").click(() => hp.exportAsActivitySet());
-
-  $(".modal-overlay").click(() => toggleModal());
-  $(".modal-close, .modal-close").click(() => toggleModal());
-
-  document.onkeydown = function (e) {
-    e = e || window.event;
-    var isEscape = false;
-    if ("key" in e) {
-      isEscape = e.key === "Escape" || e.key === "Esc";
-    } else {
-      isEscape = e.code === "Escape";
-    }
-    if (isEscape && $("body").hasClass("modal-active")) {
-      toggleModal();
-    }
-  };
 
   /* LOBBY */
   $("#pl-submit-answer-btn").click(() => pl.answerHandler());
@@ -59,62 +40,6 @@ function toggleHideQuestionDisplay(componentsToUnhide) {
   ];
   componentsToHide.forEach((hide) => $(hide).addClass("hidden"));
   componentsToUnhide.forEach((show) => $(show).removeClass("hidden"));
-}
-
-function toggleModal() {
-  $(".modal").toggleClass("opacity-0 pointer-events-none");
-  $("body").toggleClass("modal-active");
-}
-
-var activitySetThumbnail = "";
-function imageViewer(img) {
-  return {
-    imageUrl: img || "",
-
-    loadThumbnail() {
-      var el = $("#load-thumbnail");
-      loadPresetThumbnail(el.attr("src")).then((res) => (this.imageUrl = res));
-    },
-
-    clearPreview() {
-      document.getElementById("activity-set-thumbnail").value = null;
-      this.imageUrl = "";
-      activitySetThumbnail = "";
-    },
-
-    fileChosen(event) {
-      this.fileToDataUrl(event, (src) => (this.imageUrl = src));
-    },
-
-    fileToDataUrl(event, callback) {
-      if (!event.target.files.length) return;
-      const files = [...event.target.files];
-
-      if (files[0].size > 1024 * 1024) {
-        Compress.compress(files, {
-          size: 1, // the max size in MB, defaults to 2MB
-          quality: 0.6, // the quality of the image, max is 1
-        }).then((result) => {
-          // returns an array of compressed images
-          const img = result[0];
-          const base64str = "data:image/jpeg;charset=utf-8;base64, " + img.data;
-          console.log(img.endSizeInMb + "MiB");
-          activitySetThumbnail = img;
-          callback(base64str);
-        });
-      } else {
-        let file = event.target.files[0];
-        let reader = new FileReader();
-        activitySetThumbnail = file;
-
-        reader.readAsDataURL(file);
-        reader.onload = (e) => {
-          callback(e.target.result);
-          console.log(files[0].size / 1024 / 1024 + "MiB");
-        };
-      }
-    },
-  };
 }
 
 const OptionInput = (qid, idx, option) => {

@@ -168,61 +168,12 @@ const HostPanel = new (function () {
     });
   };
 
-  this.exportAsActivitySet = () => {
-    const title = $("#activity-set-title").val();
-    const desc = $("#activity-set-desc").val();
-    const isPrivate = $("#set-private").is(":checked");
-    const thumbnail = activitySetThumbnail;
-    const config = { questions: questions };
-
-    if (this.validate())
-      yai
-        .createPresetActivity(desc, title, username, isPrivate, config, thumbnail)
-        .then(() => {
-          toggleModal();
-          swal({
-            icon: "success",
-            text: "Question set successfully made into an activity set!",
-            button: false,
-          });
-        })
-        .catch((err) => swal({ icon: "error", text: err, button: false }));
-  };
-
-  this.updateActivitySet = () => {
-    const title = $("#activity-set-title").val();
-    const desc = $("#activity-set-desc").val();
-    const isPrivate = $("#set-private").is(":checked");
-    const thumbnail = activitySetThumbnail;
-    const config = { questions: questions };
-
-    if (this.validate())
-      yai
-        .updatePresetActivity(desc, title, username, isPrivate, config, thumbnail)
-        .then(() => {
-          swal({
-            icon: "success",
-            text: "Activity set successfully updated!",
-            button: false,
-          });
-        })
-        .catch((err) => swal({ icon: "error", text: err, button: false }));
-  };
-
-  this.exportAsJson = () => {
-    var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(questions));
-    var dlAnchorElem = document.getElementById("hp-export-json");
-    dlAnchorElem.setAttribute("href", dataStr);
-    dlAnchorElem.setAttribute("download", "questionSet.json");
-    swal({
-      icon: "success",
-      text: "Successfully exported question set!",
-      button: false,
-    });
-  };
-
   this.startQuiz = () => {
     if (this.validate()) HostLobby.start();
+  };
+
+  this.getConfig = () => {
+    return { questions: questions };
   };
 
   this.validate = () => {

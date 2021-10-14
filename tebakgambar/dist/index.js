@@ -11,7 +11,7 @@ var questions = [];
 var leaderboard = {};
 var loadedImage = null;
 
-const BLOB_SOURCE = "https://yaidevstraccwebapp.blob.core.windows.net";
+const BLOB_SOURCE = "https://nahtuhprodstasset.blob.core.windows.net";
 const BASE_SCORE = 200;
 const hp = HostPanel,
   hl = HostLobby,
@@ -38,11 +38,7 @@ function onConnected(data) {
 
   if (isHost) {
     yai.eventVars.wrongAnswers = [];
-    if (yai.isLoadingActivitySet) {
-      presetModal.isOwner = yai.isActivitySetOwner;
-      loadActivitySet();
-      console.log("loading activity set...");
-    }
+    if (yai.isLoadingActivitySet) loadActivitySet();
     HostPanel.start();
   } else {
     PlayerLobby.start();
@@ -86,27 +82,6 @@ $.fn.replaceClass = function (pFromClass, pToClass) {
 
 /* UTILS */
 
-function uploadJson(id, callback) {
-  document.getElementById(id).onchange = function (evt) {
-    try {
-      let files = evt.target.files;
-      if (!files.length) {
-        alert("No file selected!");
-        return;
-      }
-      let file = files[0];
-      let reader = new FileReader();
-      const self = this;
-      reader.onload = (event) => {
-        callback(event.target.result);
-      };
-      reader.readAsText(file);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-}
-
 function nth(n) {
   return [, "st", "nd", "rd"][(n / 10) % 10 ^ 1 && n % 10] || "th";
 }
@@ -119,8 +94,8 @@ async function findHost() {
 
 async function loadActivitySet() {
   let preset = await yai.getPresetActivityData();
+  presetModal.isOwner = yai.isActivitySetOwner;
   presetModal.loadPresetActivityData(preset);
-  console.log(preset);
 
   questions = [];
   $("#question-cards").empty();

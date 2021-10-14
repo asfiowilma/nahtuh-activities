@@ -14,7 +14,8 @@
   "scripts": {
     "build": "postcss dev/styles.css -o dist/styles.css&& node build.js",
     "bundle": "browserify dev/main.js -o dist/bundle.js",
-    "prod": "SET NODE_ENV=production&& postcss dev/styles.css -o dist/styles.css&& node build.js"
+    "prod": "SET NODE_ENV=production&& postcss dev/styles.css -o dist/styles.css&& node build.js",
+    "prodcss": "SET NODE_ENV=production&& postcss dev/styles.css -o dist/styles.css"
   },
   "author": "lyth",
   "license": "ISC"

@@ -13,11 +13,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.7/signalr.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js"></script>
 
-    <script src="https://nahtuhprodstasset.blob.core.windows.net/components/index.js" type="module"></script>
-    <script src="https://nahtuhprodstasset.blob.core.windows.net/%24web/js/observable-slim.js"></script>
-    <script src="https://nahtuhprodstasset.blob.core.windows.net/%24web/js/yai-settings.js"></script>
-    <script src="https://nahtuhprodstasset.blob.core.windows.net/%24web/js/identitymanager.js"></script>
-    <script src="https://nahtuhprodstasset.blob.core.windows.net/%24web/js/yai.js"></script>
+    <script src="https://yaidevstraccwebapp.blob.core.windows.net/components/index.js" type="module"></script>
+    <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/observable-slim.js"></script>
+    <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/yai-settings.js"></script>
+    <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/identitymanager.js"></script>
+    <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/yai.js"></script>
     <title>Pop! Quiz</title>
     <style>
       .modal {
@@ -41,11 +41,11 @@
     <div id="canvas" class="canvas w-full h-fit-content min-h-screen flex flex-col bg-gray-light">
       <!-- LOGIN PANEL -->
       <div id="login-panel" class="flex-1 flex flex-col w-full mx-auto items-center justify-center">
-        <create-event-component id="create-event" colorPrimary="#EC4899" colorSecondary="#DB2777" colorLink="#EC4899"></create-event-component>
+        <create-event-component id="create-event" colorPrimary="#ec4899" colorSecondary="#be185d" colorLink="#EC4899"></create-event-component>
       </div>
 
       <!-- HOST PANEL -->
-      <div id="host-panel" class="hidden container mx-auto py-8 px-4 lg:px-0 flex items-start">
+      <div id="host-panel" class="hidden container mx-auto py-8 px-4 lg:px-0 flex-1 flex items-start">
         <div id="menu-toggle" class="rounded-full bg-pink-500 h-10 w-10 flex items-center justify-center z-20 shadow-lg fixed top-4 left-4 block md:hidden"><i class="fas fa-bars text-white"></i></div>
         <div class="menu-overlay hidden absolute inset-0 bg-gray-900 opacity-10 z-10"></div>
 
@@ -62,13 +62,7 @@
               <span id="hp-event-id" class="font-bold">XXX-XXX-XXX</span>
             </div>
             <!-- IMPORT & EXPORT -->
-            <div class="flex flex-col gap-2 mt-3">
-              <div class="w-full">
-                <div id="hp-import-btn" class="btn btn-primary-outline w-full mb-2">Import Quiz</div>
-                <div id="hp-export-set" class="btn btn-primary w-full">Save Quiz</div>
-                <input id="import-json" value="import json" type="file" accept="application/json" style="display: none" />
-              </div>
-            </div>
+            <preset-activity-button class="mt-2" buttonprompt="Save Quiz" colorPrimary="#ec4899" colorSecondary="#be185d"></preset-activity-button>
           </div>
 
           <!-- QUESTION LIST -->
@@ -292,75 +286,7 @@
       <a id="credits" href="https://www.vecteezy.com/free-vector/vector" class="text-gray-200 text-sm m-2 absolute bottom-0 left-0">Vector Vectors by Vecteezy</a>
 
       <!-- MODAL -->
-      <div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 bottom-0 flex items-center justify-center z-30">
-        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
-
-        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-card shadow-lg z-50 overflow-y-auto">
-          <div class="modal-close absolute top-0 right-0 cursor-pointer flex flex-col items-center mt-4 mr-4 text-white text-sm z-50">
-            <i class="fas fa-times text-white"></i>
-            <span class="text-sm">(Esc)</span>
-          </div>
-
-          <!-- Add margin if you want to see some of the overlay behind the modal-->
-          <div class="modal-content p-8 text-left">
-            <!--Title-->
-            <div class="flex justify-between items-center pb-4">
-              <p class="text-xl font-bold">Save as Preset Activity</p>
-              <div class="modal-close cursor-pointer z-50">
-                <i class="fas fa-times text-black"></i>
-              </div>
-            </div>
-
-            <!--Body-->
-            <form id="save-as-activity-set" class="flex flex-col">
-              <label for="title" class="text-sm ml-6 mb-1">Title</label>
-              <input id="activity-set-title" name="title" type="text" placeholder="Preset activity title" class="input-form mb-4" />
-              <div class="flex gap-8 ml-6 mb-1">
-                <label for="set-private"> <input id="set-private" type="radio" name="is-private" class="text-pink-500 form-radio focus:ring-pink-300" checked /> Private </label>
-                <label for="set-public"> <input id="set-public" type="radio" name="is-private" class="text-pink-500 form-radio focus:ring-pink-300"/> Public </label>
-              </div>
-              <div class="bg-pink-50 mb-4 rounded-full px-6 py-1 text-sm text-pink-700">Ini desc</div>
-              <label for="desc" class="text-sm ml-6 mb-1">Description</label>
-              <textarea id="activity-set-desc" name="title" placeholder="Type preset activity description" class="input-form mb-4 rounded-card resize-none" rows="3"></textarea>
-              <label for="thumbnail" class="text-sm ml-6">Thumbnail</label>
-              <div class="rounded-card overflow-hidden w-full my-2">
-                <div class="w-full">
-                  <div class="relative border-dashed h-40 rounded-card border-dashed border border-gray-300 p-2">
-                    <div x-data="imageViewer()" class="relative w-full h-full flex justify-center items-center">
-                      <!-- Show the image -->
-                      <template x-if="imageUrl">
-                        <div class="relative rounded-lg h-full w-full">
-                          <img :src="imageUrl" class="object-contain w-full h-full" />
-                          <div id="delete-thumbnail" @click="clearPreview()" class="btn btn-danger btn-rounded text-base absolute bottom-0 right-0 z-20"><i class="fa fa-trash"></i></div>
-                        </div>
-                      </template>
-
-                      <!-- Show the gray box when image is not available -->
-                      <template x-if="!imageUrl">
-                        <div class="flex flex-col items-center">
-                          <i class="far fa-image fa-3x text-pink-400"></i>
-                          <span class="block text-gray-400 text-xs font-normal">Drag and drop image or</span>
-                          <div class="btn btn-primary py-1 w-20 mt-2">Browse</div>
-                        </div>
-                      </template>
-                      <!-- Image file selector -->
-                      <!-- <input class="mt-2" type="file" accept="image/*" @change="fileChosen" /> -->
-                      <img id="load-thumbnail" src="" alt="" @load="loadThumbnail" class="hidden" />
-                      <input id="activity-set-thumbnail" imgSrc="" type="file" class="h-full w-full opacity-0 absolute top-0 z-10 cursor-pointer" accept="image/*" @change="fileChosen" name="thumbnail" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </form>
-
-            <!--Footer-->
-            <div class="flex pt-2 gap-2">
-              <button class="modal-close btn btn-secondary-outline mr-2 flex-1">Cancel</button>
-              <button id="hp-export-set-btn" class="btn btn-primary flex-1">Save</button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <preset-activity-modal colorPrimary="#ec4899" colorSecondary="#be185d"> </preset-activity-modal>
     </div>
   </body>
   <footer>
