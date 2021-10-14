@@ -13,17 +13,17 @@
     <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/yai.js"></script>
 
     <script type="module" src="/js/components/index.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js" integrity="sha512-csNcFYJniKjJxRWRV1R7fvnXrycHP6qDR21mgz1ZP55xY5d+aHLfo9/FcGDQLfn2IfngbAHd8LdfsagcCqgTcQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="./xlsx.full.min.js"></script>
   </head>
   <body>
     <!-- #F4F8FD -->
-    <div id="canvas" class="flex flex-col min-h-screen h-auto md:h-screen" style="background: #222; font-family: Poppins">
-      <div class="flex-1 flex justify-center items-start pt-10">
-        <create-event-component id="create-event"></create-event-component>
-        <!-- <create-event-component id="create-event" colorLink="#ffffff" colorprimary="#EC4899" colorsecondary="#BE185D"></create-event-component> -->
-      </div>
+    <div id="canvas" class="flex flex-col min-h-screen h-auto md:h-screen">
+      <create-event-component id="create-event"></create-event-component>
+      <!-- <preset-activity-button> </preset-activity-button>
+      <preset-activity-modal> </preset-activity-modal> -->
+      
+      <button class="w-40 bg-blue-500 rounded m-8 p-2 text-white hover:bg-blue-600" onclick="exportFile()">export</button>
     </div>
   </body>
   <footer>
