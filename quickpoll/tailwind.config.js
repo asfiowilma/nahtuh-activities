@@ -3,7 +3,7 @@ const purge = process.env.NODE_ENV === "production";
 module.exports = {
   purge: {
     enabled: purge,
-    content: ["./*.html", "./*.js"],
+    content: ["./dist/*.html", "./dist/*.js"],
     options: {
       keyframes: true,
     },

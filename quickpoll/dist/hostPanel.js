@@ -6,6 +6,13 @@ const HostPanel = new (function () {
     $("#credits").toggleClass("hidden");
 
     if (window.location.hostname != "localhost") $("#hp-import-btn").addClass("hidden");
+    var qCards = document.getElementById("question-cards");
+    var sortable = Sortable.create(qCards, {
+      fallbackTolerance: 5,
+      animation: 150,
+      swapThreshold: 0.8,
+      onEnd: (evt) => reorder(evt.oldIndex, evt.newIndex),
+    });
 
     $("#hp-username").text(username);
     $("#hp-event-id").text(eventId);
@@ -15,7 +22,7 @@ const HostPanel = new (function () {
   };
 
   // ============================================================
-  // Render Scripts
+  /* Render Scripts */
   // ============================================================
 
   this.renderUtilButton = () => {
@@ -25,10 +32,12 @@ const HostPanel = new (function () {
 
   this.toggleSidebar = () => {
     $("#sidebar").toggleClass("-translate-x-full");
+    $("body").toggleClass("overflow-hidden");
+    $(".menu-overlay").toggleClass("hidden");
   };
 
   // ============================================================
-  // CRUD questions
+  /* CRUD questions  */
   // ============================================================
 
   this.addQuestion = (questionToAdd) => {
@@ -42,18 +51,9 @@ const HostPanel = new (function () {
     this.changeQuestion(idx);
   };
 
-  this.changeAnswer = (idx, newValue) => {
-    questions[this.qid].options[idx] = newValue;
-  };
-
   this.addAnswer = () => {
     questions[this.qid].options.push("");
     $("#hp-option-grid").empty();
-    this.rerenderAnswerOptions();
-  };
-
-  this.deleteAnswer = (idx) => {
-    questions[this.qid].options.splice(idx, 1);
     this.rerenderAnswerOptions();
   };
 
@@ -63,101 +63,10 @@ const HostPanel = new (function () {
       const isLast = i === questions[this.qid].options.length - 1;
       $("#hp-option-grid").append(AnswerInput(questions[this.qid].options[i], i, isLast));
     }
-    styleComponents();
   };
 
-  this.importJson = () => {
-    $("#import-json").click();
-    uploadJson("import-json", function (json) {
-      const importedQuestions = JSON.parse(json);
-      questions = [];
-      $("#question-cards").empty();
-      for (question of importedQuestions) {
-        hp.addQuestion(question);
-      }
-      if (questions.length > 0) hp.changeQuestion(0);
-      swal({
-        icon: "success",
-        text: "Question set successfully imported!",
-        button: false,
-      });
-    });
-  };
-
-  this.exportAsActivitySet = () => {
-    const title = $("#activity-set-title").val();
-    const desc = $("#activity-set-desc").val();
-    const isPrivate = $("#set-private").prop("checked");
-    const thumbnail = activitySetThumbnail;
-    const config = { questions: questions };
-
-    if (this.validate())
-      yai
-        .createPresetActivity(desc, title, username, isPrivate, config, thumbnail)
-        .then(() => {
-          console.log(desc, title, username, isPrivate, config, thumbnail);
-          toggleModal();
-          swal({
-            icon: "success",
-            text: "Question set successfully made into an activity set!",
-            button: false,
-          });
-        })
-        .catch((err) => swal({ icon: "error", text: err, button: false }));
-  };
-
-  this.updateActivitySet = () => {
-    const title = $("#activity-set-title").val();
-    const desc = $("#activity-set-desc").val();
-    const isPrivate = $("#set-private").prop("checked");
-    const thumbnail = activitySetThumbnail;
-    const config = { questions: questions };
-
-    if (this.validate())
-      yai
-        .updatePresetActivity(desc, title, username, isPrivate, config, thumbnail)
-        .then(() => {
-          toggleModal();
-          swal({
-            icon: "success",
-            text: "Activity set successfully updated!",
-            button: false,
-          });
-        })
-        .catch((err) => swal({ icon: "error", text: err, button: false }));
-  };
-
-  this.saveQuestion = () => {
-    const type = $("input[name=type]:checked").val();
-    let scales,
-      options = [""];
-    if (["poll", "scales", "ranking"].includes(type)) {
-      options = $(`#hp-option-grid`).find(".answer-input");
-      options = Array.from(options);
-      options = options.length > 0 ? options.map((option) => option.children[0].value) : [""];
-
-      if (type == "scales") {
-        scales = {
-          skippable: $("input[name=skippable]").prop("checked"),
-          label: {
-            hi: $("#hp-label-value-hi").val() || "Strongly agree",
-            lo: $("#hp-label-value-lo").val() || "Strongly disagree",
-          },
-        };
-      }
-    }
-
-    const savedQuestion = {
-      type: type,
-      q: $("#hp-question-q").val(),
-      options: options,
-      ...(scales || {}),
-    };
-
-    questions[this.qid] = savedQuestion;
-    const oldQuestionCard = $(`.q-card:eq(${this.qid + 1})`);
-    const newQuestionCard = QuestionCard(this.qid, savedQuestion);
-    oldQuestionCard.replaceWith(newQuestionCard);
+  this.changeAnswer = (idx, newValue) => {
+    questions[this.qid].options[idx] = newValue;
   };
 
   this.changeQuestion = (idx) => {
@@ -174,9 +83,47 @@ const HostPanel = new (function () {
     this.questionInput();
   };
 
+  this.saveQuestion = () => {
+    const type = $("input[name=type]:checked").val();
+    let settings,
+      options = [""];
+    if (["poll", "scales", "ranking"].includes(type)) {
+      options = $(`#hp-option-grid`).find(".answer-input");
+      options = Array.from(options);
+      options = options.length > 0 ? options.map((option) => option.children[0].value) : [""];
+
+      if (type == "scales") {
+        settings = {
+          skippable: $("input[name=skippable]").prop("checked"),
+          label: {
+            hi: $("#hp-label-value-hi").val() || "Strongly agree",
+            lo: $("#hp-label-value-lo").val() || "Strongly disagree",
+          },
+        };
+      }
+    } else if (type == "qna") settings = { isAnonymous: $("input[name=anon]").prop("checked") };
+
+    const savedQuestion = {
+      type: type,
+      q: $("#hp-question-q").val(),
+      options: options,
+      ...(settings || {}),
+    };
+
+    questions[this.qid] = savedQuestion;
+    const oldQuestionCard = $(`.q-card:eq(${this.qid + 1})`);
+    const newQuestionCard = QuestionCard(this.qid, savedQuestion);
+    oldQuestionCard.replaceWith(newQuestionCard);
+  };
+
   this.duplicateQuestion = () => {
     const toDuplicate = questions[this.qid];
     this.addQuestion(toDuplicate);
+  };
+
+  this.deleteAnswer = (idx) => {
+    questions[this.qid].options.splice(idx, 1);
+    this.rerenderAnswerOptions();
   };
 
   this.deleteQuestion = (qid) => {
@@ -186,7 +133,6 @@ const HostPanel = new (function () {
     //replace question card numbering
     for (let idx = 0; idx < questions.length; idx++) {
       const qCard = $(`.q-card:eq(${idx + 1})`);
-      qCard.find(".q-header").text(`Q${idx + 1}. ${questions[idx].q}`);
       qCard.unbind("click");
       qCard.click(() => this.changeQuestion(idx));
     }
@@ -195,74 +141,9 @@ const HostPanel = new (function () {
     this.changeQuestion(0);
   };
 
-  this.importJson = () => {
-    $("#import-json").click();
-    uploadJson("import-json", function (json) {
-      const importedQuestions = JSON.parse(json);
-      questions = [];
-      $("#question-cards").empty();
-      for (question of importedQuestions) {
-        hp.addQuestion(question);
-      }
-      if (questions.length > 0) hp.changeQuestion(0);
-      swal({
-        icon: "success",
-        text: "Question set successfully imported!",
-        button: false,
-      });
-    });
-  };
-
-  this.exportAsActivitySet = () => {
-    const title = $("#activity-set-title").val();
-    const desc = $("#activity-set-desc").val();
-    const thumbnail = activitySetThumbnail;
-    const config = { questions: questions };
-
-    if (this.validate())
-      yai
-        .createPresetActivity(desc, title, username, false, config, thumbnail)
-        .then(() => {
-          toggleModal();
-          swal({
-            icon: "success",
-            text: "Question set successfully made into an activity set!",
-            button: false,
-          });
-        })
-        .catch((err) => swal({ icon: "error", text: err, button: false }));
-  };
-
-  this.updateActivitySet = () => {
-    const title = $("#activity-set-title").val();
-    const desc = $("#activity-set-desc").val();
-    const thumbnail = activitySetThumbnail;
-    const config = { questions: questions };
-
-    if (this.validate())
-      yai
-        .updatePresetActivity(desc, title, username, false, config, thumbnail)
-        .then(() => {
-          swal({
-            icon: "success",
-            text: "Activity set successfully updated!",
-            button: false,
-          });
-        })
-        .catch((err) => swal({ icon: "error", text: err, button: false }));
-  };
-
-  this.exportAsJson = () => {
-    var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(questions));
-    var dlAnchorElem = document.getElementById("hp-export-json");
-    dlAnchorElem.setAttribute("href", dataStr);
-    dlAnchorElem.setAttribute("download", "questionSet.json");
-    swal({
-      icon: "success",
-      text: "Successfully exported question set!",
-      button: false,
-    });
-  };
+  // ============================================================
+  /* Utils */
+  // ============================================================
 
   this.startQuiz = () => {
     if (this.validate()) Lobby.start();
@@ -294,23 +175,45 @@ const HostPanel = new (function () {
     return true;
   };
 
+  this.getConfig = () => {
+    return { questions: questions };
+  };
+
   // ============================================================
-  // Settings
+  /* Settings */
   // ============================================================
 
   this.defaultQuestionTemplate = () => {
     return { type: "Poll", q: "", options: [""] };
   };
 
+  this.typeInfo = {
+    poll: "Let your participants vote from a given set of options.",
+    wordcloud: "Let your participants submit up to 3 words to make a word cloud.",
+    open: "Let your participants answer with longer responses up to 250 characters.",
+    scales: "Let your participants rate each option on a scale of 1 (low) to 5 (high).",
+    ranking: "Let your participants sort the options in the order they prefer.",
+    qna: "Let your participants ask questions and vote on the most relevant ones.",
+  };
+
   // ============================================================
-  // Components
+  /* Components */
   // ============================================================
 
   this.questionInput = () => {
     const type = $("input[name=type]:checked").val();
     $("#hp-question-q").val(questions[this.qid].q);
-    $(".hp-scales-settings").addClass("hidden");
-    if (["wordcloud", "open"].includes(type)) {
+    $("#type-info").text(this.typeInfo[type]);
+    $(".hp-scales-settings, .hp-qna-settings").addClass("hidden");
+    $("#hp-question-q").attr("placeholder", "Type your question here");
+    $("#edit-question > div:nth-child(2)").text("Question");
+    if (["wordcloud", "open", "qna"].includes(type)) {
+      if (type == "qna") {
+        $("#hp-question-q").attr("placeholder", "Any questions?");
+        $("#edit-question > div:nth-child(2)").text("Prompt");
+        $(".hp-qna-settings").removeClass("hidden");
+        $("input[name=anon]").prop("checked", questions[this.qid].isAnonymous || false);
+      }
       $(".options-text").addClass("hidden");
       $("#hp-option-grid").empty();
     } else {

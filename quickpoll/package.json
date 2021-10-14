@@ -4,8 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "postcss styles/styles.css -o styles.css",
-    "prod": "SET NODE_ENV=production&& postcss styles/styles.css -o styles.css"
+    "build": "postcss dev/styles.css -o dist/styles.css&& node build.js",
+    "bundle": "browserify dev/main.js -o dist/bundle.js",
+    "prod": "SET NODE_ENV=production&& postcss dev/styles.css -o dist/styles.css&& node build.js",
+    "prodcss": "SET NODE_ENV=production&& postcss dev/styles.css -o dist/styles.css"
   },
   "keywords": [],
   "author": "",

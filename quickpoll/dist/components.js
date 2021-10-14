@@ -2,96 +2,39 @@
 /* UTIL COMPONENT FUNCTIONS */
 // ----------------------------------------------------------------
 
-function styleComponents() {
-  $(".btn").replaceClass(
-    "btn",
-    "px-2 py-3 text-center cursor-pointer rounded-full transition ease-in-out text-xs font-semibold"
-  );
-  $(".btn-primary").replaceClass(
-    "btn-primary",
-    "bg-gradient-to-br from-indigo-500 to-indigo-700 filter hover:brightness-90 text-white"
-  );
-  $(".btn-primary-outline").replaceClass(
-    "btn-primary-outline",
-    "border border-indigo-500 hover:bg-indigo-500 text-indigo-500 hover:text-white"
-  );
-  $(".btn-secondary").replaceClass("btn-secondary", "bg-gray-500 filter hover:brightness-90 text-white");
-  $(".btn-secondary-outline").replaceClass(
-    "btn-secondary-outline",
-    "border border-gray-500 text-gray-500 hover:bg-gray-500 hover:text-white"
-  );
-  $(".btn-light").replaceClass("btn-light", "bg-white hover:bg-gray-100 text-black");
-  $(".btn-light-outline").replaceClass(
-    "btn-light-outline",
-    "border border-white text-white hover:bg-gray-100 hover:text-black"
-  );
-  $(".btn-dark").replaceClass("btn-dark", "bg-gray-600 hover:bg-gray-500 text-white");
-  $(".btn-danger").replaceClass("btn-danger", "bg-red-500 hover:bg-red-600 text-white");
-  $(".btn-danger-outline").replaceClass(
-    "btn-danger-outline",
-    "border border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
-  );
-  $(".select-type").replaceClass(
-    "select-type",
-    "p-2 w-18 h-18 rounded-lg border border-gray-500 text-xs text-center flex flex-col items-center cursor-pointer hover:border-indigo-500 hover:text-indigo-500"
-  );
-  $(".select-active").replaceClass(
-    "select-active",
-    "p-2 w-18 h-18 rounded-lg bg-indigo-500 text-white text-xs text-center flex flex-col items-center cursor-pointer"
-  );
-  $(".input-form").replaceClass(
-    "input-form",
-    "rounded-full py-3 px-6 border border-gray-300 focus:border-indigo-500 leading-tight focus:outline-none"
-  );
-  $(".input-option").replaceClass(
-    "input-option",
-    "rounded-full py-3 px-6 border border-gray-300 hover:border-indigo-500 leading-tight focus:outline-none hover:text-indigo-500"
-  );
-  $(".input-active").replaceClass(
-    "input-active",
-    "rounded-full py-3 px-6 border border-indigo-400 leading-tight bg-indigo-400 text-white flex-1"
-  );
-}
-
 function setButtonsOnClick() {
   /* HOST PANEL */
-  $("#menu-toggle").click(() => hp.toggleSidebar());
+  $("#menu-toggle, .menu-overlay").click(() => hp.toggleSidebar());
   $("#hp-start-quiz-btn").click(() => hp.startQuiz());
-  $("#hp-add-question-btn, #hp-add-question-2-btn").click(() => hp.addQuestion());
+  $("#hp-add-question-btn").click(() => hp.addQuestion());
   $("#hp-save-question-btn").click(() => hp.saveQuestion());
+  $("#hp-add-question-2-btn").click(() => {
+    hp.saveQuestion();
+    hp.addQuestion();
+  });
   $("#hp-import-btn").click(() => hp.importJson());
   $("#hp-export-json").click(() => hp.exportAsJson());
   $("#hp-export-set").click(() => toggleModal());
   $("#hp-export-set-btn").click(() => hp.exportAsActivitySet());
+  $("#hp-question-q").change((e) => (questions[hp.qid].q = e.target.value));
   $("input[name=type]").change(function () {
     $("input[name=type]:checked").prop("checked", false);
     $(`#${this.value}`).prop("checked", true);
     $("#type-panel label").removeClass().addClass("select-type");
     $(`label[for=${this.value}]`).removeClass().addClass("select-active");
     console.log(`changed to ${this.value} type`);
-    styleComponents();
     hp.questionInput();
   });
-
-  $(".modal-overlay").click(() => toggleModal());
-  $(".modal-close, .modal-close").click(() => toggleModal());
-
-  document.onkeydown = function (e) {
-    e = e || window.event;
-    var isEscape = false;
-    if ("key" in e) {
-      isEscape = e.key === "Escape" || e.key === "Esc";
-    } else {
-      isEscape = e.code === "Escape";
-    }
-    if (isEscape && $("body").hasClass("modal-active")) {
-      toggleModal();
-    }
-  };
 
   /* LOBBY */
   $(".pl-quit-btn").click(() => lobby.onLeave());
   $("#next-btn").click(() => lobby.nextQuestion());
+  $("#export-result-btn").click(() => lobby.exportResults());
+  $(".mute-btn").click(() => {
+    $(".mute-btn i").toggleClass("fa-volume-mute").toggleClass("fa-volume-up");
+    isMuted = !isMuted;
+    $("audio").prop("muted", isMuted); // toggle mute 1/0
+  });
 }
 
 function sceneSwitcher(scene, isInLobby = true) {
@@ -105,59 +48,30 @@ function toggleModal() {
   $("body").toggleClass("modal-active");
 }
 
-var activitySetThumbnail = "";
-function imageViewer(img) {
-  return {
-    imageUrl: img || "",
-
-    loadThumbnail() {
-      var el = $("#load-thumbnail");
-      loadPresetThumbnail(el.attr("src")).then((res) => (this.imageUrl = res));
-    },
-
-    clearPreview() {
-      document.getElementById("activity-set-thumbnail").value = null;
-      this.imageUrl = "";
-      activitySetThumbnail = "";
-      styleButtons();
-    },
-
-    fileChosen(event) {
-      this.fileToDataUrl(event, (src) => (this.imageUrl = src));
-    },
-
-    fileToDataUrl(event, callback) {
-      if (!event.target.files.length) return;
-      const files = [...event.target.files];
-
-      if (files[0].size > 1024 * 1024) {
-        Compress.compress(files, {
-          size: 1, // the max size in MB, defaults to 2MB
-          quality: 0.6, // the quality of the image, max is 1
-        }).then((result) => {
-          // returns an array of compressed images
-          const img1 = result[0];
-          const base64strPreview = "data:image/jpeg;charset=utf-8;base64, " + img1.data;
-          const base64str = img1.data;
-          const imgExt = img1.ext;
-          const file = Compress.convertBase64ToFile(base64str, imgExt);
-          console.log(img1.endSizeInMb + "MiB");
-
-          activitySetThumbnail = file;
-          callback(base64strPreview);
-        });
-      } else {
-        let file = event.target.files[0];
-        let reader = new FileReader();
-        activitySetThumbnail = file;
-
-        reader.readAsDataURL(file);
-        reader.onload = (e) => {
-          callback(e.target.result);
-          console.log(files[0].size / 1024 / 1024 + "MiB");
-        };
-      }
-    },
+function Sound(src) {
+  this.sound = document.createElement("audio");
+  this.sound.src = src;
+  this.sound.setAttribute("preload", "auto");
+  this.sound.setAttribute("controls", "none");
+  this.sound.style.display = "none";
+  document.body.appendChild(this.sound);
+  this.play = function () {
+    if (!isMuted) this.sound.play();
+    return this;
+  };
+  this.loop = function () {
+    this.sound.loop = true;
+    return this;
+  };
+  this.then = function (playThis) {
+    this.sound.addEventListener("ended", playThis);
+  };
+  this.bgm = function () {
+    this.sound.volume = 0.1;
+    return this;
+  };
+  this.stop = function () {
+    this.sound.pause();
   };
 }
 
@@ -190,6 +104,10 @@ const QuestionCard = (idx, quiz) => {
     case "ranking":
       qCard.find(".q-type").text("Ranking");
       icon.replaceClass("fa-chart-bar", "fa-list-ol");
+      break;
+    case "qna":
+      qCard.find(".q-type").text("QnA");
+      icon.replaceClass("fa-chart-bar", "fa-chalkboard-teacher");
       break;
     default:
       qCard.find(".q-type").text("Poll");
@@ -243,13 +161,13 @@ const PollChart = (question) => {
 };
 
 const PollInput = (option, i) => {
-  pollInput = $(".poll-input-wrapper").first().clone();
+  let pollInput = $(".poll-input-wrapper").first().clone();
   pollInput.removeClass("hidden");
-  input = pollInput.find("input");
+  let input = pollInput.find("input");
   input.prop("id", `q-${lobby.currentQid}-${i}`);
   input.prop("name", `q-${lobby.currentQid}`);
   input.val(i);
-  label = pollInput.find("label");
+  let label = pollInput.find("label");
   label.text(option);
   label.prop("for", `q-${lobby.currentQid}-${i}`);
   return pollInput;
@@ -259,13 +177,13 @@ const PollInput = (option, i) => {
 
 const WordCloudChart = () => {
   $(".chart").addClass("hidden");
-  chart = $(".chart-wordcloud").first().clone();
+  let chart = $(".chart-wordcloud").first().clone();
   chart.attr("id", `chart-${lobby.currentQid}`);
   chart.removeClass("hidden");
-  ctx = chart.find("canvas");
+  let ctx = chart.find("canvas");
 
-  colors = ["white", "rosybrown", "burlywood", "bisque", "PeachPuff", "Moccasin", "PapayaWhip"];
-  wordCloud = new Chart(ctx, {
+  let colors = ["white", "rosybrown", "burlywood", "bisque", "PeachPuff", "Moccasin", "PapayaWhip"];
+  let wordCloud = new Chart(ctx, {
     type: "wordCloud",
     data: {
       labels: [""],
@@ -308,9 +226,9 @@ const WordCloudChart = () => {
 };
 
 const WordCloudInput = () => {
-  wcInput = $(".wordcloud-input-wrapper").first().clone();
+  let wcInput = $(".wordcloud-input-wrapper").first().clone();
   wcInput.removeClass("hidden");
-  input = wcInput.children("input");
+  let input = wcInput.children("input");
   for (let i = 0; i < input.length; i++) {
     input[i].id = `q-${lobby.currentQid}-${i}`;
     input[i].name = `q-${lobby.currentQid}`;
@@ -331,19 +249,19 @@ function wordCloudScaler(wordValues) {
   if (valueSum <= 20) {
     console.log("this is in if");
     for (val of wordValues) {
-      scale = (val / valueSum) * range + minSize;
+      let scale = (val / valueSum) * range + minSize;
       scaledValues.push(scale);
     }
   } else if (valueSum > 20 && maxVal * minSize < maxSize) {
     console.log("this is in elif");
     for (val of wordValues) {
-      scale = val * minSize;
+      let scale = val * minSize;
       scaledValues.push(scale);
     }
   } else {
     console.log("this is in else");
     for (val of wordValues) {
-      scale = (val / maxVal) * maxSize;
+      let scale = (val / maxVal) * maxSize;
       scaledValues.push(scale);
     }
   }
@@ -354,15 +272,15 @@ function wordCloudScaler(wordValues) {
 
 const OpenEndedChart = () => {
   $(".chart").addClass("hidden");
-  chart = $(".chart-open").first().clone();
+  let chart = $(".chart-open").first().clone();
   chart.attr("id", `chart-${lobby.currentQid}`);
   chart.removeClass("hidden");
   return chart;
 };
 
 const OpenEndedResponse = (response) => {
-  bgColors = ["bg-indigo-100", "bg-indigo-50", "bg-white", "bg-indigo-200"];
-  card = $(".open-ended-response").first().clone();
+  let bgColors = ["bg-indigo-100", "bg-indigo-50", "bg-white", "bg-indigo-200"];
+  let card = $(".open-ended-response").first().clone();
   card.removeClass("hidden");
   card.addClass(bgColors[Math.floor(Math.random() * bgColors.length)]);
   card.text(response);
@@ -370,7 +288,7 @@ const OpenEndedResponse = (response) => {
 };
 
 const OpenEndedInput = () => {
-  input = $(".open-ended-input").first().clone();
+  let input = $(".open-ended-input").first().clone();
   input.removeClass("hidden");
   input.prop("name", `q-${lobby.currentQid}`);
   return input;
@@ -380,13 +298,13 @@ const OpenEndedInput = () => {
 
 const ScalesChart = (question) => {
   $(".chart").addClass("hidden");
-  chart = $(".chart-scales").first().clone();
+  let chart = $(".chart-scales").first().clone();
   chart.attr("id", `chart-${lobby.currentQid}`);
   chart.removeClass("hidden");
-  ctx = chart.find("canvas");
+  let ctx = chart.find("canvas");
 
-  data = new Array(question.options.length).fill(0);
-  colors = ["white", "rosybrown", "burlywood", "bisque", "PeachPuff", "Moccasin", "PapayaWhip"];
+  let data = new Array(question.options.length).fill(0);
+  let colors = ["white", "rosybrown", "burlywood", "bisque", "PeachPuff", "Moccasin", "PapayaWhip"];
   var scales = new Chart(ctx, {
     type: "bar",
     data: {
@@ -397,7 +315,7 @@ const ScalesChart = (question) => {
       indexAxis: "y",
       plugins: { legend: { display: false } },
       scales: {
-        x: { display: false },
+        x: { min: 0, max: 5, ticks: { color: "white" }, grid: { color: "#6667c2" } },
         y: { ticks: { color: "white" }, grid: { display: false } },
       },
     },
@@ -408,25 +326,27 @@ const ScalesChart = (question) => {
 
 const ScalesInput = (option, i, label) => {
   const qid = lobby.currentQid;
-  scalesInput = $(".scales-input-wrapper").first().clone();
+  let scalesInput = $(".scales-input-wrapper").first().clone();
   scalesInput.removeClass("hidden");
   scalesInput.attr("name", `q-${qid}-${i}`);
   scalesInput.find(".scale-lo").text(label.lo);
   scalesInput.find(".scale-hi").text(label.hi);
-  input = scalesInput.find("input");
+
+  let input = scalesInput.find("input");
   input.prop("id", `q-${qid}-${i}`);
   input.prop("name", `q-${qid}`);
   input.change(() => $(`.scales-input-wrapper[name=q-${qid}-${i}] .scale`).text($(`#q-${qid}-${i}`).val()));
-  label = scalesInput.find("label");
-  label.find(".scale-option").text(option);
-  label.find(".scale-skip ").click(() => {
-    inp = $(`#q-${qid}-${i}`);
+
+  let optionLabel = scalesInput.find("label");
+  optionLabel.find(".scale-option").text(option);
+  optionLabel.find(".scale-skip ").click(() => {
+    let inp = $(`#q-${qid}-${i}`);
     inp.attr("skip", !inp.attr("skip"));
     inp.toggleClass("opacity-50");
     inp.prop("disabled", !inp.prop("disabled"));
     $(`.scales-input-wrapper[name=q-${qid}-${i}]`).toggleClass("text-gray-400 bg-gray-100");
   });
-  label.prop("for", `q-${qid}-${i}`);
+  optionLabel.prop("for", `q-${qid}-${i}`);
   return scalesInput;
 };
 
@@ -434,13 +354,13 @@ const ScalesInput = (option, i, label) => {
 
 const RankingChart = (question) => {
   $(".chart").addClass("hidden");
-  chart = $(".chart-ranking").first().clone();
+  let chart = $(".chart-ranking").first().clone();
   chart.attr("id", `chart-${lobby.currentQid}`);
   chart.removeClass("hidden");
-  ctx = chart.find("canvas");
+  let ctx = chart.find("canvas");
 
-  data = new Array(question.options.length).fill(0);
-  colors = ["white", "rosybrown", "burlywood", "bisque", "PeachPuff", "Moccasin", "PapayaWhip"];
+  let data = new Array(question.options.length).fill(0);
+  let colors = ["white", "rosybrown", "burlywood", "bisque", "PeachPuff", "Moccasin", "PapayaWhip"];
   var scales = new Chart(ctx, {
     type: "bar",
     data: {
@@ -461,7 +381,7 @@ const RankingChart = (question) => {
 };
 
 const RankingInput = (option, id, i, isLast) => {
-  rankInput = $(".ranking-input-wrapper").first().clone();
+  let rankInput = $(".ranking-input-wrapper").first().clone();
   rankInput.removeClass("hidden");
   rankInput.prop("id", `q-${lobby.currentQid}-${id}`);
   rankInput.find(".rank-nth").text(i + 1 + nth(i + 1));
@@ -480,4 +400,90 @@ const RankingInput = (option, id, i, isLast) => {
       .unbind("click")
       .replaceClass("text-gray-500 hover:bg-gray-500 hover:text-white", "text-white bg-gray-500 opacity-20");
   return rankInput;
+};
+
+// QNA
+
+const QnAContainer = () => {
+  $(".chart").addClass("hidden");
+  let qnaContainer = $(".chart-qna").first().clone();
+  qnaContainer.removeClass("hidden");
+  qnaContainer.prop("id", `chart-${lobby.currentQid}`);
+
+  lobby.qnaFilter = 0;
+  let radio = qnaContainer.find("input[name='qna-filter']");
+  let labels = qnaContainer.find("label");
+  radio.each(function (i) {
+    $(this).prop("id", `q-${lobby.currentQid}-qna-filter-${i}`);
+  });
+  labels.each(function (i) {
+    $(this).attr("for", `q-${lobby.currentQid}-qna-filter-${i}`);
+  });
+  radio.change(function () {
+    $("input[name='qna-filter']:checked").prop("checked", false);
+    $(`#q-${lobby.currentQid}-${this.value}`).prop("checked", true);
+    lobby.qnaFilter = this.value;
+    labels.removeClass("btn-light px-6");
+    $(`label[for=q-${lobby.currentQid}-qna-filter-${this.value}]`).addClass("btn-light px-6");
+    lobby.renderQnAList(qnaContainer.find(".qna-items"), lobby.currentQid);
+  });
+  return qnaContainer;
+};
+
+const QnAInput = () => {
+  let qnaContainer = $(".qna-input").first().clone();
+  qnaContainer.removeClass("hidden");
+  qnaContainer.prop("name", `q-${lobby.currentQid}`);
+  return qnaContainer;
+};
+
+const QnAItem = (item, isPinned, isAnonymous) => {
+  const { id, time, q, upvotes, asker, isAnswered, isAnonymous: isAnon } = item;
+  let qna = $(".qna-item").first().clone();
+  if (isPinned) qna = $(".qna-item.pinned").first().clone();
+
+  qna.removeClass("hidden");
+  qna.prop("id", id);
+  qna.find(".qna-upvotes").text(upvotes);
+  qna.find(".qna-time").text(new Date(time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+  qna.find(".qna-asker").text(isAnonymous && isAnon ? `Anonymous${mod(hash(asker), 100)}` : asker);
+  qna.find(".qna-q").text(q);
+
+  if (isHost) {
+    qna.find(".qna-p-btn").addClass("hidden");
+    qna.find(".qna-h-btn").unhide();
+    let pinBtn = qna.find(".qna-pin-btn");
+    let answerBtn = qna.find(".qna-answer-btn");
+    answerBtn.one("click", () => lobby.qnaAnswerHandler(id));
+    pinBtn.click(() => lobby.qnaPinHandler(id));
+  } else {
+    let upvoteBtn = qna.find(".qna-upvote-btn");
+    let withdrawBtn = qna.find(".qna-withdraw-btn");
+    if (lobby?.currentQuestion?.upvoted.includes(id)) upvoteBtn.addClass("opacity-40");
+    else {
+      upvoteBtn.one("click", () => {
+        lobby.qnaUpvoteHandler(id);
+        upvoteBtn.addClass("opacity-40");
+      });
+    }
+    if (username != asker || isPinned) withdrawBtn.addClass("hidden");
+    else {
+      withdrawBtn.click(() =>
+        swal({ icon: "warning", text: "Are you sure you want to withdraw this question?", buttons: true }).then(
+          (value) => {
+            if (value) lobby.qnaWithdrawHandler(id);
+          }
+        )
+      );
+    }
+  }
+
+  if (isAnswered) qna.find(".qna-p-btn, .qna-h-btn").addClass("hidden");
+
+  return qna;
+};
+
+const QnAEmpty = () => {
+  let qnaEmpty = $(".qna-empty").first().clone();
+  return qnaEmpty;
 };

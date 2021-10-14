@@ -8,27 +8,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./styles.css" />
-    <script src="./bundle.js"></script>
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.slim.min.js" integrity="sha256-u7e5khyithlIdTpu22PHhENmPcRdFiHRjhAuHcs05RI=" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js"></script>
-    <script src="https://unpkg.com/chartjs-chart-wordcloud@3.5.0/build/index.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js" integrity="sha512-csNcFYJniKjJxRWRV1R7fvnXrycHP6qDR21mgz1ZP55xY5d+aHLfo9/FcGDQLfn2IfngbAHd8LdfsagcCqgTcQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.7/signalr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <!-- PRODUCTION -->
-    <script src="https://yaidevstraccwebapp.blob.core.windows.net/components/index.js" type="module"></script>
-    <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/observable-slim.js"></script>
-    <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/yai-settings.js"></script>
-    <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/identitymanager.js"></script>
-    <script src="https://yaidevstraccwebapp.blob.core.windows.net/%24web/js/yai.js"></script>
     <title>Quick Poll</title>
     <style>
-      .modal {
-        transition: opacity 0.25s ease;
-      }
-      body.modal-active {
-        overflow-x: hidden;
-        overflow-y: visible !important;
-      }
       input[type="range"]::-webkit-slider-thumb {
         width: 20px;
         height: 20px;
@@ -39,10 +26,14 @@
         box-shadow: -408px 0 0 400px #4e48d7;
         border-radius: 50%;
       }
-      input[name="skippable"]:checked ~ .dot {
+      input[name="skippable"]:checked ~ .dot,
+      input[name="pl-anon"]:checked ~ .dot,
+      input[name="anon"]:checked ~ .dot {
         transform: translateX(100%);
       }
-      input[name="skippable"]:checked ~ .dot-cont {
+      input[name="skippable"]:checked ~ .dot-cont,
+      input[name="pl-anon"]:checked ~ .dot-cont,
+      input[name="anon"]:checked ~ .dot-cont {
         background-color: #4e48d7;
       }
     </style>
@@ -56,14 +47,15 @@
 
       <!-- HOST PANEL -->
       <div id="host-panel" class="hidden container mx-auto py-8 px-4 lg:px-0 flex-1 flex items-start">
-        <div id="menu-toggle" class="rounded-full bg-indigo-500 h-10 w-10 flex items-center justify-center z-20 shadow-lg fixed top-2 left-2 block md:hidden"><i class="fas fa-bars text-white"></i></div>
+        <div id="menu-toggle" class="rounded-full bg-indigo-500 h-10 w-10 flex items-center justify-center z-20 shadow-lg fixed top-4 left-4 block md:hidden"><i class="fas fa-bars text-white"></i></div>
+        <div class="menu-overlay hidden absolute inset-0 bg-gray-900 opacity-10 z-10"></div>
 
         <!-- SIDEBAR -->
-        <div id="sidebar" class="w-60 lg:w-72 fixed top-8 left-0 z-10 md:translate-x-0 md:relative md:top-0 md:left-0 flex flex-col align-stretch transition ease-in-out transform -translate-x-full h-screen md:h-full pb-12 md:pb-4">
+        <div id="sidebar" class="rounded-card overflow-y-auto scrollbar scrollbar-hidden w-60 lg:w-72 fixed top-4 left-4 z-10 md:translate-x-0 md:relative md:top-0 md:left-0 flex flex-col align-stretch transition ease-in-out transform -translate-x-full pr-4 md:pr-0 h-screen md:h-full pb-12 md:pb-4">
           <!-- GAME INFO -->
-          <div id="game-info" class="bg-white rounded-card shadow-card p-4 lg:p-6">
-            <div class="flex flex-col mb-2 gap-1">
-              <div class="text-sm">Your username:</div>
+          <div id="game-info" class="bg-white rounded-card flex flex-col align-stretch shadow-card p-4">
+            <div class="flex flex-col mb-2 ml-8 md:ml-0">
+              <div class="text-sm">Your nickname:</div>
               <span id="hp-username" class="font-bold text-sm">Litha</span>
             </div>
             <div class="flex flex-col gap-1">
@@ -73,9 +65,7 @@
 
             <!-- PRESET ACTIVITY -->
             <div class="w-full mt-4">
-              <input id="import-json" value="" type="file" accept="application/json" style="display: none" />
-              <div id="hp-import-btn" class="btn btn-primary-outline w-full mb-2">Import Survey</div>
-              <div id="hp-export-set" class="btn btn-primary w-full">Save Survey</div>
+              <preset-activity-button buttonprompt="Save Survey" colorprimary="#6366F1" colorsecondary="#4338CA"> </preset-activity-button>
             </div>
           </div>
 
@@ -98,15 +88,15 @@
 
         <!-- MAIN PANEL -->
         <div id="panel" class="flex-1 flex-col md:ml-4">
-          <!-- START PANEL -->
-          <div id="type-panel" class="bg-white rounded-card shadow-card p-4 md:p-6 mb-4 w-full">
+          <div id="type-panel" class="bg-white rounded-card shadow-card p-4 md:p-6 mb-4 w-full mt-8 sm:mt-0">
             <div class="text-sm mb-2">Question Type:</div>
-            <div class="w-full grid grid-cols-5 gap-2 text-gray-500">
+            <div class="w-full grid grid-rows-2 grid-cols-3 md:grid-rows-none md:grid-cols-6 gap-2 text-gray-500">
               <input id="poll" checked type="radio" name="type" value="poll" class="hidden" />
               <input id="wordcloud" type="radio" name="type" value="wordcloud" class="hidden" />
               <input id="open" type="radio" name="type" value="open" class="hidden" />
               <input id="scales" type="radio" name="type" value="scales" class="hidden" />
               <input id="ranking" type="radio" name="type" value="ranking" class="hidden" />
+              <input id="qna" type="radio" name="type" value="qna" class="hidden" />
               <label for="poll" class="select-active">
                 <i class="fas fa-chart-bar fa-2x"></i>
                 <div class="flex-1 flex items-center">Poll</div>
@@ -127,11 +117,15 @@
                 <i class="fas fa-list-ol fa-2x"></i>
                 <div class="flex-1 flex items-center">Ranking</div>
               </label>
+              <label for="qna" class="select-type">
+                <i class="fas fa-chalkboard-teacher fa-2x"></i>
+                <div class="flex-1 flex items-center">QnA</div>
+              </label>
             </div>
           </div>
           <div id="main-panel" class="bg-white rounded-card shadow-card p-4 md:p-6 relative w-full">
-            <div class="flex w-full justify-between items-start">
-              <div id="type-info" class="flex-1 mr-4"></div>
+            <div class="flex w-full justify-between items-stretch mb-4">
+              <div id="type-info" class="flex-1 flex items-center mr-4 text-indigo-800 bg-indigo-100 py-1 px-6 rounded-card text-sm lg:text-base"></div>
               <div id="util-buttons" class="btn-wrapper flex relative">
                 <div id="hp-delete-question-btn" title="Delete question" class="btn btn-danger h-10 w-10 mr-2 text-base flex items-center justify-center"><i class="far fa-trash-alt"></i></div>
                 <div id="hp-clone-question-btn" title="Duplicate question" class="btn btn-secondary h-10 w-10 text-base flex items-center justify-center"><i class="far fa-clone"></i></div>
@@ -142,7 +136,7 @@
             <div id="edit-question">
               <!-- ANSWER INPUT TEMPLATE -->
               <div class="hidden answer-input flex items-center overflow-x-auto scrollbar scrollbar-hidden">
-                <input type="text" placeholder="Enter correct answer" class="input-form flex-1" />
+                <input type="text" placeholder="Enter an option" maxlength="30" class="input-form flex-1" />
                 <div class="btn btn-danger-outline delete-answer-btn ml-2 flex-none w-10 h-10" title="Delete option"><i class="fa fa-trash"></i></div>
                 <div class="btn btn-secondary-outline add-answer-btn ml-2 flex-none w-10 h-10" title="Add option"><i class="fa fa-plus"></i></div>
               </div>
@@ -168,6 +162,16 @@
                     <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition"></div>
                   </div>
                   <div class="ml-2 leading-tight text-gray-600">Let participant skip individual statements <i class="fas fa-question-circle mx-1 text-gray-300" title="Skipped statements will not be counted towards the result."></i></div>
+                </label>
+              </div>
+              <div class="hp-qna-settings hidden flex items-center justify-start w-full ml-6 mb-4">
+                <label for="hp-qna-anon" class="flex items-center cursor-pointer">
+                  <div class="relative">
+                    <input type="checkbox" id="hp-qna-anon" class="sr-only" name="anon" />
+                    <div class="dot-cont block bg-gray-300 w-10 h-6 rounded-full"></div>
+                    <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition"></div>
+                  </div>
+                  <div class="ml-2 leading-tight text-gray-600">Enable anonymous QnA session <i class="fas fa-question-circle mx-1 text-gray-300" title="Your participants can choose to ask question anonymously."></i></div>
                 </label>
               </div>
               <div class="options-text text-sm ml-6 mb-1">Options</div>
@@ -196,41 +200,27 @@
 
         <!-- HEADER -->
         <div id="lobby-header" class="hidden sticky top-0 z-40 w-full flex flex-col items-start p-4 lg:p-8 lg:pb-0">
-          <div class="bg-indigo-100 bg-opacity-20 backdrop-filter backdrop-blur-xl p-4 md:p-6 w-full rounded-xl flex items-center justify-between flex-wrap">
+          <div class="bg-indigo-100 bg-opacity-20 p-4 md:p-6 w-full rounded-xl flex items-center justify-between flex-wrap" style="backdrop-filter: blur(24px)">
             <div id="question-count" class="font-bold text-white"></div>
             <div id="next-btn" class="btn btn-light-outline w-full mt-2 md:mt-0 md:w-40">Next</div>
+            <div id="export-result-btn" class="hidden btn btn-light-outline w-full mt-2 md:mt-0 md:w-40">Download Results</div>
           </div>
 
-          <div id="answered" class="font-bold text-white text-right mr-8 mt-2 md:mt-4">Answered <span id="answer-count">0</span></div>
+          <div class="mt-2 flex justify-between items-center w-full">
+            <div id="answered" class="font-bold text-white text-right mr-8">Answered <span id="answer-count">0</span></div>
+            <div class="mute-btn btn btn-rounded btn-light-outline self-end" title="mute/unmute audio"><i class="fas fa-volume-up text-base"></i></div>
+          </div>
         </div>
 
         <!-- QUESTION DISPLAY -->
         <div id="question-display" class="flex-1 flex flex-col items-center justify-center mx-auto container md:max-w-screen-sm lg:max-w-screen-md xl:max-w-screen-lg px-4 md:px-0">
           <div id="pl-reveal-remark" class="hidden text-2xl font-bold text-white"></div>
-          <div id="display-question-q" class="text-xl font-bold text-white text-center mb-6">${question.q}</div>
-
-          <!-- CHART TEMPLATES -->
-          <div class="hidden chart chart-poll max-w-screen-md w-full mx-auto">
-            <canvas width="768" height="432"></canvas>
-          </div>
-          <div class="hidden chart chart-ranking max-w-screen-md w-full mx-auto">
-            <canvas width="768" height="432"></canvas>
-          </div>
-          <div class="hidden chart chart-wordcloud max-w-screen-md w-full mx-auto">
-            <canvas width="768" height="432"></canvas>
-          </div>
-          <div class="hidden chart chart-scales max-w-screen-md w-full mx-auto">
-            <canvas width="768" height="432"></canvas>
-          </div>
-          <div class="hidden chart chart-open w-full relative mb-8"></div>
-          <div class="hidden open-ended-response shadow-lg absolute rounded-card w-full p-6"></div>
-
-          <div id="chart-container" class="hidden w-full"></div>
+          <div id="display-question-q" class="text-xl font-bold text-white text-center my-6">${question.q}</div>
 
           <!-- INPUT TEMPLATES -->
           <div class="hidden poll-input-wrapper flex">
             <input id="q-99-99" type="radio" name="poll-1" value="option" class="hidden" />
-            <label class="flex-1 input-option">Option</label>
+            <label class="input-option">Option</label>
           </div>
           <div class="hidden wordcloud-input-wrapper flex flex-col gap-4">
             <input id="wordcloud-99-0" maxlength="25" type="text" name="wordcloud-1" placeholder="Enter a word" class="input-form flex-1" autofocus />
@@ -253,20 +243,107 @@
             <div class="flex justify-between text-sm"><span class="scale-lo">Strongly disagree</span> <span class="scale-hi">Strongly agree</span></div>
           </div>
           <textarea rows="4" maxlength="250" class="hidden open-ended-input input-form rounded-card resize-none" placeholder="Type your response in 250 characters"></textarea>
+          <textarea rows="3" maxlength="250" class="hidden qna-input input-form rounded-card resize-none" placeholder="Type your question here"></textarea>
 
           <div id="input-container" class="hidden w-full rounded-card shadow-lg bg-white m-4 p-4 flex flex-col gap-4 max-w-screen-md">
             <div id="display-options" class="w-full grid grid-cols-1 gap-4"></div>
-
+            <label for="pl-qna-anon" class="flex items-center cursor-pointer">
+              <div class="relative">
+                <input type="checkbox" id="pl-qna-anon" class="sr-only" name="pl-anon" />
+                <div class="dot-cont block bg-gray-300 w-10 h-6 rounded-full"></div>
+                <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition"></div>
+              </div>
+              <div class="ml-2 leading-tight text-gray-600">Ask anonymously<i class="fas fa-question-circle mx-1 text-gray-300" title="Your name will be shown as anonymousXX instead."></i></div>
+            </label>
             <div id="pl-submit-vote" class="btn btn-primary">Submit</div>
           </div>
+
+          <!-- CHART TEMPLATES -->
+          <div class="hidden chart chart-poll max-w-screen-md w-full mx-auto">
+            <canvas width="768" height="432"></canvas>
+          </div>
+          <div class="hidden chart chart-ranking max-w-screen-md w-full mx-auto">
+            <canvas width="768" height="432"></canvas>
+          </div>
+          <div class="hidden chart chart-wordcloud max-w-screen-md w-full mx-auto">
+            <canvas width="768" height="432"></canvas>
+          </div>
+          <div class="hidden chart chart-scales max-w-screen-md w-full mx-auto">
+            <canvas width="768" height="432"></canvas>
+          </div>
+          <div class="hidden chart chart-open w-full relative mb-8"></div>
+          <div class="hidden open-ended-response shadow-lg absolute rounded-card w-full p-6 break-all"></div>
+          <div class="hidden chart chart-qna w-full my-4">
+            <div class="w-full flex gap-4 sm:px-6 mt-4 text-white items-end justify-center sm:justify-start">
+              <input type="radio" checked value="0" name="qna-filter" class="hidden" />
+              <input type="radio" value="1" name="qna-filter" class="hidden" />
+              <input type="radio" value="2" name="qna-filter" class="hidden" />
+              <label class="qna-popular-btn btn btn-light px-6">Popular</label>
+              <label class="qna-recent-btn btn">Recent</label>
+              <label class="qna-answered-btn btn">Answered</label>
+              <div class="flex-1 text-right text-sm hidden sm:inline"><span class="qna-count">No</span> Question<span class="qna-plural inline">s</span></div>
+            </div>
+
+            <div class="qna-items w-full rounded-card shadow-lg bg-white my-2 p-4 flex flex-col gap-4">
+              <div class="qna-empty w-full h-32 bg-gray-100 rounded-xl flex flex-col items-center justify-center text-center p-4">
+                <div class="font-bold text-lg">QnA Session is open</div>
+                <div class="text-gray-500">
+                  No questions yet.<br />
+                  Questions from participants will appear here.
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="hidden qna-item">
+            <div class="text-indigo-700 text-xl mr-2 sm:w-auto"><i class="fas fa-arrow-circle-up"></i> <span class="qna-upvotes">10</span></div>
+            <div class="flex flex-col mb-1 sm:flex-1 order-last sm:order-none w-full sm:w-auto mt-2 sm:mt-0">
+              <div class="text-gray-400 text-sm">
+                <i class="far fa-clock"></i>
+                <span class="qna-time">08:27</span> <span class="qna-asker ml-1">username</span> asked,
+              </div>
+              <div class="qna-q break-all flex-1 mr-4">Ini question saya?</div>
+            </div>
+            <div class="qna-p-btn flex-none flex flex-row-reverse gap-2">
+              <div class="qna-upvote-btn btn btn-primary px-6"><i class="fas fa-arrow-circle-up mr-1"></i>Upvote</div>
+              <div class="qna-withdraw-btn btn btn-secondary-outline btn-rounded text-sm"><i class="far fa-trash-alt"></i></div>
+            </div>
+            <div class="qna-h-btn hidden flex flex-none flex-row gap-2 justify-end">
+              <div class="qna-pin-btn btn btn-primary btn-rounded text-sm"><i class="fas fa-thumbtack"></i></div>
+              <div class="qna-answer-btn btn btn-primary-outline btn-rounded text-sm"><i class="fas fa-check"></i></div>
+            </div>
+          </div>
+          <div class="hidden qna-item pinned">
+            <div class="text-white text-xl mr-2 sm:w-auto"><i class="fas fa-arrow-circle-up"></i> <span class="qna-upvotes">10</span></div>
+            <div class="flex flex-col mb-1 sm:flex-1 text-white order-last sm:order-none w-full sm:w-auto mt-2 sm:mt-0">
+              <div class="text-sm opacity-60">
+                <i class="far fa-clock"></i>
+                <span class="qna-time">08:27</span> <span class="qna-asker ml-1">username</span> asked,
+              </div>
+              <div class="qna-q break-all flex-1 mr-4">Ini question saya?</div>
+            </div>
+            <div class="qna-p-btn flex-none flex flex-row-reverse gap-2">
+              <div class="qna-upvote-btn btn btn-light px-6"><i class="fas fa-arrow-circle-up mr-1"></i>Upvote</div>
+              <div class="qna-withdraw-btn btn btn-light-outline btn-rounded text-sm"><i class="far fa-trash-alt"></i></div>
+            </div>
+            <div class="qna-h-btn hidden flex flex-none flex-row gap-2">
+              <div class="qna-pin-btn btn btn-light-outline btn-rounded text-sm">
+                <span class="fa-stack"><i class="fas fa-slash fa-stack-1x"></i><i class="fas fa-thumbtack fa-stack-1x"></i></span>
+              </div>
+              <div class="qna-answer-btn btn btn-light btn-rounded text-sm"><i class="fas fa-check"></i></div>
+            </div>
+          </div>
+
+          <div id="chart-container" class="hidden w-full mb-8"></div>
         </div>
 
         <!-- PLAYER ANSWERED / TIME UP SCREEN -->
         <div id="waiting-for-reveal" class="hidden flex-1 flex flex-col items-center justify-center mx-auto container md:max-w-lg lg:max-w-xl xl:max-w-3xl px-4 md:px-0 mb-4">
-          <div class="text-2xl font-bold text-white text-center flex flex-col items-center">
+          <div class="text-2xl font-bold text-white text-center flex flex-col items-center my-8">
             <span>Thank you for answering!</span>
             <span id="pl-waiting-message"> Waiting for next question ...</span>
+            <div class="hidden pl-quit-btn btn btn-light">Leave Event</div>
           </div>
+          <div id="result-container" class="hidden w-full mb-8"></div>
         </div>
 
         <!-- REVIEW SCREEN -->
@@ -275,9 +352,10 @@
           <div id="review-charts" class="flex-1 flex justify-center items-center"></div>
         </div>
 
-        <!-- FOOTER -->
-        <div id="lobby-footer" class="hidden p-4 md:p-6 lg:px-8 relative w-full">
-          <div class="bg-indigo-100 bg-opacity-20 backdrop-filter backdrop-blur-xl rounded-xl w-full flex items-center justify-between p-4 md:pl-6">
+        <!-- FOOTER -->        
+        <div id="lobby-footer" class="hidden p-4 md:p-6 lg:px-8 w-full">
+          <div class="mute-btn fixed top-4 left-4 btn btn-rounded btn-light-outline self-end" title="mute/unmute audio"><i class="fas fa-volume-up text-base"></i></div>
+          <div class="bg-indigo-100 bg-opacity-20 rounded-xl w-full flex items-center justify-between p-4 md:pl-6" style="backdrop-filter: blur(24px)">
             <div class="pl-username text-2xl font-bold text-white truncate mr-4"></div>
             <div class="pl-quit-btn btn btn-light-outline whitespace-nowrap w-10 h-10 flex items-center justify-center pl-3"><i class="fas fa-sign-out-alt text-base"></i></div>
           </div>
@@ -291,77 +369,17 @@
     </div> -->
 
       <!-- MODAL -->
-      <div class="modal opacity-0 pointer-events-none fixed w-full h-full top-0 left-0 bottom-0 flex items-center justify-center z-30">
-        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
-
-        <div class="modal-container bg-white w-11/12 md:max-w-md mx-auto rounded-card shadow-lg z-50 overflow-y-auto">
-          <div class="modal-close absolute top-0 right-0 cursor-pointer flex flex-col items-center mt-4 mr-4 text-white text-sm z-50">
-            <i class="fas fa-times text-white"></i>
-            <span class="text-sm">(Esc)</span>
-          </div>
-
-          <!-- Add margin if you want to see some of the overlay behind the modal-->
-          <div class="modal-content p-8 text-left">
-            <!--Title-->
-            <div class="flex justify-between items-center pb-4">
-              <p class="text-xl font-bold">Save as Preset Activity</p>
-              <div class="modal-close cursor-pointer z-50">
-                <i class="fas fa-times text-black"></i>
-              </div>
-            </div>
-
-            <!--Body-->
-            <form id="save-as-activity-set" class="flex flex-col">
-              <label for="title" class="text-sm ml-6 mb-1">Title</label>
-              <input id="activity-set-title" name="title" type="text" placeholder="Preset activity title" class="input-form mb-4" />
-              <div class="flex gap-8 mb-4">
-                <label for="set-public"> <input id="set-public" type="radio" name="is-private" value="false" checked/> Public </label>
-                <label for="set-private"> <input id="set-private" type="radio" name="is-private" value="true" /> Private </label>
-              </div>
-              <label for="desc" class="text-sm ml-6 mb-1">Description</label>
-              <textarea id="activity-set-desc" name="title" placeholder="Type preset activity description" class="input-form mb-4 rounded-card resize-none" rows="3"></textarea>
-              <label for="thumbnail" class="text-sm ml-6">Thumbnail</label>
-              <div class="rounded-card overflow-hidden w-full my-2">
-                <div class="w-full">
-                  <div class="relative border-dashed h-40 rounded-card border-dashed border border-gray-300 p-2">
-                    <div x-data="imageViewer()" class="relative w-full h-full flex justify-center items-center">
-                      <!-- Show the image -->
-                      <template x-if="imageUrl">
-                        <div class="relative rounded-lg h-full w-full">
-                          <img :src="imageUrl" class="object-contain w-full h-full" />
-                          <div id="delete-thumbnail" @click="clearPreview()" class="px-2 py-1 text-center cursor-pointer rounded transition ease-in-out bg-red-500 hover:bg-red-600 text-white absolute bottom-0 right-0 z-20"><i class="fa fa-trash"></i></div>
-                        </div>
-                      </template>
-
-                      <!-- Show the gray box when image is not available -->
-                      <template x-if="!imageUrl">
-                        <div class="flex flex-col items-center">
-                          <i class="far fa-image fa-3x text-indigo-400"></i>
-                          <span class="block text-gray-400 text-xs font-normal">Drag and drop image or</span>
-                          <div class="px-16 py-2 mt-2 text-center cursor-pointer rounded-full transition ease-in-out text-xs font-semibold bg-gradient-to-br from-indigo-500 to-indigo-700 filter hover:brightness-90 text-white">Browse</div>
-                        </div>
-                      </template>
-                      <!-- Image file selector -->
-                      <!-- <input class="mt-2" type="file" accept="image/*" @change="fileChosen" /> -->
-                      <img id="load-thumbnail" src="" alt="" @load="loadThumbnail" class="hidden">
-                      <input id="activity-set-thumbnail" imgSrc="" type="file" class="h-full w-full opacity-0 absolute top-0 z-10 cursor-pointer" accept="image/*" @change="fileChosen" name="thumbnail" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </form>
-
-            <!--Footer-->
-            <div class="flex pt-2 gap-2">
-              <button class="modal-close btn btn-secondary-outline mr-2 flex-1">Cancel</button>
-              <button id="hp-export-set-btn" class="btn btn-primary flex-1">Save</button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <preset-activity-modal colorprimary="#6366F1" colorsecondary="#4338CA"> </preset-activity-modal>
     </div>
   </body>
   <footer>
+    <script src="./bundle.js"></script>
+    <script src="https://cdn-dev.nahtuh.com/libraries/nahtuhclient.js"></script>
+    <script src="https://yaidevstraccwebapp.blob.core.windows.net/components/index.js" type="module"></script>
+    <!-- <script src="https://cdn-dev.nahtuh.com/components/index.js" type="module"></script> -->
+    <script src="https://unpkg.com/chartjs-chart-wordcloud@3.5.0/build/index.umd.min.js"></script>
+
+    <script src="./xlsx.full.min.js"></script>
     <script src="./components.js"></script>
     <script src="./hostPanel.js"></script>
     <script src="./lobby.js"></script>

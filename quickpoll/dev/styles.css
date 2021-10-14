@@ -1,0 +1,61 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap");
+
+@tailwind base;
+@tailwind components;
+
+.btn {
+  @apply px-2 py-3 text-center cursor-pointer rounded-full transition ease-in-out text-xs font-semibold;
+}
+.btn-rounded {
+  @apply w-10 h-10 flex items-center justify-center;
+}
+.btn-primary {
+  @apply bg-gradient-to-br from-indigo-500 to-indigo-700 filter hover:brightness-90 text-white;
+}
+.btn-primary-outline {
+  @apply border border-indigo-500 hover:bg-indigo-400 text-indigo-500 hover:text-white;
+}
+.btn-secondary {
+  @apply bg-gray-500 hover:bg-gray-300 text-white;
+}
+.btn-secondary-outline {
+  @apply border border-gray-500 text-gray-500 hover:bg-gray-300;
+}
+.btn-light {
+  @apply bg-white hover:bg-gray-100 text-black;
+}
+.btn-light-outline {
+  @apply border border-white text-white hover:bg-gray-100 hover:text-black;
+}
+.btn-danger {
+  @apply bg-red-500 hover:bg-red-600 text-white;
+}
+.btn-danger-outline {
+  @apply border border-red-500 text-red-500 hover:bg-red-500 hover:text-white;
+}
+.input-form {
+  @apply rounded-full py-3 px-6 border border-gray-300 focus:border-indigo-500 leading-tight focus:ring-0 focus:outline-none;
+}
+.select-type {
+  @apply p-2 rounded-lg border border-gray-500 text-xs text-center flex flex-col items-center cursor-pointer hover:border-indigo-500 hover:text-indigo-500;
+}
+.select-active {
+  @apply p-2 rounded-lg bg-indigo-500 text-white text-xs text-center flex flex-col items-center cursor-pointer;
+}
+.input-form {
+  @apply rounded-full py-3 px-6 border border-gray-300 focus:border-indigo-500 leading-tight focus:outline-none;
+}
+.input-option {
+  @apply rounded-full py-3 px-6 border border-gray-300 hover:border-indigo-500 leading-tight focus:outline-none hover:text-indigo-500 flex-1 break-all flex items-center;
+}
+.input-active {
+  @apply rounded-full py-3 px-6 border border-indigo-400 leading-tight bg-indigo-400 text-white flex-1 break-all flex items-center;
+}
+.qna-item {
+  @apply border border-gray-200 p-4 rounded-xl flex items-center sm:items-start flex-wrap justify-between;
+}
+.qna-item.pinned {
+  @apply border-none bg-lollipop shadow-lg;
+}
+
+@tailwind utilities;
