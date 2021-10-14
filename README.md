@@ -6,7 +6,9 @@ Code base for activities deployed on [nahtuh.com](http://dev.nahtuh.com/). Built
 
 1. [Pop! Quiz](./popquiz)
 2. [Guess the Picture!](./tebakgambar)
-3. [What's that Song?](./tebaklagu)
+3. [What's that Song?](./tebaklagu) - discontinued
+4. [Heartbroken](./hangman)
+5. [Quickpoll](./quickpoll)
 
 ## Commit Tags
 
