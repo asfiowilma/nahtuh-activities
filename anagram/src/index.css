@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+
+.input {
+  @apply rounded-full px-6;
+}
+
+.btn-primary {
+  @apply transition-all ease-in-out bg-gradient-to-br from-primary to-primary-focus border-none;
+}
+
+.btn-primary:hover {
+  @apply filter brightness-75 border-none;
+}
+
+.table tr.active:nth-child(2n) td,
+.table tr.active td {
+  @apply bg-primary text-primary-content;
+}
+
+.table tr.active td:first-child {
+  @apply rounded-l-lg;
+}
+
+.table tr.active td:last-child {
+  @apply rounded-r-lg;
+}
+
+@tailwind utilities;
