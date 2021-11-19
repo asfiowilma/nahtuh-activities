@@ -15,10 +15,46 @@ function setButtonsOnClick() {
   $("#hp-import-btn").click(() => hp.importJson());
 
   /* LOBBY */
-  $("#pl-submit-answer-btn").click(() => pl.answerHandler());
-  $(".pl-quit-btn").click(() => pl.onLeave());
-  $(".final-score-btn").click(() => sceneSwitcher("#display-final-rank", true));
-  $(".leaderboard-btn").click(() => sceneSwitcher("#leaderboard", true));
+  $("#pl-submit-answer-btn").click(() => {
+    btnClick.play();
+    pl.answerHandler();
+  });
+  $(".pl-quit-btn").click(() => {
+    btnClick.play();
+    pl.onLeave();
+  });
+  $(".final-score-btn").click(() => {
+    btnClick.play();
+    sceneSwitcher("#display-final-rank", true);
+  });
+  $(".leaderboard-btn").click(() => {
+    btnClick.play();
+    sceneSwitcher("#leaderboard", true);
+  });
+
+  /* SOUND CONTROLS */
+  $("#mute-btn").click(() => {
+    muted = !muted;
+    if (muted) {
+      Howler.volume(0);
+      $("#mute-btn .fas").replaceClass("fa-volume-up", "fa-volume-mute");
+    } else {
+      Howler.volume(volume);
+      $("#mute-btn .fas").replaceClass("fa-volume-mute", "fa-volume-up");
+    }
+  });
+  $("#volume-range").change(() => {
+    volume = $("#volume-range").val();
+    Howler.volume(volume);
+    console.log(volume);
+    if (volume == 0) {
+      muted = true;
+      $("#mute-btn .fas").replaceClass("fa-volume-up", "fa-volume-mute");
+    } else {
+      muted = false;
+      $("#mute-btn .fas").replaceClass("fa-volume-mute", "fa-volume-up");
+    }
+  });
 }
 
 function sceneSwitcher(scene, isInLobby = false) {
@@ -74,10 +110,12 @@ const AnswerInput = (value, idx, isLast) => {
 
 const OptionButton = (option, reveal = false, isHost = false, answer = null) => {
   var optionBtn = $(`
-    <div class="w-full text-black bg-white ${reveal && option.b ? "bg-green-400 text-white" : ""} ${
+    <div class="w-full text-black bg-white ${reveal && option.b ? "bg-green-400 text-white" : "hover:bg-green-400"} ${
     reveal && !option.b ? "scale-90" : ""
   } ${
-    reveal && answer && !answer.b && option.v === answer.v ? "bg-pink-900 bg-opacity-50 text-white" : ""
+    reveal && answer && !answer.b && option.v === answer.v
+      ? "bg-pink-900 bg-opacity-50 text-white"
+      : "hover:bg-pink-900"
   } rounded-lg shadow px-4 py-6 cursor-pointer hover:bg-pink-50 transform transition ${
     !reveal && !isHost ? "hover:scale-105" : ""
   } ease-in-out text-center">
@@ -86,6 +124,7 @@ const OptionButton = (option, reveal = false, isHost = false, answer = null) => 
   `);
   if (!isHost && !reveal)
     optionBtn.one("click", function () {
+      btnClick.play();
       console.log(`${option.v} is clicked 😄`);
       PlayerLobby.answerHandler(option);
     });
@@ -105,11 +144,20 @@ const HostLobbyHeader = (reveal = false, leaderboard = false) => {
 
   $("#next-or-skip-btn").unbind("click");
   if (reveal && leaderboard) {
-    $("#next-or-skip-btn").click(() => hl.showLeaderboard());
+    $("#next-or-skip-btn").click(() => {
+      btnClick.play();
+      hl.showLeaderboard();
+    });
   } else if (!reveal) {
-    $("#next-or-skip-btn").click(() => hl.stopTimer());
+    $("#next-or-skip-btn").click(() => {
+      btnClick.play();
+      hl.stopTimer();
+    });
   } else {
-    $("#next-or-skip-btn").click(() => hl.nextQuestion());
+    $("#next-or-skip-btn").click(() => {
+      btnClick.play();
+      hl.nextQuestion();
+    });
   }
 
   const time = questions[hl.currentQid].time;
@@ -152,6 +200,7 @@ const WrongAnswerBlock = (answer, count) => {
     () => regradeBtn.find("span").addClass("hidden")
   );
   regradeBtn.one("click", function () {
+    btnClick.play();
     yai.broadcast({ regrade: answer });
     wrongBlock.replaceClass("bg-opacity-50", "bg-opacity-10");
     regradeBtn.replaceClass("btn-primary", "btn-light-outline");
@@ -181,7 +230,10 @@ const QuestionCard = (idx, quiz) => {
   qCard.find(".q-type").text(quiz.type);
   qCard.find(".q-header").text(`Q${idx + 1}. ${quiz.q}`);
   qCard.find(".q-type").text(quiz.type);
-  qCard.click(() => hp.changeQuestion(idx));
+  qCard.click(() => {
+    btnClick.play();
+    hp.changeQuestion(idx);
+  });
 
   const correctAnswer = qCard.find(".correct-answer").empty();
   switch (quiz.type) {

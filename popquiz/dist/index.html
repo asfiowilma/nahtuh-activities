@@ -40,12 +40,12 @@
   <body class="font-poppins">
     <div id="canvas" class="canvas w-full h-fit-content min-h-screen flex flex-col bg-gray-light">
       <!-- LOGIN PANEL -->
-      <div id="login-panel" class="flex-1 flex flex-col w-full mx-auto items-center justify-center">
+      <div id="login-panel" class="flex-1 flex flex-col w-full h-screen items-center justify-center">
         <create-event-component id="create-event" colorPrimary="#ec4899" colorSecondary="#be185d" colorLink="#EC4899"></create-event-component>
       </div>
 
       <!-- HOST PANEL -->
-      <div id="host-panel" class="hidden container mx-auto py-8 px-4 lg:px-0 flex-1 flex items-start">
+      <div id="host-panel" class="hidden container mx-auto py-8 px-4 xl:px-8 flex-1 flex items-start">
         <div id="menu-toggle" class="rounded-full bg-pink-500 h-10 w-10 flex items-center justify-center z-20 shadow-lg fixed top-4 left-4 block md:hidden"><i class="fas fa-bars text-white"></i></div>
         <div class="menu-overlay hidden absolute inset-0 bg-gray-900 opacity-10 z-10"></div>
 
@@ -132,7 +132,7 @@
                 <div class="hidden answer-input flex items-center">
                   <input type="text" placeholder="Enter correct answer" class="input-form flex-1" />
                   <div class="btn btn-danger-outline btn-rounded delete-answer-btn ml-2"><i class="fa fa-trash"></i></div>
-                  <div class="btn btn-secondary-outline btn-rounded add-answer-btn ml-2"><i class="fas fa-plus"></i></div>
+                  <div class="btn btn-primary-outline btn-rounded add-answer-btn ml-2"><i class="fas fa-plus"></i></div>
                 </div>
 
                 <!-- OPTION INPUT TEMPLATE -->
@@ -150,7 +150,7 @@
                 <div id="hp-option-grid-tf" class="grid gap-4 grid-rows-2 md:grid-rows-none md:grid-cols-2"></div>
               </div>
               <div class="flex justify-end mt-4">
-                <div id="hp-add-question-2-btn" class="btn btn-primary-outline btn-rounded mr-2"><i class="fas fa-plus"></i></div>
+                <div id="hp-add-question-2-btn" class="btn btn-secondary mr-2 pl-4 pr-5"><i class="fas fa-plus mr-2"></i> Save & Add</div>
                 <div id="hp-save-question-btn" class="btn btn-primary w-full md:w-40">Save</div>
               </div>
             </form>
@@ -187,7 +187,15 @@
             <div id="next-or-skip-btn" class="btn btn-light-outline w-full mt-2 md:mt-0 md:w-40">Skip</div>
           </div>
 
-          <div id="answered" class="hidden font-bold text-white text-right mr-8 mt-2 md:mt-4">Answered <span id="answer-count">0</span></div>
+          <div class="flex justify-between w-full">
+            <div id="sound-controls" class="dropdown dropdown-hover dropdown-right mt-2 md:mt-4">
+              <div id="mute-btn" tabindex="0" class="btn btn-light-outline btn-rounded mr-2"><i class="fas fa-volume-up text-base"></i></div>
+              <div class="p-3 dropdown-content rounded-card bg-white bg-opacity-20 w-52 flex items-center">
+                <input id="volume-range" name="volume-range" type="range" min="0" max="1" value="1" step="0.05" class="range overflow-hidden appearance-none rounded-full" />
+              </div>
+            </div>
+            <div id="answered" class="font-bold text-white text-right mt-2 md:mt-4">Answered <span id="answer-count">0</span></div>
+          </div>
         </div>
 
         <!-- QUESTION DISPLAY -->
@@ -290,6 +298,7 @@
     </div>
   </body>
   <footer>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
     <script src="./components.js"></script>
     <script src="./playerLobby.js"></script>
     <script src="./hostLobby.js"></script>

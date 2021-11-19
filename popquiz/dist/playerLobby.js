@@ -33,6 +33,7 @@ const PlayerLobby = new (function () {
     }
 
     if (content.isStarted) {
+      bgmLoop.play();
       isStarted = isStarted;
       this.totalQuestions = content.totalQuestions;
     }
@@ -144,6 +145,7 @@ const PlayerLobby = new (function () {
     const componentsToDisplay = ["#display-question-q"];
 
     PlayerLobbyHeader(question.time);
+    $("#sound-controls").removeClass("visible fixed top-0 left-4");
     $("#display-question-q").text(question.q);
 
     if (question.type !== "SA") {
@@ -174,7 +176,8 @@ const PlayerLobby = new (function () {
       "Extraordinary!",
     ];
     sceneSwitcher("#waiting-for-reveal", true);
-    $("#lobby-header").addClass("hidden");
+    $("#lobby-header").addClass("invisible w-0 h-0 m-0 p-0");
+    $("#sound-controls").addClass("visible fixed top-0 left-4");
     $("#pl-waiting-remarks").text(remarks[Math.floor(Math.random() * remarks.length)]);
   };
 
@@ -185,7 +188,12 @@ const PlayerLobby = new (function () {
 
   this.renderShowScore = (question) => {
     sceneSwitcher("#question-display", true);
-    $("#lobby-header").addClass("hidden");
+    $("#lobby-header").addClass("invisible w-0 h-0 m-0 p-0");
+    $("#sound-controls").addClass("visible fixed top-0 left-4");
+
+    if (this.answeredCorrect) correctSound.play();
+    else incorrectSound.play();
+
     $("#pl-reveal-remark").text(this.answeredCorrect ? "You're correct!" : "Better luck next time~");
     $("#pl-current-score").text(this.currentScore + ` (+${this.scoreEarned})`);
     const componentsToDisplay = ["#display-question-q", "#pl-reveal-remark", "#pl-reveal-score"];
@@ -210,6 +218,8 @@ const PlayerLobby = new (function () {
   };
 
   this.renderFinalScreen = (lb) => {
+    bgmLoop.stop();
+    gameOver.play();
     const winner = lb[0];
     const rank = lb.findIndex((x) => x.username === username) + 1;
     const remarks = ["Congratulations!", "Great job!", 'You tried your best :")'];

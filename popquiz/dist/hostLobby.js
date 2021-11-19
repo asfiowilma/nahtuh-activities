@@ -34,6 +34,7 @@ const HostLobby = new (function () {
   };
 
   this.startQuiz = () => {
+    bgmLoop.play();
     isStarted = true;
     yai.broadcast({
       isStarted: isStarted,
@@ -126,6 +127,7 @@ const HostLobby = new (function () {
 
   this.renderCorrectAnswer = (question) => {
     console.log("rendering correct answer");
+    correctSound.play();
     sceneSwitcher("#question-display", true);
     $("#progress-bar").addClass("hidden");
     HostLobbyHeader(true, true);
@@ -171,6 +173,8 @@ const HostLobby = new (function () {
     const winner = lb[0];
 
     if (final) {
+      bgmLoop.stop();
+      gameOver.play();
       $("#lobby-header").addClass("hidden");
       $("#leaderboard-final").removeClass("hidden");
       $("#leaderboard-heading").text("Congratulations!");

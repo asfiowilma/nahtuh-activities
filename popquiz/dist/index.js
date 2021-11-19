@@ -31,6 +31,15 @@ yai.onParticipantJoined = onPlayerJoin;
 yai.onParticipantLeave = onPlayerLeave;
 yai.onIncomingMessage = onIncomingMessage;
 
+// SOUNDS
+var muted = false;
+var volume = 1;
+var bgmLoop = new Howl({ src: ["./sounds/bgm-loop.wav"], loop: true });
+var correctSound = new Howl({ src: ["./sounds/answer-correct.wav"] });
+var incorrectSound = new Howl({ src: ["./sounds/answer-incorrect.wav"] });
+var btnClick = new Howl({ src: ["./sounds/btn-click.ogg"] });
+var gameOver = new Howl({ src: ["./sounds/game-over.wav"] });
+
 function onConnected(data) {
   isHost = data.participant.isHost;
   username = data.participant.participantName;
