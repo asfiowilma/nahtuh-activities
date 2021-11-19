@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { MdAlarm } from 'react-icons/md'
 import { useGame } from '../../contexts/GameContext'
 import { mod } from '../../utils'
@@ -24,6 +24,9 @@ export const WordsToFind = ({ setOpen, className }) => {
     setStarted,
   } = useGame()
   const [timeLeft, setTimeLeft] = useState(secondsToTime(timeLimit))
+
+  let intervalRef = useRef()
+
   const [words, setWords] = useState({
     four: 0,
     five: 0,
@@ -55,13 +58,12 @@ export const WordsToFind = ({ setOpen, className }) => {
 
       // save intervalId to clear the interval when the
       // component re-renders
-      const intervalId = setInterval(() => {
+      intervalRef.current = setInterval(() => {
         setTimer(timer - 1)
-        setTimeLeft(secondsToTime(timer - 1))
       }, 1000)
 
       // clear interval on re-render to avoid memory leaks
-      return () => clearInterval(intervalId)
+      return () => clearInterval(intervalRef.current)
       // add timeLeft as a dependency to re-rerun the effect
       // when we update it
     } else {
@@ -70,6 +72,10 @@ export const WordsToFind = ({ setOpen, className }) => {
       return
     }
   }, [isStarted, timer])
+
+  useEffect(() => {
+    setTimeLeft(secondsToTime(timer))
+  }, [timer])
 
   useEffect(() => {
     setWords({
@@ -100,8 +106,8 @@ export const WordsToFind = ({ setOpen, className }) => {
         <div className="text-center ml-8 flex justify-center">
           {!isStarted || timer > 0 ? (
             <div className="countdown">
-              <span style={{ '--value': timeLeft.m }}></span>m
-              <span className="ml-1" style={{ '--value': timeLeft.s }}></span>s
+              <span key="timerminute" style={{ '--value': timeLeft.m }}></span>m
+              <span key="timersecond" className="ml-1" style={{ '--value': timeLeft.s }}></span>s
             </div>
           ) : (
             "Time's Up!"

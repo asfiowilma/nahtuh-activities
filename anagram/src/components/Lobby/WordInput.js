@@ -1,7 +1,12 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { BiSubdirectoryLeft } from 'react-icons/bi'
+import { useSound } from '../../contexts/SoundContext'
 export const WordInput = ({ guessHandler, word, setword }) => {
+  const {
+    state: { btnClick },
+  } = useSound()
   const enterWord = (e) => {
+    btnClick.play()
     e.preventDefault()
     guessHandler(word)
     setword('')

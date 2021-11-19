@@ -13,9 +13,9 @@ function CreateEvent({ onStart }) {
   }, [createEventComponent])
 
   // dev
-  useEffect(() => {
-    createEventComponent.current.renderRoot.querySelector('#username').value = generateString(5)
-  }, [])
+  // useEffect(() => {
+  //   createEventComponent.current.renderRoot.querySelector('#username').value = generateString(5)
+  // }, [])
 
   const onAlert = (message) => {
     swal({ icon: 'warning', text: message, button: false })

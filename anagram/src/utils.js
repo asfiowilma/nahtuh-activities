@@ -1,5 +1,6 @@
 import { nahtuhClient as yai } from 'nahtuh-client'
 
+// eslint-disable-next-line no-sparse-arrays
 export const nth = (n) => [, 'st', 'nd', 'rd'][(n / 10) % 10 ^ 1 && n % 10] || 'th'
 export const isAlpha = (ch) => /^[A-Z]$/i.test(ch)
 export const range = (size, startAt = 0) => [...Array(size).keys()].map((i) => i + startAt)
@@ -23,6 +24,8 @@ export const generateAnagramString = (length) => {
     .map((v) => consonants[Math.floor(Math.random() * consonants.length)])
   return [...cArray, ...vArray].join('')
 }
+
+export const flat = (arr) => arr.reduce((a, b) => (Array.isArray(b) ? [...a, ...flat(b)] : [...a, b]), [])
 
 export const findHost = async () => {
   var participants = await yai.getParticipantList()
